@@ -6,10 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AuthContainerView: View {
-    @StateObject private var viewModel =  AuthViewModel()
+    @StateObject private var viewModel : AuthViewModel
     @Namespace private var animation
+    @Environment(\.modelContext) private var modelContext
+    
+    init(modelContext: ModelContext) {
+        _viewModel = StateObject(wrappedValue: AuthViewModel(modelContext: modelContext))
+    }
     
     var body: some View {
         GeometryReader { geometry in

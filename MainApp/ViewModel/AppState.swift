@@ -36,13 +36,13 @@ class AppState {
     }
     
     @MainActor
-    func signUp(name: String, email: String, password: String, completion: @escaping (Bool) -> Void) async throws {
+    func signUp(name: String, email: String, password: String, completion: @escaping (User.ID) -> Void) async throws {
         isLoading = true
         
         do{
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
 //            print("User created \(result.user.uid)")
-            completion(true)
+            completion(result.user.uid)
             isLoading = false
         }catch{
             print(error)
@@ -66,4 +66,5 @@ class AppState {
             throw AuthError(error: error)
         }
     }
+    
 }

@@ -38,6 +38,13 @@ struct SignupView: View {
                     )
                     
                     AuthTextField(
+                        title: "UserName",
+                        placeholder: "Enter your userName",
+                        systemImage: "person.circle",
+                        text: $viewModel.username
+                    )
+                    
+                    AuthTextField(
                         title: "Email",
                         placeholder: "Enter your email",
                         systemImage: "envelope",
@@ -165,7 +172,7 @@ struct SignupView: View {
     }
 }
 
-#Preview {
-    SignupView()
-        .environmentObject(AuthViewModel())
-}
+//#Preview {
+//    SignupView()
+//        .environmentObject(AuthViewModel())
+//}

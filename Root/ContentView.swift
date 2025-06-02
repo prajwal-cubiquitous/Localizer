@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) var modelContext
     @StateObject private var viewModel = ContentViewModel()
     @State private var showMainView = false
     
@@ -17,7 +19,7 @@ struct ContentView: View {
                 MainTabView()
                     .smoothTransition()
             } else {
-                AuthContainerView()
+                AuthContainerView(modelContext: modelContext)
                     .fadeInOut()
             }
         }

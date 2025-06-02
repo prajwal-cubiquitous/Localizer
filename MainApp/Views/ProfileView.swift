@@ -13,12 +13,13 @@ struct ProfileView: View {
     
     // Sample user data
     let user = User(
+        id: "oksdhfowae",
         name: "John Doe",
-        username: "@johndoe",
+        email: "@johndoe",
+        username: "sjdfojds",
         bio: "iOS Developer | Swift Enthusiast | Coffee Lover",
         postsCount: 48,
-        followersCount: 1258,
-        followingCount: 357
+
     )
     
     var body: some View {
@@ -41,14 +42,14 @@ struct ProfileView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text(user.username)
+                        Text(user.email)
                             .font(.subheadline)
                             .foregroundStyle(.gray)
                         
-                        Text(user.bio)
-                            .font(.body)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 4)
+//                        Text(user.bio)
+//                            .font(.body)
+//                            .multilineTextAlignment(.center)
+//                            .padding(.top, 4)
                         
                         // Stats
                         HStack(spacing: 40) {
@@ -60,21 +61,6 @@ struct ProfileView: View {
                                     .foregroundStyle(.gray)
                             }
                             
-                            VStack {
-                                Text("\(user.followersCount)")
-                                    .font(.headline)
-                                Text("Followers")
-                                    .font(.caption)
-                                    .foregroundStyle(.gray)
-                            }
-                            
-                            VStack {
-                                Text("\(user.followingCount)")
-                                    .font(.headline)
-                                Text("Following")
-                                    .font(.caption)
-                                    .foregroundStyle(.gray)
-                            }
                         }
                         .padding(.top, 16)
                         
@@ -174,15 +160,6 @@ struct ProfileView: View {
 
 }
 
-// User model
-struct User {
-    let name: String
-    let username: String
-    let bio: String
-    let postsCount: Int
-    let followersCount: Int
-    let followingCount: Int
-}
 
 // Edit profile view
 struct EditProfileView: View {
@@ -190,13 +167,13 @@ struct EditProfileView: View {
     let user: User
     
     @State private var name: String
-    @State private var bio: String
+    //    @State private var bio: String
     
     init(isPresented: Binding<Bool>, user: User) {
         self._isPresented = isPresented
         self.user = user
         self._name = State(initialValue: user.name)
-        self._bio = State(initialValue: user.bio)
+        //        self._bio = State(initialValue: user.bio)
     }
     
     var body: some View {
@@ -244,31 +221,32 @@ struct EditProfileView: View {
                         Text("Bio")
                             .font(.headline)
                         
-                        TextEditor(text: $bio)
-                            .frame(height: 100)
-                            .padding(4)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
+                        //                        TextEditor(text: $bio)
+                        //                            .frame(height: 100)
+                        //                            .padding(4)
+                        //                            .background(Color.gray.opacity(0.1))
+                        //                            .cornerRadius(8)
+                        //                    }
                     }
+                    .padding(.horizontal)
+                    
+                    Spacer()
                 }
-                .padding(.horizontal)
-                
-                Spacer()
-            }
-            .padding(.top, 20)
-            .navigationTitle("Edit Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        isPresented = false
+                .padding(.top, 20)
+                .navigationTitle("Edit Profile")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            isPresented = false
+                        }
                     }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        // Save profile changes
-                        isPresented = false
+                    
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") {
+                            // Save profile changes
+                            isPresented = false
+                        }
                     }
                 }
             }
