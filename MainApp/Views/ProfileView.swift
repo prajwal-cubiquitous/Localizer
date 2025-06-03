@@ -13,6 +13,7 @@ struct ProfileView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var isEditingProfile = false
     @EnvironmentObject var AuthViewModel : AuthViewModel
+    @State private var isRefreshing = false
     
     // Use a properly configured query to fetch the current user without any filters
     // This will show ALL users in the database, which should include our current user
@@ -37,7 +38,7 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
+            ScrollView {                
                 VStack(spacing: 20) {
                     // Header with profile image
                     VStack {
@@ -175,6 +176,9 @@ struct ProfileView: View {
                 }
                 .padding(.vertical)
             }
+            .refreshable {
+                await refreshUserData()
+            }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .background(colorScheme == .dark ? Color.black : Color.white)
@@ -251,7 +255,26 @@ struct ProfileView: View {
             debugMessage = "Error: \(error.localizedDescription)"
         }
     }
-
+    
+    /// Refreshes user data from Firestore and updates SwiftData using AuthViewModel's fetchAndStoreUser function
+    @MainActor
+    private func refreshUserData() async {
+        guard let userId = AppState.shared.userSession?.uid else {
+            print("DEBUG: No user session found during refresh")
+            return
+        }
+        
+        isRefreshing = true
+        print("DEBUG: Refreshing user data for ID: \(userId)")
+        
+        // Use the injected AuthViewModel instance to refresh user data
+        self.AuthViewModel.fetchAndStoreUser(userId: userId)
+        
+        // Small delay to allow the UI to update (can be removed if not needed)
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay
+        
+        isRefreshing = false
+    }
 }
 
 
