@@ -21,10 +21,12 @@ class ContentViewModel: ObservableObject{
     }
     
     @MainActor
-    private func setupSubscriptions(){
-        AppState.shared.$userSession.sink { [weak self] userSession in
-            self?.userSession = userSession
-        }.store(in: &cancellables)
+    private func setupSubscriptions() {
+        AppState.shared.$userSession
+            .receive(on: DispatchQueue.main) // Ensure this runs on main thread
+            .sink { [weak self] userSession in
+                self?.userSession = userSession
+            }
+            .store(in: &cancellables)
     }
-    
 }

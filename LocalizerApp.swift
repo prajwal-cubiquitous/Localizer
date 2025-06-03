@@ -30,6 +30,7 @@ struct LocalizerApp: App {
                 .tint(.accentColor)
                 .dynamicTypeSize(.medium)
         }
+        .modelContainer(for: [LocalUser.self])
         
     }
     
@@ -43,4 +44,8 @@ struct LocalizerApp: App {
             return nil // System default
         }
     }
+    
+    init(){
+        print(URL.applicationSupportDirectory.path(percentEncoded: false))
+    } 
 }

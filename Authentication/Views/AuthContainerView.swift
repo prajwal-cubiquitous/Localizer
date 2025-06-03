@@ -9,12 +9,12 @@ import SwiftUI
 import SwiftData
 
 struct AuthContainerView: View {
-    @StateObject private var viewModel : AuthViewModel
+    @StateObject private var viewModel = AuthViewModel.shared
     @Namespace private var animation
     @Environment(\.modelContext) private var modelContext
     
     init(modelContext: ModelContext) {
-        _viewModel = StateObject(wrappedValue: AuthViewModel(modelContext: modelContext))
+        AuthViewModel.shared.setModelContext(modelContext)
     }
     
     var body: some View {

@@ -16,7 +16,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             if viewModel.userSession != nil {
-                MainTabView()
+                MainTabView(modelContext: modelContext)
                     .smoothTransition()
             } else {
                 AuthContainerView(modelContext: modelContext)

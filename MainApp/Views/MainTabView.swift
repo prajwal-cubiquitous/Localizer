@@ -4,12 +4,21 @@
 //
 //  Created on 5/28/25.
 //
-
+import SwiftData
 import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
     @Environment(\.colorScheme) private var colorScheme
+    // Use the shared singleton instead of creating a new instance
+    @StateObject var AuthviewModel = AuthViewModel.shared
+    @Environment(\.modelContext) private var modelContext
+    
+    init(modelContext: ModelContext) {
+        // Pass the modelContext to the singleton instance
+        print("DEBUG: Setting modelContext in MainTabView init")
+        AuthViewModel.shared.setModelContext(modelContext)
+    }
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -63,6 +72,11 @@ struct MainTabView: View {
             
             // Profile Tab
             ProfileView()
+                .environment(\.modelContext, modelContext) // Explicitly pass modelContext to ProfileView
+                .environmentObject(AuthviewModel)
+                .onAppear {
+                    print("DEBUG: Profile tab appeared with modelContext: \(modelContext)")
+                }
                 .tabItem {
                     Label {
                         Text("Profile")
@@ -103,17 +117,17 @@ struct MainTabView: View {
     }
 }
 
-// Preview for both light and dark mode
-struct MainTabView_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            MainTabView()
-                .preferredColorScheme(.light)
-                .previewDisplayName("Light Mode")
-            
-            MainTabView()
-                .preferredColorScheme(.dark)
-                .previewDisplayName("Dark Mode")
-        }
-    }
-}
+//// Preview for both light and dark mode
+//struct MainTabView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        Group {
+//            MainTabView()
+//                .preferredColorScheme(.light)
+//                .previewDisplayName("Light Mode")
+//            
+//            MainTabView()
+//                .preferredColorScheme(.dark)
+//                .previewDisplayName("Dark Mode")
+//        }
+//    }
+//}

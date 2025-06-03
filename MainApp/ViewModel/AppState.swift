@@ -19,7 +19,7 @@ class AppState {
         self.userSession = Auth.auth().currentUser
     }
     
-    func signIn(email: String, password: String, completion: @escaping (Bool) -> Void) async throws {
+    func signIn(email: String, password: String, completion: @escaping (User.ID) -> Void) async throws {
         isLoading = true
         
         
@@ -27,8 +27,8 @@ class AppState {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             self.userSession = result.user
             isLoading = false
+            completion(result.user.uid)
         } catch {
-//            print("isloading false")
             isLoading = false
             throw AuthError(error: error)
         }
@@ -42,10 +42,10 @@ class AppState {
         do{
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
 //            print("User created \(result.user.uid)")
-            completion(result.user.uid)
+            self.signOut()
             isLoading = false
+            completion(result.user.uid)
         }catch{
-            print(error)
             isLoading = false
             throw AuthError(error: error)
         }
@@ -66,5 +66,4 @@ class AppState {
             throw AuthError(error: error)
         }
     }
-    
 }

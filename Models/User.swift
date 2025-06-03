@@ -13,8 +13,8 @@ struct User: Identifiable, Codable{
     var name: String
     let email: String
     var username: String
-    var bio: String?
-    var profileImageUrl: String?
+    var bio: String = ""
+    var profileImageUrl: String = ""
     var postsCount: Int = 0
     var likedCount: Int = 0
     var commentsCount: Int = 0
@@ -32,7 +32,7 @@ class LocalUser {
     var likedCount: Int
     var commentCount: Int
     
-    init(id: String, name: String,username: String, email: String, bio: String? = nil, profileImageUrl: String? = nil, postCount: Int, likedCount: Int, commentCount: Int) {
+    init(id: String, name: String,username: String, email: String, bio: String, profileImageUrl: String, postCount: Int, likedCount: Int, commentCount: Int) {
         self.id = id
         self.name = name
         self.email = email

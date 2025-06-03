@@ -6,21 +6,34 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ProfileView: View {
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @State private var isEditingProfile = false
+    @EnvironmentObject var AuthViewModel : AuthViewModel
     
-    // Sample user data
-    let user = User(
-        id: "oksdhfowae",
-        name: "John Doe",
-        email: "@johndoe",
-        username: "sjdfojds",
-        bio: "iOS Developer | Swift Enthusiast | Coffee Lover",
-        postsCount: 48,
-
-    )
+    // Use a properly configured query to fetch the current user without any filters
+    // This will show ALL users in the database, which should include our current user
+    @Query private var localUsers: [LocalUser]
+    
+    // Add an onAppear action to debug what's happening
+    @State private var debugMessage = ""
+    
+    // Computed property to safely get current user
+    private var currentUser: LocalUser? {
+        // Log the count of users found to help debug
+        if !localUsers.isEmpty {
+            print("DEBUG: Found \(localUsers.count) users in ProfileView")
+            for user in localUsers {
+                print("DEBUG: User \(user.name) (\(user.id)) available in ProfileView")
+            }
+        } else {
+            print("DEBUG: No users found in ProfileView")
+        }
+        return localUsers.first
+    }
     
     var body: some View {
         NavigationStack {
@@ -38,46 +51,79 @@ struct ProfileView: View {
                             )
                             .padding(.bottom, 8)
                         
-                        Text(user.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        Text(user.email)
-                            .font(.subheadline)
-                            .foregroundStyle(.gray)
-                        
-//                        Text(user.bio)
-//                            .font(.body)
-//                            .multilineTextAlignment(.center)
-//                            .padding(.top, 4)
-                        
-                        // Stats
-                        HStack(spacing: 40) {
-                            VStack {
-                                Text("\(user.postsCount)")
-                                    .font(.headline)
-                                Text("Posts")
-                                    .font(.caption)
-                                    .foregroundStyle(.gray)
+                        if let user = currentUser {
+                            Text(user.name)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Text(user.email)
+                                .font(.subheadline)
+                                .foregroundStyle(.gray)
+                            
+                            if let bio = user.bio, !bio.isEmpty {
+                                Text(bio)
+                                    .font(.body)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.top, 4)
                             }
                             
+                            // Stats
+                            HStack(spacing: 40) {
+                                VStack {
+                                    Text("\(user.postCount)")
+                                        .font(.headline)
+                                    Text("Posts")
+                                        .font(.caption)
+                                        .foregroundStyle(.gray)
+                                }
+                                
+                                VStack {
+                                    Text("\(user.likedCount)")
+                                        .font(.headline)
+                                    Text("Likes")
+                                        .font(.caption)
+                                        .foregroundStyle(.gray)
+                                }
+                                
+                                VStack {
+                                    Text("\(user.commentCount)")
+                                        .font(.headline)
+                                    Text("Comments")
+                                        .font(.caption)
+                                        .foregroundStyle(.gray)
+                                }
+                            }
+                            .padding(.top, 16)
+                        } else {
+                            VStack(spacing: 15) {
+                                Text("No Profile Available")
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                                    
+                                // Add a debug button to create a test user
+                                Button("Create Test Profile") {
+                                    createTestUser()
+                                }
+                                .buttonStyle(.borderedProminent)
+                            }
                         }
-                        .padding(.top, 16)
                         
                         // Edit profile button
-                        Button {
-                            isEditingProfile = true
-                        } label: {
-                            Text("Edit Profile")
-                                .font(.headline)
-                                .foregroundStyle(colorScheme == .dark ? .white : .black)
-                                .frame(width: 150, height: 40)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(colorScheme == .dark ? Color.white : Color.black, lineWidth: 1)
-                                )
+                        if currentUser != nil {
+                            Button {
+                                isEditingProfile = true
+                            } label: {
+                                Text("Edit Profile")
+                                    .font(.headline)
+                                    .foregroundStyle(colorScheme == .dark ? .white : .black)
+                                    .frame(width: 150, height: 40)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(colorScheme == .dark ? Color.white : Color.black, lineWidth: 1)
+                                    )
+                            }
+                            .padding(.top, 8)
                         }
-                        .padding(.top, 8)
                     }
                     .padding(.bottom, 20)
                     
@@ -117,9 +163,12 @@ struct ProfileView: View {
                             
                         }
                         settingsRow(icon: "arrow.left.square", title: "Logout"){
-                            print("logging out ")
-                            AppState.shared.signOut()
-                            print("logged out")
+                            Task {
+                                // First clear the local user data while we have access
+                                AuthViewModel.clearLocalUser()
+                                // Then sign out of Firebase which will trigger the UI update
+                                AppState.shared.signOut()
+                            }
                         }
                     }
                     .padding(.top, 10)
@@ -130,7 +179,9 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.inline)
             .background(colorScheme == .dark ? Color.black : Color.white)
             .sheet(isPresented: $isEditingProfile) {
-                EditProfileView(isPresented: $isEditingProfile, user: user)
+                if let currentUser = currentUser {
+                    EditProfileView(isPresented: $isEditingProfile, localUser: currentUser, modelContext: modelContext)
+                }
             }
         }
     }
@@ -157,6 +208,49 @@ struct ProfileView: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
+    
+    /// Creates a test user in SwiftData for debugging purposes
+    private func createTestUser() {
+        print("DEBUG: Creating test user in SwiftData")
+        
+        // First clear any existing users
+        let fetchDescriptor = FetchDescriptor<LocalUser>()
+        do {
+            let existingUsers = try modelContext.fetch(fetchDescriptor)
+            print("DEBUG: Found \(existingUsers.count) existing users before creating test user")
+            
+            // Delete any existing users
+            for user in existingUsers {
+                modelContext.delete(user)
+                print("DEBUG: Deleted user: \(user.name)")
+            }
+            
+            // Create a new test user
+            let testUser = LocalUser(
+                id: "test-user-id-\(Date().timeIntervalSince1970)",
+                name: "Test User",
+                username: "testuser", 
+                email: "test@example.com",
+                bio: "This is a test user created for debugging",
+                profileImageUrl: "",
+                postCount: 5,
+                likedCount: 10,
+                commentCount: 3
+            )
+            
+            // Insert and save the test user
+            modelContext.insert(testUser)
+            try modelContext.save()
+            print("DEBUG: Successfully created and saved test user")
+            
+            // Force UI refresh
+            debugMessage = "User created: \(Date().formatted())"
+            
+        } catch {
+            print("DEBUG: Error creating test user: \(error.localizedDescription)")
+            debugMessage = "Error: \(error.localizedDescription)"
+        }
+    }
 
 }
 
@@ -164,16 +258,18 @@ struct ProfileView: View {
 // Edit profile view
 struct EditProfileView: View {
     @Binding var isPresented: Bool
-    let user: User
+    var localUser: LocalUser
+    var modelContext: ModelContext
     
     @State private var name: String
-    //    @State private var bio: String
+    @State private var bio: String
     
-    init(isPresented: Binding<Bool>, user: User) {
+    init(isPresented: Binding<Bool>, localUser: LocalUser, modelContext: ModelContext) {
         self._isPresented = isPresented
-        self.user = user
-        self._name = State(initialValue: user.name)
-        //        self._bio = State(initialValue: user.bio)
+        self.localUser = localUser
+        self.modelContext = modelContext
+        self._name = State(initialValue: localUser.name)
+        self._bio = State(initialValue: localUser.bio ?? "")
     }
     
     var body: some View {
@@ -221,12 +317,11 @@ struct EditProfileView: View {
                         Text("Bio")
                             .font(.headline)
                         
-                        //                        TextEditor(text: $bio)
-                        //                            .frame(height: 100)
-                        //                            .padding(4)
-                        //                            .background(Color.gray.opacity(0.1))
-                        //                            .cornerRadius(8)
-                        //                    }
+                        TextEditor(text: $bio)
+                            .frame(height: 100)
+                            .padding(4)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
                     }
                     .padding(.horizontal)
                     
@@ -244,7 +339,17 @@ struct EditProfileView: View {
                     
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Save") {
-                            // Save profile changes
+                            // Update the LocalUser with new values
+                            localUser.name = name
+                            localUser.bio = bio
+                            
+                            // Save the changes to SwiftData
+                            do {
+                                try modelContext.save()
+                            } catch {
+                                print("Error saving user profile: \(error.localizedDescription)")
+                            }
+                            
                             isPresented = false
                         }
                     }
@@ -254,6 +359,6 @@ struct EditProfileView: View {
     }
 }
 
-#Preview {
-    ProfileView()
-}
+//#Preview {
+//    ProfileView()
+//}
