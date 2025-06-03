@@ -9,6 +9,7 @@ import SwiftUI
 import PhotosUI
 
 struct PostView: View {
+    let pincode: String
     @Environment(\.presentationMode) private var presentationMode
     @Environment(\.colorScheme) private var colorScheme
     
@@ -164,7 +165,7 @@ struct PostView: View {
                             }
                             .padding(.vertical, 10)
                         }
-                        .onChange(of: selectedItem) { newValue in
+                        .onChange(of: selectedItem) { oldValue, newValue in
                             Task {
                                 if let data = try? await newValue?.loadTransferable(type: Data.self),
                                    let uiImage = UIImage(data: data) {
@@ -257,12 +258,12 @@ struct PostView: View {
 
 struct DarkModePreview: PreviewProvider {
     static var previews: some View {
-        PostView()
+        PostView(pincode: "560001")
             .preferredColorScheme(.dark)
     }
 }
 
 #Preview {
-    PostView()
+    PostView(pincode: "560001")
         .preferredColorScheme(.light)
 }

@@ -8,15 +8,21 @@
 import SwiftUI
 import FirebaseAuth
 
-class AppState {
+class AppState: ObservableObject {
     
     static let shared = AppState()
     
     @Published var userSession: FirebaseAuth.User?
     @Published var isLoading: Bool = false
+    @Published var userPincode: String = ""
     
     init(){
         self.userSession = Auth.auth().currentUser
+    }
+    
+    func updatePincode(_ pincode: String) {
+        self.userPincode = pincode
+        print("DEBUG: AppState updated with pincode: \(pincode)")
     }
     
     func signIn(email: String, password: String, completion: @escaping (User.ID) -> Void) async throws {

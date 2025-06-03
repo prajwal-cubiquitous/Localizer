@@ -16,7 +16,8 @@ extension Animation {
     }
     
     static func easeInOut(duration: Double = 0.3) -> Animation {
-        Animation.easeInOut(duration: duration)
+        // Using the SwiftUI built-in ease function instead of calling our own method
+        return Animation.timingCurve(0.45, 0, 0.55, 1, duration: duration)
     }
 }
 

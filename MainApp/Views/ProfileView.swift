@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct ProfileView: View {
+    let pincode: String
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @State private var isEditingProfile = false
@@ -24,15 +25,6 @@ struct ProfileView: View {
     
     // Computed property to safely get current user
     private var currentUser: LocalUser? {
-        // Log the count of users found to help debug
-        if !localUsers.isEmpty {
-            print("DEBUG: Found \(localUsers.count) users in ProfileView")
-            for user in localUsers {
-                print("DEBUG: User \(user.name) (\(user.id)) available in ProfileView")
-            }
-        } else {
-            print("DEBUG: No users found in ProfileView")
-        }
         return localUsers.first
     }
     
@@ -95,20 +87,7 @@ struct ProfileView: View {
                                 }
                             }
                             .padding(.top, 16)
-                        } else {
-                            VStack(spacing: 15) {
-                                Text("No Profile Available")
-                                    .font(.title3)
-                                    .foregroundStyle(.secondary)
-                                    
-                                // Add a debug button to create a test user
-                                Button("Create Test Profile") {
-                                    createTestUser()
-                                }
-                                .buttonStyle(.borderedProminent)
-                            }
-                        }
-                        
+                        }                        
                         // Edit profile button
                         if currentUser != nil {
                             Button {
@@ -211,49 +190,6 @@ struct ProfileView: View {
             .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white)
         }
         .buttonStyle(PlainButtonStyle())
-    }
-    
-    /// Creates a test user in SwiftData for debugging purposes
-    private func createTestUser() {
-        print("DEBUG: Creating test user in SwiftData")
-        
-        // First clear any existing users
-        let fetchDescriptor = FetchDescriptor<LocalUser>()
-        do {
-            let existingUsers = try modelContext.fetch(fetchDescriptor)
-            print("DEBUG: Found \(existingUsers.count) existing users before creating test user")
-            
-            // Delete any existing users
-            for user in existingUsers {
-                modelContext.delete(user)
-                print("DEBUG: Deleted user: \(user.name)")
-            }
-            
-            // Create a new test user
-            let testUser = LocalUser(
-                id: "test-user-id-\(Date().timeIntervalSince1970)",
-                name: "Test User",
-                username: "testuser", 
-                email: "test@example.com",
-                bio: "This is a test user created for debugging",
-                profileImageUrl: "",
-                postCount: 5,
-                likedCount: 10,
-                commentCount: 3
-            )
-            
-            // Insert and save the test user
-            modelContext.insert(testUser)
-            try modelContext.save()
-            print("DEBUG: Successfully created and saved test user")
-            
-            // Force UI refresh
-            debugMessage = "User created: \(Date().formatted())"
-            
-        } catch {
-            print("DEBUG: Error creating test user: \(error.localizedDescription)")
-            debugMessage = "Error: \(error.localizedDescription)"
-        }
     }
     
     /// Refreshes user data from Firestore and updates SwiftData using AuthViewModel's fetchAndStoreUser function

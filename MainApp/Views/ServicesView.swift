@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ServicesView: View {
+    let pincode: String
     @Environment(\.colorScheme) private var colorScheme
     
     private let services = [
@@ -138,5 +139,5 @@ struct ServicesView: View {
 }
 
 #Preview {
-    ServicesView()
+    ServicesView(pincode: "560001")
 }

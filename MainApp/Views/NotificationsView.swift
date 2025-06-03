@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NotificationsView: View {
+    let pincode: String
     @Environment(\.colorScheme) private var colorScheme
     
     // Sample notification data
@@ -141,5 +142,5 @@ enum NotificationType {
 }
 
 #Preview {
-    NotificationsView()
+    NotificationsView(pincode: "560001")
 }

@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct NewsFeedView: View {
+    let pincode: String
     @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var appState: AppState
     
     var body: some View {
         NavigationStack {
@@ -42,6 +44,9 @@ struct NewsFeedView: View {
                 }
             }
             .background(colorScheme == .dark ? Color.black : Color.white)
+        }
+        .onAppear {
+            print("DEBUG: NewsFeedView appeared with pincode: \(pincode)")
         }
     }
     
@@ -77,7 +82,7 @@ struct NewsFeedView: View {
             }
             
             // Content
-            Text("This is a sample news feed post #\(index). It contains some random text to demonstrate the layout and design of the news feed.")
+            Text("This is a sample news feed post #\(pincode). It contains some random text to demonstrate the layout and design of the news feed.")
                 .font(.subheadline)
                 .lineLimit(3)
             
@@ -144,5 +149,5 @@ struct NewsFeedView: View {
 }
 
 #Preview {
-    NewsFeedView()
+    NewsFeedView(pincode: "560043")
 }
