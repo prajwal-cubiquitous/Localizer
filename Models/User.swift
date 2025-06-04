@@ -44,3 +44,37 @@ class LocalUser {
         self.commentCount = commentCount
     }
 }
+
+extension LocalUser {
+    static func from(user: User) -> LocalUser {
+        return LocalUser(
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            bio: user.bio,
+            profileImageUrl: user.profileImageUrl,
+            postCount: user.postsCount,
+            likedCount: user.likedCount,
+            commentCount: user.commentsCount
+        )
+    }
+    
+    func toUser() -> User {
+        return User(
+            id: self.id,
+            name: self.name,
+            email: self.email,
+            username: self.username,
+            bio: self.bio ?? "",
+            profileImageUrl: self.profileImageUrl ?? "",
+            postsCount: self.postCount,
+            likedCount: self.likedCount,
+            commentsCount: self.commentCount
+        )
+    }
+}
+
+struct DummylocalUser{
+    static var user1 = LocalUser(id: "kfjiehoi342", name: "Parthik", username: "padda", email: "padda@gmail.com", bio: "i am padda", profileImageUrl: "klodsfjlds", postCount: 20, likedCount: 10, commentCount: 5)
+}
