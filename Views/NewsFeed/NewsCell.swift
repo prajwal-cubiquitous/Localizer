@@ -49,7 +49,7 @@ struct NewsCell: View {
                 .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(localNews.user?.username ?? "Unknown User")
+                    Text(localNews.user?.name ?? "Unknown User")
                         .font(.headline)
                         .foregroundColor(.primary)
                     

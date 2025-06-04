@@ -30,7 +30,7 @@ struct LocalizerApp: App {
                 .tint(.accentColor)
                 .dynamicTypeSize(.medium)
         }
-        .modelContainer(for: [LocalUser.self])
+        .modelContainer(for: [LocalUser.self, LocalNews.self, LocalVote.self])
         
     }
     

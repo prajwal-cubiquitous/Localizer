@@ -7,11 +7,13 @@
 
 import FirebaseAuth
 import Firebase
+import FirebaseFirestore
 import SwiftUI
 import PhotosUI
 import SensitiveContentAnalysis
 import UniformTypeIdentifiers
 import AVFoundation
+import SwiftData
 
 enum MediaItem: Identifiable, Equatable {
     case image(UIImage)
@@ -142,27 +144,48 @@ class PostViewModel: ObservableObject {
     }
     
     func uploadNews(caption: String) async throws {
-        guard let uid = Auth.auth().currentUser?.uid else {
-            return
-        }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        // Fetch user details so we can embed them in the News document
+        let author = try await fetchCurrentUser(uid)
         
         // Get current location
         let currentPincode = await getCurrentPincode()
         
-        let news = News(ownerUid: uid, caption: caption, timestamp: Timestamp(), likesCount: 0, commentsCount: 0, postalCode: currentPincode)
+        let news = News(ownerUid: uid,
+                        caption: caption,
+                        timestamp: Timestamp(),
+                        likesCount: 0,
+                        commentsCount: 0,
+                        postalCode: currentPincode,
+                        user: author)
+        
         try await NewsService.uploadNews(news)
+        
+        // Increment post count in Firestore & SwiftData
+        try await incrementPostCount(for: uid)
     }
     
     func uploadNewsimages(caption: String, imageURLS: [String]?) async throws {
-        guard let uid = Auth.auth().currentUser?.uid else {
-            return
-        }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let author = try await fetchCurrentUser(uid)
         
         // Get current location
         let currentPincode = await getCurrentPincode()
         
-        let news = News(ownerUid: uid, caption: caption, timestamp: Timestamp(), likesCount: 0, commentsCount: 0, postalCode: currentPincode, newsImageURLs: imageURLS)
+        let news = News(ownerUid: uid,
+                        caption: caption,
+                        timestamp: Timestamp(),
+                        likesCount: 0,
+                        commentsCount: 0,
+                        postalCode: currentPincode,
+                        user: author,
+                        newsImageURLs: imageURLS)
         try await NewsService.uploadNews(news)
+        
+        // Increment post count
+        try await incrementPostCount(for: uid)
     }
     
     private func getCurrentPincode() async -> String {
@@ -443,6 +466,40 @@ class PostViewModel: ObservableObject {
         try await exportSession.export(to: outputURL, as: .mov)
         
         return outputURL
+    }
+    
+    // MARK: - Post Count Handling
+    private func incrementPostCount(for uid: String) async throws {
+        let db = Firestore.firestore()
+        let userRef = db.collection("users").document(uid)
+        // Atomically increment in Firestore
+        try await userRef.updateData(["postsCount": FieldValue.increment(Int64(1))])
+        
+        // Update local SwiftData cache (if available) on main actor
+        if let context = AuthViewModel.shared.modelContext {
+            do {
+                let fetch = FetchDescriptor<LocalUser>(
+                    predicate: #Predicate { $0.id == uid },
+//                    fetchLimit: 1
+                )
+                if let localUser = try context.fetch(fetch).first {
+                    localUser.postCount += 1
+                }
+            } catch {
+                print("[PostVM] Failed to update local postCount: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func fetchCurrentUser(_ uid: String) async throws -> User {
+        let docRef = Firestore.firestore().collection("users").document(uid)
+        let snapshot = try await docRef.getDocument()
+        guard let user = try? snapshot.data(as: User.self) else {
+            throw NSError(domain: "PostViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode current user"])
+        }
+        return user
     }
     
     // MARK: - Validation

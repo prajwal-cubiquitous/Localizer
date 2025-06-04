@@ -26,7 +26,7 @@ class AuthViewModel: ObservableObject {
     let db = Firestore.firestore()
     
     // model context for swift data - only one instance needed
-    private var modelContext: ModelContext?
+    var modelContext: ModelContext?
     
     // Private init for singleton pattern
     private init() {
