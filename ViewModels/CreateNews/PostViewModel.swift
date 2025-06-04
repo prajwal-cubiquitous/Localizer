@@ -223,7 +223,16 @@ class PostViewModel: ObservableObject {
     }
     
     func addTrimmedVideo(_ trimmedURL: URL) {
-        let thumbnail = generateThumbnail(from: trimmedURL)
+        var thumbnail: UIImage?
+        if #available(iOS 18.0, *) {
+            Task {
+                thumbnail = await generateThumbnailAsync(from: trimmedURL)
+                // Use thumbnail here
+            }
+        } else {
+            thumbnail = generateThumbnail(from: trimmedURL)
+            // Use thumbnail here
+        }
         
         mediaItems.append(.video(trimmedURL, thumbnail: thumbnail))
         videos.append(trimmedURL)
@@ -310,13 +319,13 @@ class PostViewModel: ObservableObject {
         return duration.seconds
     }
     
+    @available(iOS, deprecated: 18.0, message: "Use async thumbnail generation instead")
     func generateThumbnail(from videoURL: URL) -> UIImage? {
         print("DEBUG: Generating thumbnail for video: \(videoURL)")
         let asset = AVURLAsset(url: videoURL)
         let imageGenerator = AVAssetImageGenerator(asset: asset)
         imageGenerator.appliesPreferredTrackTransform = true
         
-        // Use synchronous approach since we're in a sync function
         do {
             let cgImage = try imageGenerator.copyCGImage(at: .zero, actualTime: nil)
             print("DEBUG: Successfully generated thumbnail")
@@ -326,6 +335,24 @@ class PostViewModel: ObservableObject {
             return nil
         }
     }
+    @available(iOS 18.0, *)
+    func generateThumbnailAsync(from videoURL: URL) async -> UIImage? {
+        let asset = AVURLAsset(url: videoURL)
+        let imageGenerator = AVAssetImageGenerator(asset: asset)
+        imageGenerator.appliesPreferredTrackTransform = true
+
+        return await withCheckedContinuation { continuation in
+            imageGenerator.generateCGImageAsynchronously(for: .zero) { cgImage, actualTime, error in
+                if let cgImage = cgImage {
+                    continuation.resume(returning: UIImage(cgImage: cgImage))
+                } else {
+                    print("Failed to generate thumbnail: \(error?.localizedDescription ?? "Unknown error")")
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
+    }
+
     
     func trimVideo(from url: URL, startTime: Double, endTime: Double) async throws -> URL {
         let asset = AVURLAsset(url: url)

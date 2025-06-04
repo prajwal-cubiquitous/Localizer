@@ -9,6 +9,7 @@ import Foundation
 import CoreLocation
 import Combine
 
+
 class LocationManager: NSObject, ObservableObject {
     static let shared = LocationManager()
     
@@ -38,11 +39,15 @@ class LocationManager: NSObject, ObservableObject {
     // Store the completion handler to call it when the location is found
     private var pincodeCompletionHandler: ((String?) -> Void)?
     
+    
     func getCurrentPincode(completion: @escaping (String?) -> Void) {
         // Store the completion handler for later use
-        self.pincodeCompletionHandler = completion
-        
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            self?.pincodeCompletionHandler = completion
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.isLoading = true
             self.error = nil
         }
