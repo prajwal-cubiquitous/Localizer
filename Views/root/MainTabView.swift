@@ -17,6 +17,7 @@ struct MainTabView: View {
     @State private var pincode: String = ""
     @State private var isLocationReady: Bool = false
     @State private var locationError: String? = nil
+    @State private var showPostView = false
     @Environment(\.colorScheme) private var colorScheme
     // Use the shared singleton instead of creating a new instance
     @StateObject var AuthviewModel = AuthViewModel.shared
@@ -110,9 +111,8 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            // Post Tab
-            PostView(pincode: pincode)
-                .environmentObject(appState)
+            // Create Post Tab - Now just triggers sheet
+            Color.clear
                 .tabItem {
                     Label {
                         Text("Post")
@@ -155,6 +155,20 @@ struct MainTabView: View {
                 .tag(4)
         }
         .tint(colorScheme == .dark ? .white : .blue)
+        .onChange(of: selectedTab) { oldValue, newValue in
+            if newValue == 2 {
+                showPostView = true
+                // Switch back to previous tab to avoid staying on empty tab
+                selectedTab = oldValue
+            }
+        }
+        .sheet(isPresented: $showPostView) {
+            PostViewWrapper(pincode: pincode) { shouldNavigateToNewsFeed in
+                if shouldNavigateToNewsFeed {
+                    selectedTab = 0 // Navigate to NewsFeed tab
+                }
+            }
+        }
         .onAppear {
             // Customize tab bar appearance for both light and dark mode
             let tabBarAppearance = UITabBarAppearance()

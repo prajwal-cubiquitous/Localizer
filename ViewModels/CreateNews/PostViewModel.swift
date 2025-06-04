@@ -49,6 +49,9 @@ class PostViewModel: ObservableObject {
     @Published var showError: Bool = false
     @Published var isProcessing: Bool = false
     @Published var isPosting: Bool = false
+    @Published var showSuccessAlert: Bool = false
+    @Published var showFailureAlert: Bool = false
+    @Published var shouldNavigateToNewsFeed: Bool = false
     
     // MARK: - Post Creation
     
@@ -72,11 +75,12 @@ class PostViewModel: ObservableObject {
                 caption = ""
                 clearAllMedia()
                 isPosting = false
+                showSuccessAlert = true
             }
         } catch {
             await MainActor.run {
                 errorMessage = "Failed to create post: \(error.localizedDescription)"
-                showError = true
+                showFailureAlert = true
                 isPosting = false
             }
         }
@@ -134,12 +138,7 @@ class PostViewModel: ObservableObject {
         let currentPincode = await getCurrentPincode()
         
         let news = News(ownerUid: uid, caption: caption, timestamp: Timestamp(), likesCount: 0, commentsCount: 0, postalCode: currentPincode)
-        do{
-            try await NewsService.uploadNews(news)
-            self.isPosting = false
-        }catch{
-            print("failed to upload the news \(error.localizedDescription)")
-        }
+        try await NewsService.uploadNews(news)
     }
     
     func uploadNewsimages(caption: String, imageURLS: [String]?) async throws {
@@ -276,7 +275,7 @@ class PostViewModel: ObservableObject {
         do {
             try data.write(to: tempInputURL)
             
-            let asset = AVAsset(url: tempInputURL)
+            let asset = AVURLAsset(url: tempInputURL)
             guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality) else {
                 return nil
             }
@@ -284,13 +283,15 @@ class PostViewModel: ObservableObject {
             exportSession.outputURL = tempOutputURL
             exportSession.outputFileType = .mov
             
-            await exportSession.export()
-            
-            if exportSession.status == .completed {
+            do {
+                try await exportSession.export(to: tempOutputURL, as: .mov)
                 let compressedData = try Data(contentsOf: tempOutputURL)
                 try? FileManager.default.removeItem(at: tempInputURL)
                 try? FileManager.default.removeItem(at: tempOutputURL)
                 return compressedData
+            } catch {
+                print("Video compression export error: \(error.localizedDescription)")
+                return nil
             }
         } catch {
             print("Video compression error: \(error.localizedDescription)")
@@ -315,6 +316,7 @@ class PostViewModel: ObservableObject {
         let imageGenerator = AVAssetImageGenerator(asset: asset)
         imageGenerator.appliesPreferredTrackTransform = true
         
+        // Use synchronous approach since we're in a sync function
         do {
             let cgImage = try imageGenerator.copyCGImage(at: .zero, actualTime: nil)
             print("DEBUG: Successfully generated thumbnail")
@@ -326,11 +328,15 @@ class PostViewModel: ObservableObject {
     }
     
     func trimVideo(from url: URL, startTime: Double, endTime: Double) async throws -> URL {
-        let asset = AVAsset(url: url)
+        let asset = AVURLAsset(url: url)
         let composition = AVMutableComposition()
         
-        guard let videoTrack = asset.tracks(withMediaType: .video).first,
-              let audioTrack = asset.tracks(withMediaType: .audio).first,
+        // Use new iOS 16+ APIs
+        let videoTracks = try await asset.loadTracks(withMediaType: .video)
+        let audioTracks = try await asset.loadTracks(withMediaType: .audio)
+        
+        guard let videoTrack = videoTracks.first,
+              let audioTrack = audioTracks.first,
               let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
               let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
             throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create composition tracks"])
@@ -353,11 +359,8 @@ class PostViewModel: ObservableObject {
         exportSession.outputFileType = .mov
         exportSession.timeRange = timeRange
         
-        await exportSession.export()
-        
-        if let error = exportSession.error {
-            throw error
-        }
+        // Use new iOS 18 API
+        try await exportSession.export(to: outputURL, as: .mov)
         
         return outputURL
     }

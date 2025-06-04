@@ -123,7 +123,7 @@ struct VideoTrimmerView: View {
         }
 
         Task {
-            let originalDuration = try await asset.load(.duration).seconds
+            _ = try await asset.load(.duration).seconds // Use underscore for unused originalDuration
             duration = endTime - startTime
             await player?.seek(to: CMTime(seconds: startTime, preferredTimescale: 600))
         }

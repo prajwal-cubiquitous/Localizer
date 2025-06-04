@@ -9,10 +9,26 @@ import SwiftUI
 import PhotosUI
 import AVKit
 
+struct PostViewWrapper: View {
+    let pincode: String
+    let onNavigationRequested: (Bool) -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        PostView(pincode: pincode, onNavigationRequested: onNavigationRequested)
+    }
+}
+
 struct PostView: View {
     let pincode: String
+    let onNavigationRequested: ((Bool) -> Void)?
     @Environment(\.presentationMode) private var presentationMode
     @StateObject var viewModel = PostViewModel()
+    
+    init(pincode: String, onNavigationRequested: ((Bool) -> Void)? = nil) {
+        self.pincode = pincode
+        self.onNavigationRequested = onNavigationRequested
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -141,7 +157,7 @@ struct PostView: View {
                             )
                             .cornerRadius(12)
                         }
-                        .onChange(of: viewModel.photosPicked) { oldValue, newValue in
+                        .onChange(of: viewModel.photosPicked) { _, newValue in
                             Task {
                                 await viewModel.processPickedPhotos(newValue)
                                 viewModel.photosPicked.removeAll()
@@ -163,7 +179,6 @@ struct PostView: View {
                 Button(action: {
                     Task {
                         await viewModel.createPost()
-                        presentationMode.wrappedValue.dismiss()
                     }
                 }) {
                     HStack {
@@ -204,6 +219,19 @@ struct PostView: View {
                 )
             }
         }
+        .alert("Success!", isPresented: $viewModel.showSuccessAlert) {
+            Button("OK") {
+                presentationMode.wrappedValue.dismiss()
+                onNavigationRequested?(true)
+            }
+        } message: {
+            Text("Your post has been shared successfully!")
+        }
+        .alert("Error", isPresented: $viewModel.showFailureAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage)
+        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -227,7 +255,7 @@ struct MediaPreviewCard: View {
                     .clipped()
                     .cornerRadius(12)
                 
-            case .video(let url, let thumbnail):
+            case .video(_, let thumbnail):
                 ZStack {
                     if let thumbnail = thumbnail {
                         Image(uiImage: thumbnail)
