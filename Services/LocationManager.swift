@@ -42,35 +42,47 @@ class LocationManager: NSObject, ObservableObject {
         // Store the completion handler for later use
         self.pincodeCompletionHandler = completion
         
-        isLoading = true
-        error = nil
+        DispatchQueue.main.async {
+            self.isLoading = true
+            self.error = nil
+        }
         
         // Check if we already have a pincode
         if !pincode.isEmpty {
-            isLoading = false
+            DispatchQueue.main.async {
+                self.isLoading = false
+            }
             completion(pincode)
             return
         }
         
         // Check authorization status
         let status = locationManager.authorizationStatus
-        authorizationStatus = status
+        DispatchQueue.main.async {
+            self.authorizationStatus = status
+        }
         
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
             locationManager.requestLocation()
             // The actual location fetching is handled in the delegate methods
         case .denied, .restricted:
-            isLoading = false
-            error = NSError(domain: "LocationManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Location access denied"])
+            DispatchQueue.main.async {
+                self.isLoading = false
+                self.error = NSError(domain: "LocationManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Location access denied"])
+            }
             completion(nil)
         case .notDetermined:
             requestLocationPermission()
-            isLoading = false
+            DispatchQueue.main.async {
+                self.isLoading = false
+            }
             // Don't call completion here, we'll wait for authorization status to change
         @unknown default:
-            isLoading = false
-            error = NSError(domain: "LocationManager", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unknown authorization status"])
+            DispatchQueue.main.async {
+                self.isLoading = false
+                self.error = NSError(domain: "LocationManager", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unknown authorization status"])
+            }
             completion(nil)
         }
     }
@@ -123,8 +135,10 @@ class LocationManager: NSObject, ObservableObject {
 extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else {
-            isLoading = false
-            error = NSError(domain: "LocationManager", code: 5, userInfo: [NSLocalizedDescriptionKey: "No location data"])
+            DispatchQueue.main.async {
+                self.isLoading = false
+                self.error = NSError(domain: "LocationManager", code: 5, userInfo: [NSLocalizedDescriptionKey: "No location data"])
+            }
             return
         }
         
@@ -162,7 +176,9 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
+        DispatchQueue.main.async {
+            self.authorizationStatus = manager.authorizationStatus
+        }
         
         if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
             locationManager.requestLocation()

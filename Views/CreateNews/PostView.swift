@@ -7,16 +7,12 @@
 
 import SwiftUI
 import PhotosUI
+import AVKit
 
 struct PostView: View {
     let pincode: String
     @Environment(\.presentationMode) private var presentationMode
-    @Environment(\.colorScheme) private var colorScheme
     @StateObject var viewModel = PostViewModel()
-    @State private var postContent = ""
-    @State private var selectedImage: UIImage?
-    @State private var selectedItem: PhotosPickerItem?
-    @State private var isPosting = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -56,7 +52,7 @@ struct PostView: View {
                             .foregroundStyle(.primary)
                         
                         ZStack(alignment: .topLeading) {
-                            TextEditor(text: $postContent)
+                            TextEditor(text: $viewModel.caption)
                                 .font(.system(size: 16))
                                 .padding(16)
                                 .frame(minHeight: 120)
@@ -64,7 +60,7 @@ struct PostView: View {
                                 .background(Color(UIColor.secondarySystemGroupedBackground))
                                 .cornerRadius(12)
                             
-                            if postContent.isEmpty {
+                            if viewModel.caption.isEmpty {
                                 Text("Share your thoughts...")
                                     .font(.system(size: 16))
                                     .foregroundStyle(.secondary)
@@ -76,43 +72,57 @@ struct PostView: View {
                     }
                     .padding(.horizontal, 20)
                     
-                    // Add media section
+                    // Media Section
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Add Media")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        
-                        // Media preview
-                        if let selectedImage {
-                            Image(uiImage: selectedImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(height: 240)
-                                .frame(maxWidth: .infinity)
-                                .clipped()
-                                .cornerRadius(12)
-                                .overlay(alignment: .topTrailing) {
-                                    Button(action: {
-                                        self.selectedImage = nil
-                                        self.selectedItem = nil
-                                    }) {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .font(.title2)
-                                            .foregroundStyle(.white)
-                                            .background(Color.black.opacity(0.6))
-                                            .clipShape(Circle())
-                                            .padding(12)
-                                    }
+                        HStack {
+                            Text("Media")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(.primary)
+                            
+                            Spacer()
+                            
+                            if viewModel.isProcessing {
+                                HStack(spacing: 8) {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                        .scaleEffect(0.8)
+                                    Text("Processing...")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
-                        } else {
-                            // Add image button when no image selected
-                            PhotosPicker(selection: $selectedItem, matching: .images) {
-                                VStack(spacing: 12) {
-                                    Image(systemName: "photo.badge.plus")
-                                        .font(.system(size: 40))
-                                        .foregroundStyle(.blue)
-                                    
-                                    Text("Add Photo")
+                            }
+                        }
+                        
+                        // Media Grid
+                        if !viewModel.mediaItems.isEmpty {
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 12) {
+                                ForEach(Array(viewModel.mediaItems.enumerated()), id: \.offset) { index, item in
+                                    MediaPreviewCard(
+                                        item: item,
+                                        onRemove: {
+                                            viewModel.removeMediaItem(at: index)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Add Media Button
+                        PhotosPicker(
+                            selection: $viewModel.photosPicked,
+                            maxSelectionCount: 10,
+                            matching: .any(of: [.images, .videos])
+                        ) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(.blue)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Add Photos & Videos")
                                         .font(.system(size: 16, weight: .medium))
                                         .foregroundStyle(.blue)
                                     
@@ -120,42 +130,25 @@ struct PostView: View {
                                         .font(.system(size: 14))
                                         .foregroundStyle(.secondary)
                                 }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 160)
-                                .background(Color(UIColor.secondarySystemGroupedBackground))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.blue.opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [8]))
-                                )
-                                .cornerRadius(12)
+                                
+                                Spacer()
                             }
+                            .padding(16)
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                            )
+                            .cornerRadius(12)
                         }
-                        
-                        // Alternative: Add image/video button below preview
-                        if selectedImage != nil {
-                            PhotosPicker(selection: $selectedItem, matching: .images) {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "photo.badge.plus")
-                                        .font(.system(size: 20))
-                                        .foregroundStyle(.blue)
-                                    
-                                    Text("Change Photo")
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundStyle(.blue)
-                                }
-                                .padding(.vertical, 12)
+                        .onChange(of: viewModel.photosPicked) { oldValue, newValue in
+                            Task {
+                                await viewModel.processPickedPhotos(newValue)
+                                viewModel.photosPicked.removeAll()
                             }
                         }
                     }
                     .padding(.horizontal, 20)
-                    .onChange(of: selectedItem) { oldValue, newValue in
-                        Task {
-                            if let data = try? await newValue?.loadTransferable(type: Data.self),
-                               let uiImage = UIImage(data: data) {
-                                selectedImage = uiImage
-                            }
-                        }
-                    }
                     
                     Spacer(minLength: 100)
                 }
@@ -168,16 +161,19 @@ struct PostView: View {
                 Divider()
                 
                 Button(action: {
-                    handlePost()
+                    Task {
+                        await viewModel.createPost()
+                        presentationMode.wrappedValue.dismiss()
+                    }
                 }) {
                     HStack {
-                        if isPosting {
+                        if viewModel.isPosting {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                 .scaleEffect(0.8)
                         }
                         
-                        Text(isPosting ? "Posting..." : "Share Post")
+                        Text(viewModel.isPosting ? "Posting..." : "Share Post")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.white)
                     }
@@ -185,33 +181,87 @@ struct PostView: View {
                     .frame(height: 50)
                     .background(
                         RoundedRectangle(cornerRadius: 25)
-                            .fill(isFormValid ? Color.blue : Color.secondary)
+                            .fill(viewModel.isFormValid ? Color.blue : Color.secondary)
                     )
                     .padding(.horizontal, 20)
                 }
-                .disabled(!isFormValid || isPosting)
+                .disabled(!viewModel.isFormValid || viewModel.isPosting)
                 .padding(.vertical, 16)
             }
             .background(Color(UIColor.systemBackground))
         }
         .background(Color(UIColor.systemGroupedBackground))
-    }
-    
-    private func handlePost() {
-        isPosting = true
-        
-        // Simulate posting delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            postContent = ""
-            selectedImage = nil
-            selectedItem = nil
-            isPosting = false
-            presentationMode.wrappedValue.dismiss()
+        .sheet(isPresented: $viewModel.isShowingVideoTrimmer) {
+            if let videoURL = viewModel.selectedVideoURL {
+                VideoTrimmerView(
+                    viewModel: viewModel,
+                    videoURL: videoURL,
+                    startTime: 0,
+                    endTime: 30, // Default 30 seconds
+                    onTrimComplete: { trimmedURL in
+                        viewModel.addTrimmedVideo(trimmedURL)
+                    }
+                )
+            }
+        }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage)
         }
     }
+}
+
+struct MediaPreviewCard: View {
+    let item: MediaItem
+    let onRemove: () -> Void
     
-    private var isFormValid: Bool {
-        !postContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            switch item {
+            case .image(let image):
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 120)
+                    .clipped()
+                    .cornerRadius(12)
+                
+            case .video(let url, let thumbnail):
+                ZStack {
+                    if let thumbnail = thumbnail {
+                        Image(uiImage: thumbnail)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 120)
+                            .clipped()
+                            .cornerRadius(12)
+                    } else {
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.3))
+                            .frame(height: 120)
+                            .cornerRadius(12)
+                    }
+                    
+                    // Video play icon overlay
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 30))
+                        .foregroundStyle(.white)
+                        .background(Color.black.opacity(0.6))
+                        .clipShape(Circle())
+                }
+            }
+            
+            // Remove button
+            Button(action: onRemove) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(.white)
+                    .background(Color.black.opacity(0.6))
+                    .clipShape(Circle())
+                    .padding(8)
+            }
+        }
     }
 }
 
