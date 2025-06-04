@@ -219,7 +219,7 @@ struct EditProfileView: View {
     @Binding var isPresented: Bool
     var localUser: LocalUser
     var modelContext: ModelContext
-    
+    @EnvironmentObject var AuthViewModel : AuthViewModel
     @State private var name: String
     @State private var bio: String
     
@@ -299,6 +299,9 @@ struct EditProfileView: View {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Save") {
                             // Update the LocalUser with new values
+                            Task{
+                               await  AuthViewModel.updateUserProfile(userID: localUser.id, name: name, bio: bio)
+                            }
                             localUser.name = name
                             localUser.bio = bio
                             

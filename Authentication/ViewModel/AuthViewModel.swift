@@ -314,6 +314,28 @@ class AuthViewModel: ObservableObject {
             print("Recovery attempt also failed: ")
         }
     }
+    
+    func updateUserProfile(userID: String, name: String, bio: String) async {
+            
+            let data: [String: Any] = [
+                "name": name,
+                "bio": bio,
+                "lastUpdated": FieldValue.serverTimestamp()
+            ]
+            
+            db.collection("users").document(userID).updateData(data) { [weak self] error in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                                        
+                    if let error = error {
+                        self.errorMessage = AuthError.custom(message: error.localizedDescription)
+                        print("DEBUG: Error updating user profile: \(error.localizedDescription)")
+                    } else {
+                        print("DEBUG: User profile successfully updated")
+                    }
+                }
+            }
+        }
 }
 
 enum AuthState {
