@@ -41,9 +41,9 @@ class AuthViewModel: ObservableObject {
     
     // Computed property for form validation
     var isSignupFormValid: Bool {
-        !email.isEmpty && 
-        !password.isEmpty && 
-        password == confirmPassword && 
+        !email.isEmpty &&
+        !password.isEmpty &&
+        password == confirmPassword &&
         password.count >= 8 &&
         !fullName.isEmpty
     }
@@ -120,7 +120,7 @@ class AuthViewModel: ObservableObject {
     func uploadUserData(user: User){
         do{
             try db.collection("users").document(user.id).setData(from: user)
-//            fetchAndStoreUser(userId: user.id)
+            //            fetchAndStoreUser(userId: user.id)
         }catch{
             errorMessage = AuthError.custom(message: "Failed to upload user data")
         }
@@ -130,9 +130,9 @@ class AuthViewModel: ObservableObject {
         print("DEBUG: Fetching user data for ID: \(userId)")
         
         Firestore.firestore().collection("users").document(userId).getDocument { [weak self] snapshot, error in
-            guard let self = self else { 
+            guard let self = self else {
                 print("DEBUG: Self is nil in fetchAndStoreUser completion")
-                return 
+                return
             }
             
             if let error = error {
@@ -316,26 +316,19 @@ class AuthViewModel: ObservableObject {
     }
     
     func updateUserProfile(userID: String, name: String, bio: String) async {
-            
-            let data: [String: Any] = [
-                "name": name,
-                "bio": bio,
-                "lastUpdated": FieldValue.serverTimestamp()
-            ]
-            
-            db.collection("users").document(userID).updateData(data) { [weak self] error in
-                DispatchQueue.main.async {
-                    guard let self = self else { return }
-                                        
-                    if let error = error {
-                        self.errorMessage = AuthError.custom(message: error.localizedDescription)
-                        print("DEBUG: Error updating user profile: \(error.localizedDescription)")
-                    } else {
-                        print("DEBUG: User profile successfully updated")
-                    }
-                }
-            }
+        
+        let data: [String: Any] = [
+            "name": name,
+            "bio": bio,
+            "lastUpdated": FieldValue.serverTimestamp()
+        ]
+        
+        do{
+            try await AppState.shared.updateUserData(userID: userID, data: data)
+        }catch{
+            self.errorMessage = AuthError.custom(message: error.localizedDescription)
         }
+    }
 }
 
 enum AuthState {
