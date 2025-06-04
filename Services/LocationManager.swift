@@ -43,8 +43,13 @@ class LocationManager: NSObject, ObservableObject {
     func getCurrentPincode(completion: @escaping (String?) -> Void) {
         // Store the completion handler for later use
         DispatchQueue.main.async { [weak self] in
-            self?.pincodeCompletionHandler = completion
+            self?.pincodeCompletionHandler = { value in
+                DispatchQueue.main.async {
+                    completion(value)
+                }
+            }
         }
+
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }

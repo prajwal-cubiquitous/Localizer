@@ -19,6 +19,15 @@ enum MediaItem: Identifiable, Equatable {
 
     var id: UUID { UUID() }
     
+    var videoURL: URL? {
+        switch self {
+        case .video(let url, _):
+            return url
+        case .image:
+            return nil
+        }
+    }
+    
     static func == (lhs: MediaItem, rhs: MediaItem) -> Bool {
         switch (lhs, rhs) {
         case (.image(let lhsImage), .image(let rhsImage)):
@@ -52,6 +61,9 @@ class PostViewModel: ObservableObject {
     @Published var showSuccessAlert: Bool = false
     @Published var showFailureAlert: Bool = false
     @Published var shouldNavigateToNewsFeed: Bool = false
+    
+    // Track which video is being re-trimmed
+    @Published var videoBeingRetrimmed: URL?
     
     // MARK: - Post Creation
     
@@ -188,6 +200,7 @@ class PostViewModel: ObservableObject {
                             await MainActor.run {
                                 print("DEBUG: Showing video trimmer for user selection")
                                 selectedVideoURL = tempURL
+                                videoBeingRetrimmed = nil // This is a new video, not a re-trim
                                 isShowingVideoTrimmer = true
                             }
                         }
@@ -223,28 +236,68 @@ class PostViewModel: ObservableObject {
     }
     
     func addTrimmedVideo(_ trimmedURL: URL) {
-        var thumbnail: UIImage?
-        if #available(iOS 18.0, *) {
-            Task {
+        print("DEBUG: Adding trimmed video: \(trimmedURL)")
+        
+        Task {
+            let thumbnail: UIImage?
+            if #available(iOS 18.0, *) {
                 thumbnail = await generateThumbnailAsync(from: trimmedURL)
-                // Use thumbnail here
+            } else {
+                thumbnail = generateThumbnail(from: trimmedURL)
             }
+            
+            await MainActor.run {
+                updateVideoInMediaItems(trimmedURL: trimmedURL, thumbnail: thumbnail)
+            }
+        }
+    }
+    
+    private func updateVideoInMediaItems(trimmedURL: URL, thumbnail: UIImage?) {
+        // Check if this is a re-trim of an existing video
+        if let videoBeingRetrimmed = videoBeingRetrimmed,
+           let index = mediaItems.firstIndex(where: { item in
+               if case .video(let url, _) = item {
+                   return url == videoBeingRetrimmed
+               }
+               return false
+           }) {
+            // Replace existing video
+            print("DEBUG: Replacing existing video at index \(index)")
+            
+            // Remove old video file
+            if case .video(let oldURL, _) = mediaItems[index] {
+                try? FileManager.default.removeItem(at: oldURL)
+                videos.removeAll { $0 == oldURL }
+            }
+            
+            // Update with new trimmed video
+            mediaItems[index] = .video(trimmedURL, thumbnail: thumbnail)
+            videos.append(trimmedURL)
         } else {
-            thumbnail = generateThumbnail(from: trimmedURL)
-            // Use thumbnail here
+            // Add new video
+            print("DEBUG: Adding new trimmed video")
+            mediaItems.append(.video(trimmedURL, thumbnail: thumbnail))
+            videos.append(trimmedURL)
         }
         
-        mediaItems.append(.video(trimmedURL, thumbnail: thumbnail))
-        videos.append(trimmedURL)
-        
+        // Clean up original video file if it was temporary
         if let originalURL = selectedVideoURL {
             try? FileManager.default.removeItem(at: originalURL)
         }
         
+        // Reset state
         selectedVideoURL = nil
+        videoBeingRetrimmed = nil
         isShowingVideoTrimmer = false
         
         print("DEBUG: Added trimmed video to media items. Total videos: \(videos.count)")
+    }
+    
+    func startVideoRetrimming(for videoURL: URL) {
+        print("DEBUG: Starting video re-trimming for: \(videoURL)")
+        selectedVideoURL = videoURL
+        videoBeingRetrimmed = videoURL
+        isShowingVideoTrimmer = true
     }
     
     func removeMediaItem(at index: Int) {

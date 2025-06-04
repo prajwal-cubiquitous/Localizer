@@ -120,6 +120,11 @@ struct PostView: View {
                                         item: item,
                                         onRemove: {
                                             viewModel.removeMediaItem(at: index)
+                                        },
+                                        onVideoTap: {
+                                            if let videoURL = item.videoURL {
+                                                viewModel.startVideoRetrimming(for: videoURL)
+                                            }
                                         }
                                     )
                                 }
@@ -211,8 +216,8 @@ struct PostView: View {
                 VideoTrimmerView(
                     viewModel: viewModel,
                     videoURL: videoURL,
-                    startTime: 0,
-                    endTime: 30, // Default 30 seconds
+                    initialStartTime: 0,
+                    initialEndTime: 30, // Default 30 seconds, will be adjusted based on actual video duration
                     onTrimComplete: { trimmedURL in
                         viewModel.addTrimmedVideo(trimmedURL)
                     }
@@ -243,6 +248,13 @@ struct PostView: View {
 struct MediaPreviewCard: View {
     let item: MediaItem
     let onRemove: () -> Void
+    let onVideoTap: (() -> Void)?
+    
+    init(item: MediaItem, onRemove: @escaping () -> Void, onVideoTap: (() -> Void)? = nil) {
+        self.item = item
+        self.onRemove = onRemove
+        self.onVideoTap = onVideoTap
+    }
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -256,28 +268,44 @@ struct MediaPreviewCard: View {
                     .cornerRadius(12)
                 
             case .video(_, let thumbnail):
-                ZStack {
-                    if let thumbnail = thumbnail {
-                        Image(uiImage: thumbnail)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 120)
-                            .clipped()
-                            .cornerRadius(12)
-                    } else {
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.3))
-                            .frame(height: 120)
-                            .cornerRadius(12)
+                Button(action: {
+                    onVideoTap?()
+                }) {
+                    ZStack {
+                        if let thumbnail = thumbnail {
+                            Image(uiImage: thumbnail)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(height: 120)
+                                .clipped()
+                                .cornerRadius(12)
+                        } else {
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.3))
+                                .frame(height: 120)
+                                .cornerRadius(12)
+                        }
+                        
+                        // Video overlay with better visibility
+                        ZStack {
+                            // Background blur for better contrast
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.black.opacity(0.6))
+                                .frame(width: 60, height: 40)
+                            
+                            VStack(spacing: 2) {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundStyle(.white)
+                                
+                                Text("Tap to edit")
+                                    .font(.system(size: 8, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.9))
+                            }
+                        }
                     }
-                    
-                    // Video play icon overlay
-                    Image(systemName: "play.circle.fill")
-                        .font(.system(size: 30))
-                        .foregroundStyle(.white)
-                        .background(Color.black.opacity(0.6))
-                        .clipShape(Circle())
                 }
+                .buttonStyle(PlainButtonStyle())
             }
             
             // Remove button
