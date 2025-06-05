@@ -169,6 +169,7 @@ class PostViewModel: ObservableObject {
     func uploadNewsimages(caption: String, imageURLS: [String]?) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
+
         let author = try await fetchCurrentUser(uid)
         
         // Get current location
