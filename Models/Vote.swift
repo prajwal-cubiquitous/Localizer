@@ -20,3 +20,20 @@ class LocalVote {
         self.timestamp = timestamp
     }
 }
+
+
+struct Vote: Identifiable, Codable {
+    var id: String { "\(userId)_\(postId)" } // Composite key
+    let postId: String
+    let userId: String
+    var voteType: Int // 1 = upvote, -1 = downvote, 0 = neutral
+    var timestamp: Date
+//
+//    // Optional: Firestore requires this initializer if you want custom decoding/encoding
+//    init(postId: String, userId: String, voteType: Int, timestamp: Date = .now) {
+//        self.postId = postId
+//        self.userId = userId
+//        self.voteType = voteType
+//        self.timestamp = timestamp
+//    }
+}

@@ -9,22 +9,12 @@ import SwiftUI
 import FirebaseFirestore
 
 struct NewsCell: View {
+    @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
-    @State private var voteState: VoteState = .none
-    @State private var likesCount: Int = 0
-    @State private var showingMenu: Bool = false
     
-    // Animation states for button scaling
-    @State private var upvoteScale: CGFloat = 1.0
-    @State private var downvoteScale: CGFloat = 1.0
-    
-    enum VoteState {
-        case upvoted, downvoted, none
-    }
     
     init(localNews: LocalNews) {
         self.localNews = localNews
-        self._likesCount = State(initialValue: localNews.likesCount)
     }
     
     var body: some View {
@@ -102,8 +92,8 @@ struct NewsCell: View {
                 .fixedSize(horizontal: false, vertical: true)
             
             // Image Placeholder or Actual Image
-            if let imageUrls = localNews.newsImageURLs, 
-               let firstImageUrl = imageUrls.first, 
+            if let imageUrls = localNews.newsImageURLs,
+               let firstImageUrl = imageUrls.first,
                !firstImageUrl.isEmpty {
                 AsyncImage(url: URL(string: firstImageUrl)) { image in
                     image
@@ -122,29 +112,33 @@ struct NewsCell: View {
                 HStack(spacing: 10) {
                     // Upvote Button
                     Button {
-                        handleUpvote()
+                        Task{
+                            await viewModel.handleUpvote(postId: localNews.id)
+                        }
                     } label: {
-                        Image(systemName: voteState == .upvoted ? "arrowshape.up.fill" : "arrowshape.up")
-                            .foregroundColor(voteState == .upvoted ? .red : .secondary)
+                        Image(systemName: viewModel.voteState == .upvoted ? "arrowshape.up.fill" : "arrowshape.up")
+                            .foregroundColor(viewModel.voteState == .upvoted ? .red : .secondary)
                             .font(.title3)
-                            .scaleEffect(upvoteScale)
+                            .scaleEffect(viewModel.upvoteScale)
                     }
                     .buttonStyle(PlainButtonStyle())
                     
                     // Vote Count
-                    Text("\(likesCount)")
+                    Text("\(viewModel.likesCount)")
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
                     
                     // Downvote Button
                     Button {
-                        handleDownvote()
+                        Task{
+                            await viewModel.handleDownvote(postId: localNews.id)
+                        }
                     } label: {
-                        Image(systemName: voteState == .downvoted ? "arrowshape.down.fill" : "arrowshape.down")
-                            .foregroundColor(voteState == .downvoted ? .purple : .secondary)
+                        Image(systemName: viewModel.voteState == .downvoted ? "arrowshape.down.fill" : "arrowshape.down")
+                            .foregroundColor(viewModel.voteState == .downvoted ? .purple : .secondary)
                             .font(.title3)
-                            .scaleEffect(downvoteScale)
+                            .scaleEffect(viewModel.downvoteScale)
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
@@ -187,61 +181,13 @@ struct NewsCell: View {
         .padding(16)
         .background(Color(UIColor.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 0))
+        .task {
+            await viewModel.fetchVotesStatus(postId: localNews.id)
+        }
     }
+    
     
     // MARK: - Voting Functions
-    
-    private func handleUpvote() {
-        // Scale animation
-        withAnimation(.easeInOut(duration: 0.1)) {
-            upvoteScale = 1.3
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeInOut(duration: 0.1)) {
-                upvoteScale = 1.0
-            }
-        }
-        
-        // Vote logic
-        switch voteState {
-        case .none:
-            voteState = .upvoted
-            likesCount += 1
-        case .upvoted:
-            voteState = .none
-            likesCount -= 1
-        case .downvoted:
-            voteState = .upvoted
-            likesCount += 2 // Remove downvote (-1) and add upvote (+1) = +2
-        }
-    }
-    
-    private func handleDownvote() {
-        // Scale animation
-        withAnimation(.easeInOut(duration: 0.1)) {
-            downvoteScale = 1.3
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeInOut(duration: 0.1)) {
-                downvoteScale = 1.0
-            }
-        }
-        
-        // Vote logic
-        switch voteState {
-        case .none:
-            voteState = .downvoted
-            likesCount -= 1
-        case .downvoted:
-            voteState = .none
-            likesCount += 1
-        case .upvoted:
-            voteState = .downvoted
-            likesCount -= 2 // Remove upvote (+1) and add downvote (-1) = -2
-        }
-    }
     
     // Computed property for time ago
     private var timeAgo: String {
