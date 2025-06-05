@@ -9,6 +9,7 @@ import SwiftUI
 import FirebaseFirestore
 
 struct NewsCell: View {
+    @State private var showingCommentsSheet = false
     @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
     
@@ -145,7 +146,7 @@ struct NewsCell: View {
                 
                 // Comment Button
                 Button {
-                    // Comment action
+                    showingCommentsSheet = true
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "message")
@@ -183,6 +184,10 @@ struct NewsCell: View {
         .clipShape(RoundedRectangle(cornerRadius: 0))
         .task {
             await viewModel.fetchVotesStatus(postId: localNews.id)
+        }
+        .sheet(isPresented: $showingCommentsSheet) {
+            CommentsView()
+                .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
     }
     
