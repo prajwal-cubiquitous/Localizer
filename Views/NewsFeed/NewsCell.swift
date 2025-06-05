@@ -186,7 +186,7 @@ struct NewsCell: View {
             await viewModel.fetchVotesStatus(postId: localNews.id)
         }
         .sheet(isPresented: $showingCommentsSheet) {
-            CommentsView()
+            CommentsView(localNews: localNews)
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
     }

@@ -135,6 +135,11 @@ struct CommentsView: View {
     @State private var comments: [Comment] = getSampleComments()
     @State private var newCommentText: String = ""
     @State private var replyingToComment: Comment? = nil
+    let localNews: LocalNews
+    
+    init(localNews: LocalNews) {
+        self.localNews = localNews
+    }
     
     @Environment(\.dismiss) var dismiss
 
@@ -264,6 +269,9 @@ struct CommentsView: View {
         } else {
             let newComment = Comment(userId: "sfgisdihfsfbsfsdfsd", username: "CurrentUser", text: trimmedText, profileImageName: "person.crop.circle.fill.badge.plus")
             comments.append(newComment)
+            Task{
+                try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
+            }
         }
         newCommentText = ""
         replyingToComment = nil
@@ -297,7 +305,7 @@ struct ContentView_CommentDemo: View {
             }
         }
         .sheet(isPresented: $showingCommentsSheet) {
-            CommentsView()
+            CommentsView(localNews: DummyLocalNews.News1)
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
 
