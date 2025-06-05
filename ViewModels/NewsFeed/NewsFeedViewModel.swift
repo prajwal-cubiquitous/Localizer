@@ -110,6 +110,11 @@ final class NewsFeedViewModel: ObservableObject {
                 // Create and insert LocalNews linked to its LocalUser (if available)
                 let localNews = LocalNews.from(news: news, user: localAuthor)
                 context.insert(localNews)
+                
+                // If we have a local author, add this news item to their newsItems relationship
+                if let author = localAuthor {
+                    author.newsItems.append(localNews)
+                }
             }
             
         } catch {

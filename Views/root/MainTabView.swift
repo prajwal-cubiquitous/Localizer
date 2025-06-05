@@ -78,6 +78,30 @@ struct MainTabView: View {
                 }
             }
         }
+        .onAppear {
+            print("DEBUG: MainTabView appeared")
+            
+            // Ensure the current user is loaded
+            if let sessionUserId = appState.userSession?.uid {
+                print("DEBUG: Session user ID in MainTabView: \(sessionUserId)")
+                
+                // Trigger user loading if not already done
+                Task { @MainActor in
+                    let users = try? modelContext.fetch(FetchDescriptor<LocalUser>())
+                    print("DEBUG: Found \(users?.count ?? 0) users in MainTabView")
+                    
+                    if users?.isEmpty == true {
+                        print("DEBUG: No users found, fetching current user")
+                        AuthviewModel.fetchAndStoreUser(userId: sessionUserId)
+                    } else if let users = users, !users.contains(where: { $0.id == sessionUserId }) {
+                        print("DEBUG: Current session user not found in local storage")
+                        AuthviewModel.fetchAndStoreUser(userId: sessionUserId)
+                    }
+                }
+            } else {
+                print("DEBUG: No session user in MainTabView")
+            }
+        }
     }
     
     // MARK: - Views

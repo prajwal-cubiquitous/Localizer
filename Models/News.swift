@@ -34,7 +34,24 @@ class LocalNews {
     var likesCount: Int
     var commentsCount: Int
     var postalCode: String
-    var newsImageURLs: [String]?
+    
+    // Store image URLs as JSON string to avoid CoreData array compatibility issues
+    private var newsImageURLsData: String?
+    
+    // Computed property to handle array conversion
+    var newsImageURLs: [String]? {
+        get {
+            guard let data = newsImageURLsData?.data(using: .utf8) else { return nil }
+            return try? JSONDecoder().decode([String].self, from: data)
+        }
+        set {
+            if let urls = newValue, !urls.isEmpty {
+                newsImageURLsData = try? String(data: JSONEncoder().encode(urls), encoding: .utf8)
+            } else {
+                newsImageURLsData = nil
+            }
+        }
+    }
     
     // ✅ Relationship to LocalUser
     var user: LocalUser?
@@ -57,8 +74,10 @@ class LocalNews {
         self.likesCount = likesCount
         self.commentsCount = commentsCount
         self.postalCode = postalCode
-        self.newsImageURLs = newsImageURLs
         self.user = user
+        
+        // Set the image URLs using the computed property
+        self.newsImageURLs = newsImageURLs
     }
 }
 

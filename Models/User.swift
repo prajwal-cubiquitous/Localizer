@@ -26,11 +26,15 @@ class LocalUser {
     var name: String
     var email: String
     var username: String
-    var bio: String?
-    var profileImageUrl: String?
+    var bio: String
+    var profileImageUrl: String
     var postCount: Int
     var likedCount: Int
     var commentCount: Int
+    
+    // Inverse relationship to LocalNews - this will help with cascade delete
+    @Relationship(deleteRule: .cascade, inverse: \LocalNews.user) 
+    var newsItems: [LocalNews] = []
     
     init(id: String, name: String,username: String, email: String, bio: String, profileImageUrl: String, postCount: Int, likedCount: Int, commentCount: Int) {
         self.id = id
@@ -66,8 +70,8 @@ extension LocalUser {
             name: self.name,
             email: self.email,
             username: self.username,
-            bio: self.bio ?? "",
-            profileImageUrl: self.profileImageUrl ?? "",
+            bio: self.bio,
+            profileImageUrl: self.profileImageUrl,
             postsCount: self.postCount,
             likedCount: self.likedCount,
             commentsCount: self.commentCount
