@@ -158,17 +158,31 @@ struct ProfileView: View {
                         
                         // Development reset button (only in debug mode)
                         #if DEBUG
-                        settingsRow(icon: "trash", title: "🔧 Clear All Local Data (Dev)"){
+                        settingsRow(icon: "trash", title: "🔧 Clear Users Only (Dev)"){
                             Task {
-                                print("DEBUG: Manual clear all local data triggered")
-                                AuthViewModel.clearLocalUser()
+                                print("DEBUG: Manual clear users only triggered")
+                                AuthViewModel.clearLocalUser(completely: false)
                                 
                                 // Verify the clear worked
                                 let users = try? modelContext.fetch(FetchDescriptor<LocalUser>())
                                 let news = try? modelContext.fetch(FetchDescriptor<LocalNews>())
                                 let votes = try? modelContext.fetch(FetchDescriptor<LocalVote>())
                                 
-                                print("DEBUG: After manual clear - Users: \(users?.count ?? 0), News: \(news?.count ?? 0), Votes: \(votes?.count ?? 0)")
+                                print("DEBUG: After manual user clear - Users: \(users?.count ?? 0), News: \(news?.count ?? 0) (preserved), Votes: \(votes?.count ?? 0) (preserved)")
+                            }
+                        }
+                        
+                        settingsRow(icon: "trash.fill", title: "🔧 Clear ALL Data (Dev)"){
+                            Task {
+                                print("DEBUG: Manual clear ALL data triggered")
+                                AuthViewModel.clearLocalUser(completely: true)
+                                
+                                // Verify the clear worked
+                                let users = try? modelContext.fetch(FetchDescriptor<LocalUser>())
+                                let news = try? modelContext.fetch(FetchDescriptor<LocalNews>())
+                                let votes = try? modelContext.fetch(FetchDescriptor<LocalVote>())
+                                
+                                print("DEBUG: After manual complete clear - Users: \(users?.count ?? 0), News: \(news?.count ?? 0), Votes: \(votes?.count ?? 0)")
                             }
                         }
                         
@@ -202,9 +216,9 @@ struct ProfileView: View {
                         settingsRow(icon: "arrow.left.square", title: "Logout"){
                             Task {
                                 do {
-                                    // First clear the local user data while we have access
-                                    print("DEBUG: Starting logout process")
-                                    AuthViewModel.clearLocalUser()
+                                    // First clear all local data completely for logout
+                                    print("DEBUG: Starting logout process - complete data clear")
+                                    AuthViewModel.clearLocalUser(completely: true)
                                     
                                     // Add a small delay to ensure clearing completes
                                     try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
