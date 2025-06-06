@@ -66,24 +66,6 @@ class AuthViewModel: ObservableObject {
         
         do{
             try await AppState.shared.signIn(email: email, password: password) { success in
-                print("DEBUG: Login successful for user ID: \(success)")
-                
-                // Clear any existing user data before loading new user
-                if let context = self.modelContext {
-                    do {
-                        let existingUsers = try context.fetch(FetchDescriptor<LocalUser>())
-                        if !existingUsers.isEmpty {
-                            print("DEBUG: Clearing \(existingUsers.count) existing users before login")
-                            for user in existingUsers {
-                                context.delete(user)
-                            }
-                            try context.save()
-                        }
-                    } catch {
-                        print("DEBUG: Failed to clear existing users: \(error)")
-                    }
-                }
-                
                 self.fetchAndStoreUser(userId: success)
             }
         }catch let error as AuthError{
@@ -198,62 +180,45 @@ class AuthViewModel: ObservableObject {
         print("DEBUG: About to store user locally with valid modelContext")
         
         do {
-            // ALWAYS clear all existing data first to ensure only one user
-            clearAllLocalData(using: modelContext)
+            let fetchDescriptor = FetchDescriptor<LocalUser>(predicate: #Predicate { user in
+                user.id == firestoreUser.id
+            })
+            let existingUsers = try modelContext.fetch(fetchDescriptor)
+            print("DEBUG: Found \(existingUsers.count) existing users with ID \(firestoreUser.id)")
             
-            // Verify that clearing worked
-            let existingUsers = try modelContext.fetch(FetchDescriptor<LocalUser>())
-            if !existingUsers.isEmpty {
-                print("WARNING: Found \(existingUsers.count) users after clearing, force deleting")
-                for user in existingUsers {
-                    modelContext.delete(user)
-                }
-                try modelContext.save()
+            if let existingUser = existingUsers.first {
+                print("DEBUG: Updating existing user \(existingUser.name)")
+                existingUser.name = firestoreUser.name
+                existingUser.email = firestoreUser.email
+                existingUser.username = firestoreUser.username
+                existingUser.bio = firestoreUser.bio
+                existingUser.profileImageUrl = firestoreUser.profileImageUrl
+                existingUser.postCount = firestoreUser.postsCount
+                existingUser.likedCount = firestoreUser.likedCount
+                existingUser.commentCount = firestoreUser.commentsCount
+            } else {
+                print("DEBUG: Creating new local user \(firestoreUser.name)")
+                let localUser = LocalUser(
+                    id: firestoreUser.id,
+                    name: firestoreUser.name,
+                    username: firestoreUser.username,
+                    email: firestoreUser.email,
+                    bio: firestoreUser.bio,
+                    profileImageUrl: firestoreUser.profileImageUrl,
+                    postCount: firestoreUser.postsCount,
+                    likedCount: firestoreUser.likedCount,
+                    commentCount: firestoreUser.commentsCount
+                )
+                modelContext.insert(localUser)
             }
-            
-            // Create and insert the new user
-            print("DEBUG: Creating new local user \(firestoreUser.name) with ID: \(firestoreUser.id)")
-            let localUser = LocalUser(
-                id: firestoreUser.id,
-                name: firestoreUser.name,
-                username: firestoreUser.username,
-                email: firestoreUser.email,
-                bio: firestoreUser.bio,
-                profileImageUrl: firestoreUser.profileImageUrl,
-                postCount: firestoreUser.postsCount,
-                likedCount: firestoreUser.likedCount,
-                commentCount: firestoreUser.commentsCount
-            )
-            modelContext.insert(localUser)
-            
             try modelContext.save()
             print("DEBUG: Successfully saved user to SwiftData")
-            
-            // Verify that only one user was saved
-            let finalUsers = try modelContext.fetch(FetchDescriptor<LocalUser>())
-            print("DEBUG: Final user count after save: \(finalUsers.count)")
-            
-            if finalUsers.count != 1 {
-                print("ERROR: Expected 1 user but found \(finalUsers.count)")
-                errorMessage = AuthError.custom(message: "Multiple users detected after save")
-            }
-            
         } catch {
             print("Error storing local user: \(error.localizedDescription)")
-            print("Full error: \(error)")
             errorMessage = AuthError.custom(message: "Failed to save local user")
-            
-            // Recovery attempt with complete reset
+            // Try again with simplified approach if the first attempt failed
             do {
-                print("DEBUG: Attempting recovery with complete reset")
-                
-                // Nuclear option: delete everything
-                try? modelContext.delete(model: LocalNews.self)
-                try? modelContext.delete(model: LocalVote.self)
-                try? modelContext.delete(model: LocalUser.self)
-                try modelContext.save()
-                
-                // Now create the user
+                print("DEBUG: Attempting recovery with clean approach")
                 let localUser = LocalUser(
                     id: firestoreUser.id,
                     name: firestoreUser.name,
@@ -266,14 +231,17 @@ class AuthViewModel: ObservableObject {
                     commentCount: firestoreUser.commentsCount
                 )
                 
+                // Delete any existing user with same ID to avoid conflicts
+                if let existingUsers = try? modelContext.fetch(FetchDescriptor<LocalUser>()), !existingUsers.isEmpty {
+                    print("DEBUG: Clearing \(existingUsers.count) existing users before insert")
+                    for user in existingUsers {
+                        modelContext.delete(user)
+                    }
+                }
+                
                 modelContext.insert(localUser)
                 try modelContext.save()
                 print("DEBUG: Recovery successful")
-                
-                // Verify recovery
-                let recoveryUsers = try modelContext.fetch(FetchDescriptor<LocalUser>())
-                print("DEBUG: Recovery user count: \(recoveryUsers.count)")
-                
             } catch {
                 print("Second attempt to store local user also failed: \(error.localizedDescription)")
                 errorMessage = AuthError.custom(message: "Failed to save local user after multiple attempts")
@@ -281,179 +249,69 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    // Helper method to clear all local data
-    private func clearAllLocalData(using context: ModelContext) {
-        do {
-            print("DEBUG: Starting clearAllLocalData - preserving news items")
-            
-            // Only clear LocalUsers - preserve news and votes
-            let usersFetch = FetchDescriptor<LocalUser>()
-            let users = try context.fetch(usersFetch)
-            print("DEBUG: Found \(users.count) users to clear")
-            for user in users {
-                // Break all relationships first
-                user.newsItems.removeAll()
-                context.delete(user)
-            }
-            
-            // Force save to ensure everything is committed
-            try context.save()
-            print("DEBUG: Successfully cleared users while preserving news data")
-            
-            // Verify the clearing worked
-            let verifyUsers = try context.fetch(FetchDescriptor<LocalUser>())
-            let verifyNews = try context.fetch(FetchDescriptor<LocalNews>())
-            let verifyVotes = try context.fetch(FetchDescriptor<LocalVote>())
-            
-            print("DEBUG: After clearing - Users: \(verifyUsers.count), News: \(verifyNews.count) (preserved), Votes: \(verifyVotes.count) (preserved)")
-            
-        } catch {
-            print("Warning: Could not clear users: \(error.localizedDescription)")
-            print("Full error: \(error)")
-            
-            // Last resort: try to delete only users using batch operations
-            do {
-                print("DEBUG: Attempting last resort user-only batch delete")
-                try context.delete(model: LocalUser.self)
-                try context.save()
-                print("DEBUG: Last resort user batch delete successful")
-            } catch {
-                print("ERROR: Even user batch delete failed: \(error)")
-            }
-        }
-    }
-    
-    // Complete clearing method (for logout or critical reset scenarios)
-    private func clearAllLocalDataCompletely(using context: ModelContext) {
-        do {
-            print("DEBUG: Starting complete clearAllLocalData")
-            
-            // Clear all LocalNews first (including breaking relationships)
-            let newsFetch = FetchDescriptor<LocalNews>()
-            let newsItems = try context.fetch(newsFetch)
-            print("DEBUG: Found \(newsItems.count) news items to clear")
-            for newsItem in newsItems {
-                // Break the relationship first
-                newsItem.user = nil
-                context.delete(newsItem)
-            }
-            
-            // Clear all LocalVotes
-            let votesFetch = FetchDescriptor<LocalVote>()
-            let voteItems = try context.fetch(votesFetch)
-            print("DEBUG: Found \(voteItems.count) vote items to clear")
-            for voteItem in voteItems {
-                context.delete(voteItem)
-            }
-            
-            // Clear all LocalUsers last
-            let usersFetch = FetchDescriptor<LocalUser>()
-            let users = try context.fetch(usersFetch)
-            print("DEBUG: Found \(users.count) users to clear")
-            for user in users {
-                // Break all relationships first
-                user.newsItems.removeAll()
-                context.delete(user)
-            }
-            
-            // Force save to ensure everything is committed
-            try context.save()
-            print("DEBUG: Successfully cleared all existing local data completely")
-            
-            // Verify the clearing worked
-            let verifyUsers = try context.fetch(FetchDescriptor<LocalUser>())
-            let verifyNews = try context.fetch(FetchDescriptor<LocalNews>())
-            let verifyVotes = try context.fetch(FetchDescriptor<LocalVote>())
-            
-            print("DEBUG: After complete clearing - Users: \(verifyUsers.count), News: \(verifyNews.count), Votes: \(verifyVotes.count)")
-            
-            if verifyUsers.count > 0 || verifyNews.count > 0 || verifyVotes.count > 0 {
-                print("WARNING: Some data was not cleared properly, attempting force clear")
-                // Force delete using batch operations
-                try context.delete(model: LocalNews.self)
-                try context.delete(model: LocalVote.self)
-                try context.delete(model: LocalUser.self)
-                try context.save()
-                print("DEBUG: Force clear completed")
-            }
-            
-        } catch {
-            print("Warning: Could not clear all local data: \(error.localizedDescription)")
-            print("Full error: \(error)")
-            
-            // Last resort: try to delete everything using batch operations
-            do {
-                print("DEBUG: Attempting last resort batch delete")
-                try context.delete(model: LocalNews.self)
-                try context.delete(model: LocalVote.self)
-                try context.delete(model: LocalUser.self)
-                try context.save()
-                print("DEBUG: Last resort batch delete successful")
-            } catch {
-                print("ERROR: Even batch delete failed: \(error)")
-            }
-        }
-    }
-    
     // Instance method that uses the stored modelContext
-    func clearLocalUser(completely: Bool = false) {
+    func clearLocalUser() {
         guard let modelContext = self.modelContext else {
             print("ERROR: No modelContext available in clearLocalUser")
+            // Create a temporary context as fallback
+            do {
+                let container = try ModelContainer(for: LocalUser.self)
+                let tempContext = ModelContext(container)
+                print("DEBUG: Using temporary context to clear users")
+                clearUserData(using: tempContext)
+            } catch {
+                print("ERROR: Failed to create temporary context: \(error)")
+            }
             return
         }
         
-        print("DEBUG: Clearing local user with valid modelContext (completely: \(completely))")
-        if completely {
-            clearAllLocalDataCompletely(using: modelContext)
-        } else {
-            clearUserData(using: modelContext)
-        }
+        print("DEBUG: Clearing local user with valid modelContext")
+        clearUserData(using: modelContext)
     }
     
     // Static method for backwards compatibility
-    static func clearLocalUser(completely: Bool = false) {
-        print("DEBUG: Static clearLocalUser called (completely: \(completely))")
-        AuthViewModel.shared.clearLocalUser(completely: completely)
+    static func clearLocalUser() {
+        print("DEBUG: Static clearLocalUser called")
+        AuthViewModel.shared.clearLocalUser()
     }
     
-    // Helper method to clear user data with a specific context (preserves news by default)
+    // Helper method to clear user data with a specific context
     private func clearUserData(using context: ModelContext) {
-        do {
-            print("DEBUG: Starting clearUserData process - preserving news")
-            
-            // Only clear LocalUsers - preserve news and votes
-            let userFetchDescriptor = FetchDescriptor<LocalUser>()
-            let users = try context.fetch(userFetchDescriptor)
-            print("DEBUG: Found \(users.count) users to delete")
-            
-            for user in users {
-                // Clear the inverse relationship first
-                user.newsItems.removeAll()
-                context.delete(user)
-            }
-            
-            // Save all changes
-            print("DEBUG: Saving cleared user data to context")
-            try context.save()
-            print("Successfully cleared local user data while preserving news")
-            
-        } catch {
-            print("Failed to clear local user data: \(error.localizedDescription)")
-            print("Full error: \(error)")
-            
-            // Recovery attempt: Try to delete users only forcefully
+        let fetchDescriptor = FetchDescriptor<LocalUser>()
+        
+        // Retry logic for robustness
+        let maxRetries = 3
+        var currentRetry = 0
+        var success = false
+        
+        while !success && currentRetry < maxRetries {
             do {
-                print("DEBUG: Attempting recovery with user-only force clear")
+                // Fetch all users
+                let users = try context.fetch(fetchDescriptor)
+                print("DEBUG: Found \(users.count) users to delete")
                 
-                // Use deleteAll approach for users only
-                try context.delete(model: LocalUser.self)
+                // Delete each user
+                for user in users {
+                    context.delete(user)
+                }
+                
+                // Save changes
                 try context.save()
-                print("DEBUG: User-only recovery successful")
+                success = true
+                print("Successfully cleared local user data")
                 
             } catch {
-                print("Recovery attempt also failed: \(error.localizedDescription)")
-                print("Recovery full error: \(error)")
+                currentRetry += 1
+                print("Failed to clear local user data (attempt \(currentRetry)/\(maxRetries)): \(error.localizedDescription)")
+                
+                // Wait briefly before retrying
+                if currentRetry < maxRetries {
+                    Thread.sleep(forTimeInterval: 0.5)
+                } else {
+                    errorMessage = AuthError.custom(message: "Failed to clear local user after multiple attempts")
+                }
             }
+            print("Recovery attempt also failed: ")
         }
     }
     

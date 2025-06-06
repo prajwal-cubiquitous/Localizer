@@ -9,7 +9,7 @@ struct Reply: Identifiable, Codable ,Hashable {
     var timestamp: Date = Date()
 }
 
-struct Comment: Identifiable, Hashable {
+struct Comment: Identifiable, Hashable, Codable {
     var id = UUID()
     var userId: String
     var username: String

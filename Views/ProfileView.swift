@@ -25,20 +25,7 @@ struct ProfileView: View {
     
     // Computed property to safely get current user
     private var currentUser: LocalUser? {
-        // Only return the user that matches the current session
-        guard let sessionUserId = AppState.shared.userSession?.uid else {
-            print("DEBUG: No session user ID available")
-            return nil
-        }
-        
-        let matchingUser = localUsers.first { $0.id == sessionUserId }
-        
-        if matchingUser == nil && !localUsers.isEmpty {
-            print("DEBUG: No matching user found for session ID: \(sessionUserId)")
-            print("DEBUG: Available user IDs: \(localUsers.map { $0.id })")
-        }
-        
-        return matchingUser
+        return localUsers.first
     }
     
     var body: some View {
@@ -155,81 +142,12 @@ struct ProfileView: View {
                         settingsRow(icon: "gearshape", title: "Settings"){
                             
                         }
-                        
-                        // Development reset button (only in debug mode)
-                        #if DEBUG
-                        settingsRow(icon: "trash", title: "🔧 Clear Users Only (Dev)"){
-                            Task {
-                                print("DEBUG: Manual clear users only triggered")
-                                AuthViewModel.clearLocalUser(completely: false)
-                                
-                                // Verify the clear worked
-                                let users = try? modelContext.fetch(FetchDescriptor<LocalUser>())
-                                let news = try? modelContext.fetch(FetchDescriptor<LocalNews>())
-                                let votes = try? modelContext.fetch(FetchDescriptor<LocalVote>())
-                                
-                                print("DEBUG: After manual user clear - Users: \(users?.count ?? 0), News: \(news?.count ?? 0) (preserved), Votes: \(votes?.count ?? 0) (preserved)")
-                            }
-                        }
-                        
-                        settingsRow(icon: "trash.fill", title: "🔧 Clear ALL Data (Dev)"){
-                            Task {
-                                print("DEBUG: Manual clear ALL data triggered")
-                                AuthViewModel.clearLocalUser(completely: true)
-                                
-                                // Verify the clear worked
-                                let users = try? modelContext.fetch(FetchDescriptor<LocalUser>())
-                                let news = try? modelContext.fetch(FetchDescriptor<LocalNews>())
-                                let votes = try? modelContext.fetch(FetchDescriptor<LocalVote>())
-                                
-                                print("DEBUG: After manual complete clear - Users: \(users?.count ?? 0), News: \(news?.count ?? 0), Votes: \(votes?.count ?? 0)")
-                            }
-                        }
-                        
-                        // Development session info
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("🔧 Development Info")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundColor(.blue)
-                            
-                            Text("Session User: \(AppState.shared.userSession?.uid ?? "None")")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            
-                            Text("Local Users: \(localUsers.count)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            
-                            ForEach(localUsers.prefix(3), id: \.id) { user in
-                                Text("• \(user.name) (\(String(user.id.prefix(8)))...)")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                        .padding(.horizontal)
-                        #endif
-                        
                         settingsRow(icon: "arrow.left.square", title: "Logout"){
                             Task {
-                                do {
-                                    // First clear all local data completely for logout
-                                    print("DEBUG: Starting logout process - complete data clear")
-                                    AuthViewModel.clearLocalUser(completely: true)
-                                    
-                                    // Add a small delay to ensure clearing completes
-                                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                                    
-                                    // Then sign out of Firebase which will trigger the UI update
-                                    print("DEBUG: Signing out of Firebase")
-                                    AppState.shared.signOut()
-                                    
-                                } catch {
-                                    print("ERROR: Logout process failed: \(error)")
-                                }
+                                // First clear the local user data while we have access
+                                AuthViewModel.clearLocalUser()
+                                // Then sign out of Firebase which will trigger the UI update
+                                AppState.shared.signOut()
                             }
                         }
                     }
@@ -246,46 +164,6 @@ struct ProfileView: View {
             .sheet(isPresented: $isEditingProfile) {
                 if let currentUser = currentUser {
                     EditProfileView(isPresented: $isEditingProfile, localUser: currentUser, modelContext: modelContext)
-                }
-            }
-            .onAppear {
-                print("DEBUG: Profile tab appeared with modelContext: \(modelContext)")
-                print("DEBUG: Found \(localUsers.count) local users")
-                
-                // Log details about each user for debugging
-                for (index, user) in localUsers.enumerated() {
-                    print("DEBUG: User \(index + 1): \(user.name) (ID: \(user.id))")
-                }
-                
-                // Ensure AuthViewModel has the model context
-                AuthViewModel.setModelContext(modelContext)
-                
-                // Check session consistency
-                if let sessionUserId = AppState.shared.userSession?.uid {
-                    print("DEBUG: Current session user ID: \(sessionUserId)")
-                    
-                    let hasMatchingUser = localUsers.contains { $0.id == sessionUserId }
-                    
-                    if localUsers.isEmpty {
-                        print("DEBUG: No local users found - fetching current user")
-                        AuthViewModel.fetchAndStoreUser(userId: sessionUserId)
-                    } else if !hasMatchingUser {
-                        print("DEBUG: Session user not in local storage - clearing and fetching")
-                        Task {
-                            await refreshUserData()
-                        }
-                    } else if localUsers.count > 1 {
-                        print("WARNING: Multiple users found (\(localUsers.count)) - clearing extras")
-                        Task {
-                            await refreshUserData()
-                        }
-                    }
-                } else {
-                    print("DEBUG: No session user - user should be logged out")
-                    if !localUsers.isEmpty {
-                        print("DEBUG: Clearing stale user data")
-                        AuthViewModel.clearLocalUser()
-                    }
                 }
             }
         }
@@ -324,19 +202,6 @@ struct ProfileView: View {
         
         isRefreshing = true
         print("DEBUG: Refreshing user data for ID: \(userId)")
-        
-        // Check if the current user in the database matches the session user
-        let currentUsers = try? modelContext.fetch(FetchDescriptor<LocalUser>())
-        let currentUserIds = currentUsers?.map { $0.id } ?? []
-        
-        print("DEBUG: Current stored user IDs: \(currentUserIds)")
-        print("DEBUG: Session user ID: \(userId)")
-        
-        // If the session user is different from stored users, clear all and fetch fresh
-        if !currentUserIds.contains(userId) {
-            print("DEBUG: Session user different from stored users, clearing all data")
-            AuthViewModel.clearLocalUser()
-        }
         
         // Use the injected AuthViewModel instance to refresh user data
         self.AuthViewModel.fetchAndStoreUser(userId: userId)

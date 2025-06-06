@@ -5,7 +5,7 @@ import SwiftUI
 // 2. View for a Single Reply Row
 struct ReplyRowView: View {
     let reply: Reply
-
+    
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: reply.profileImageName)
@@ -16,7 +16,7 @@ struct ReplyRowView: View {
                 .padding(4)
                 .background(Color.gray.opacity(0.15))
                 .clipShape(Circle())
-
+            
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(reply.username)
@@ -40,11 +40,14 @@ struct ReplyRowView: View {
 
 // 3. View for a Single Comment Row
 struct CommentRowView: View {
+    @State var islikedBYCurrentUser:Bool = false
+    @ObservedObject var viewModel: CommentsViewModel
+    let newsId : String
     let comment: Comment
-    let onToggleLike: () -> Void
     let onStartReply: () -> Void
-    let onToggleRepliesVisibility: () -> Void // New closure
-
+    @State var replies: [Reply] = []
+    @State var showReplies = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main comment content
@@ -57,7 +60,7 @@ struct CommentRowView: View {
                     .padding(5)
                     .background(Color.gray.opacity(0.2))
                     .clipShape(Circle())
-
+                
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text(comment.username)
@@ -70,13 +73,19 @@ struct CommentRowView: View {
                         .font(.system(size: 15))
                         .foregroundColor(.primary)
                         .fixedSize(horizontal: false, vertical: true)
-
+                    
                     // Action Buttons: Like, Reply
                     HStack(spacing: 20) {
-                        Button(action: onToggleLike) {
+                        Button {
+                            Task{
+                                islikedBYCurrentUser.toggle()
+                                await viewModel.toggleLike(for: comment, inNews: newsId)
+                            }
+                        } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: comment.isLikedByCurrentUser ? "heart.fill" : "heart")
-                                    .foregroundColor(comment.isLikedByCurrentUser ? .red : .gray)
+                                Image(systemName: islikedBYCurrentUser ? "heart.fill" : "heart")
+                                    .foregroundColor(islikedBYCurrentUser ? .red : .gray)
+                                
                                 if comment.likes > 0 {
                                     Text("\(comment.likes)")
                                         .font(.caption)
@@ -84,8 +93,11 @@ struct CommentRowView: View {
                                 }
                             }
                         }
+                        .task{
+                            islikedBYCurrentUser = await viewModel.checkIfLiked(comment: comment, newsId: newsId)
+                        }
                         .buttonStyle(.plain)
-
+                        
                         Button(action: onStartReply) {
                             Text("Reply")
                                 .font(.caption.weight(.medium))
@@ -98,32 +110,43 @@ struct CommentRowView: View {
                 Spacer()
             }
             .padding(.vertical, 8)
-
+            
             // Toggle Replies Button and Replies List
-            if !comment.replies.isEmpty {
-                Button(action: onToggleRepliesVisibility) {
+            if !replies.isEmpty {
+                Button{
+                    showReplies.toggle()
+                }label:{
                     HStack {
                         Rectangle() // Little decorative line
                             .frame(width: 20, height: 1)
                             .foregroundColor(.gray.opacity(0.5))
-                        Text(comment.areRepliesVisible ? "Hide replies" : "View \(comment.replies.count) \(comment.replies.count == 1 ? "reply" : "replies")")
+                        Text(showReplies ? "Hide replies" : "View \(replies.count) \(replies.count == 1 ? "reply" : "replies")")
                             .font(.caption.weight(.medium))
                             .foregroundColor(.gray)
                         Spacer()
                     }
+                    .contentShape(Rectangle()) // Make the whole HStack tappable
+                    .background(Color.clear)   // Prevent any background from blocking taps
                 }
                 .buttonStyle(.plain)
                 .padding(.leading, 52) // Align with comment text (avatar width + spacing)
                 .padding(.top, 4)
-
-                if comment.areRepliesVisible {
+                
+                if showReplies {
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(comment.replies) { reply in
+                        ForEach(replies) { reply in
                             ReplyRowView(reply: reply)
                         }
                     }
                     .padding(.top, 6) // Space between toggle button and replies
                 }
+            }
+        }
+        .task {
+            do{
+                replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: comment.id.uuidString)
+            }catch{
+                print(error.localizedDescription)
             }
         }
     }
@@ -142,22 +165,18 @@ struct CommentsView: View {
     }
     
     @Environment(\.dismiss) var dismiss
-
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 List {
-                    ForEach(comments) { comment in
+                    ForEach(viewModel.comments) { comment in
                         CommentRowView(
+                            viewModel: viewModel,
+                            newsId: localNews.id,
                             comment: comment,
-                            onToggleLike: {
-                                toggleLike(for: comment.id)
-                            },
                             onStartReply: {
                                 startReply(to: comment)
-                            },
-                            onToggleRepliesVisibility: { // Pass the new function
-                                toggleRepliesVisibility(for: comment.id)
                             }
                         )
                         .listRowSeparator(.hidden)
@@ -166,7 +185,7 @@ struct CommentsView: View {
                 }
                 .listStyle(.plain)
                 .padding(.top)
-
+                
                 // Input area
                 VStack(spacing: 0) {
                     if let targetComment = replyingToComment {
@@ -190,21 +209,53 @@ struct CommentsView: View {
                         .padding(.vertical, 8)
                         .background(Color(UIColor.systemGray5))
                     }
-
+                    
                     HStack(spacing: 12) {
                         Image(systemName: "person.circle.fill")
                             .resizable()
                             .frame(width: 40, height: 40)
                             .foregroundColor(.gray)
-
+                        
                         TextField(replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToComment!.username)...", text: $newCommentText, axis: .vertical)
                             .textFieldStyle(.plain)
                             .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
                             .background(Color(UIColor.systemGray6))
                             .cornerRadius(20)
                             .lineLimit(1...5)
-
-                        Button(action: submitInput) {
+                        
+                        Button{
+                            Task{
+                                let trimmedText = newCommentText.trimmingCharacters(in: .whitespacesAndNewlines)
+                                guard !trimmedText.isEmpty else { return }
+                                if let targetComment = replyingToComment {
+                                    do {
+                                        try await viewModel.addReply(
+                                            toNewsId: localNews.id,
+                                            commentId: targetComment.id.uuidString, // Must be String
+                                            replyText: trimmedText
+                                        )
+                                        replyingToComment = nil
+                                        
+                                        
+                                        // Optionally update local comment list to show new reply immediately
+                                        if let index = comments.firstIndex(where: { $0.id == targetComment.id }) {
+                                            comments[index].areRepliesVisible = true
+                                            // Optionally: trigger fetchReplies() if you display replies from Firestore
+                                        }
+                                        
+                                    } catch {
+                                        print("Failed to add reply: \(error.localizedDescription)")
+                                    }
+                                }else{
+                                    do {
+                                        try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
+                                    } catch {
+                                        print("Failed to add comment: \(error.localizedDescription)")
+                                    }
+                                }
+                                newCommentText = ""
+                            }
+                        }label:{
                             Text(replyingToComment == nil ? "Post" : "Send")
                                 .font(.headline)
                                 .foregroundColor(newCommentText.isEmpty ? .gray : .blue)
@@ -226,51 +277,68 @@ struct CommentsView: View {
                 }
             }
             .onTapGesture {
-                 hideKeyboard()
+                hideKeyboard()
+            }
+        }
+        .task{
+            do{
+                try await viewModel.fetchComments(forNewsId: localNews.id)
+            }catch{
+                print("Error fetching comments: \(error)")
             }
         }
     }
-
+    
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-
-    private func toggleLike(for commentId: UUID) {
-        if let index = comments.firstIndex(where: { $0.id == commentId }) {
-            comments[index].isLikedByCurrentUser.toggle()
-            comments[index].likes += comments[index].isLikedByCurrentUser ? 1 : -1
-        }
     }
     
     // New function to toggle reply visibility
     private func toggleRepliesVisibility(for commentId: UUID) {
-        if let index = comments.firstIndex(where: { $0.id == commentId }) {
-            comments[index].areRepliesVisible.toggle()
+        if let index = viewModel.comments.firstIndex(where: { $0.id == commentId }) {
+            viewModel.comments[index].areRepliesVisible.toggle()
         }
     }
-
+    
     private func startReply(to comment: Comment) {
         replyingToComment = comment
         newCommentText = ""
         // Consider focusing TextField if possible
     }
-
+    
     private func submitInput() {
         let trimmedText = newCommentText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
-
-        if let targetComment = replyingToComment, let commentIndex = comments.firstIndex(where: { $0.id == targetComment.id }) {
-            let newReply = Reply(username: "CurrentUser", text: trimmedText, profileImageName: "person.crop.circle.fill.badge.plus")
-            comments[commentIndex].replies.append(newReply)
-             // Optionally, make replies visible when a new one is added to this comment
-            if !comments[commentIndex].areRepliesVisible {
-                comments[commentIndex].areRepliesVisible = true
-            }
-        } else {
-            let newComment = Comment(userId: "sfgisdihfsfbsfsdfsd", username: "CurrentUser", text: trimmedText, profileImageName: "person.crop.circle.fill.badge.plus")
-            comments.append(newComment)
-            Task{
-                try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
+        
+        Task {
+            print(replyingToComment)
+            if let targetComment = replyingToComment {
+                // Firestore: Save reply to comment
+                print("Started replying to the comment")
+                do {
+                    try await viewModel.addReply(
+                        toNewsId: localNews.id,
+                        commentId: targetComment.id.uuidString, // Must be String
+                        replyText: trimmedText
+                    )
+                    
+                    // Optionally update local comment list to show new reply immediately
+                    if let index = comments.firstIndex(where: { $0.id == targetComment.id }) {
+                        comments[index].areRepliesVisible = true
+                        // Optionally: trigger fetchReplies() if you display replies from Firestore
+                    }
+                    
+                } catch {
+                    print("Failed to add reply: \(error.localizedDescription)")
+                }
+            } else {
+                print("gone to comment section")
+                // Firestore: Save new top-level comment
+                do {
+                    try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
+                } catch {
+                    print("Failed to add comment: \(error.localizedDescription)")
+                }
             }
         }
         newCommentText = ""
@@ -282,7 +350,7 @@ struct CommentsView: View {
 // 5. Main Content View
 struct ContentView_CommentDemo: View {
     @State private var showingCommentsSheet = false
-
+    
     var body: some View {
         VStack {
             Image(systemName: "photo.artframe")
@@ -290,10 +358,10 @@ struct ContentView_CommentDemo: View {
                 .scaledToFit()
                 .frame(width: 200, height: 200)
                 .padding()
-
+            
             Text("Tap the button below to view comments.")
                 .padding()
-
+            
             Button {
                 showingCommentsSheet = true
             } label: {
@@ -308,7 +376,7 @@ struct ContentView_CommentDemo: View {
             CommentsView(localNews: DummyLocalNews.News1)
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
-
+        
     }
 }
 
