@@ -99,7 +99,8 @@ struct CachedUser {
 class UserCache {
     static let shared = UserCache()
     
-    private init() {}  // Prevent instantiation
+    private init() {
+    }  // Prevent instantiation
 
     // Temp in-memory dictionary: [userId: CachedUser]
     var cacheusers: [String: CachedUser] = [:]

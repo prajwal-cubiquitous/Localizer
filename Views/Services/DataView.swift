@@ -386,7 +386,7 @@ struct ModernDataCard: View {
                     }
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundStyle(Color("AdaptiveTextColor"))
+                    .foregroundStyle(Color("primaryOpposite"))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(.primary)
@@ -657,6 +657,6 @@ struct DetailRow: View {
 
 #Preview {
     NavigationView {
-        DataView(pincode: "123456")
+        DataView(pincode: "560043")
 }
 } 

@@ -188,7 +188,6 @@ struct CommentsView: View {
     @State private var newCommentText: String = ""
     @State private var replyingToComment: Comment? = nil
     let localNews: LocalNews
-    
     init(localNews: LocalNews) {
         self.localNews = localNews
     }

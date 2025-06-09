@@ -152,7 +152,6 @@ class CommentsViewModel: ObservableObject {
             .document(commentId)
             .collection("replies")
             .document(reply.id.uuidString)
-
         try replyRef.setData(from: reply)
     }
 
