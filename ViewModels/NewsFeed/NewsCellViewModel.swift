@@ -170,8 +170,6 @@ class NewsCellViewModel: ObservableObject{
             }
         }
     }
-    
-    
 }
 
 enum VoteState {

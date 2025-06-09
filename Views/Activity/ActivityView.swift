@@ -10,9 +10,6 @@ struct ActivityView: View {
     @StateObject var viewModel = ActivityViewModel()
     @State private var selectedFilter: FilterType = .saved
     let pincode: String
-    // Mock data for demonstration.
-    let newsItems: [LocalNews] = [DummyLocalNews.News1, DummyLocalNews.News1, DummyLocalNews.News1, DummyLocalNews.News1]
-    // Enum for the filter categories.
     enum FilterType: String, CaseIterable {
         case news = "My News"
         case liked = "Liked"
@@ -28,7 +25,7 @@ struct ActivityView: View {
             }
         }
     }
-
+    
     var body: some View {
         NavigationStack{
             VStack(spacing: 0) {
@@ -37,6 +34,41 @@ struct ActivityView: View {
                     ForEach(FilterType.allCases, id: \.self) { filter in
                         Button(action: {
                             self.selectedFilter = filter
+                            switch filter {
+                            case .news:
+                                Task{
+                                    do{
+                                        try await viewModel.fetchNews(postalCode: pincode)
+                                    }catch{
+                                        print(error.localizedDescription)
+                                    }
+                                }
+                            case .liked:
+                                Task{
+                                    do{
+                                        try await viewModel.fetchLikedNews()
+                                    }catch{
+                                        print(error.localizedDescription)
+                                    }
+                                }
+                            case .commented:
+                                Task{
+                                    do{
+                                        try await viewModel.commentedNews()
+                                    }catch{
+                                        print(error.localizedDescription)
+                                    }
+                                }
+                            case .saved:
+                                Task{
+                                    do{
+                                        try await viewModel.fetchSavedNews()
+                                    }catch{
+                                        print(error.localizedDescription)
+                                    }
+                                }
+                                // Add more cases as needed
+                            }
                         }) {
                             VStack(spacing: 5) {
                                 Image(systemName: filter.iconName)
@@ -53,9 +85,9 @@ struct ActivityView: View {
                     }
                 }
                 .padding()
-
+                
                 // MARK: - News List
-                List(newsItems) { newsItem in
+                List(viewModel.newsItems) { newsItem in
                     NewsCell(localNews: newsItem)
                         .listRowInsets(EdgeInsets()) // Remove default padding
                         .listRowSeparator(.hidden) // Hide the default separator
@@ -69,94 +101,6 @@ struct ActivityView: View {
         }
     }
 }
-
-
-// A view for a single cell in the list.
-struct NewsItemCell1: View {
-    let newsItem: LocalNews
-    
-    @State private var voteCount: Int
-    @State private var isUpvoted: Bool = false
-    @State private var isDownvoted: Bool = false
-
-    init(newsItem: LocalNews) {
-        self.newsItem = newsItem
-        _voteCount = State(initialValue: newsItem.likesCount)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack(alignment: .top) {
-                Image(systemName: "person.circle.fill")
-                    .resizable()
-                    .frame(width: 44, height: 44)
-                    .foregroundColor(.gray)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(newsItem.caption)
-                        .font(.headline)
-                    // Using SwiftUI's built-in relative date style.
-                    Text(newsItem.timestamp, style: .relative)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        + Text(" ago") // Append "ago" for clarity
-                }
-                
-                Spacer()
-                
-                Button(action: {}) {
-                    Image(systemName: "ellipsis")
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            // Caption
-            Text(newsItem.caption)
-                .font(.body)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // Footer
-            HStack(spacing: 24) {
-                HStack(spacing: 8) {
-                    Button(action: { /* upvote logic */ }) {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(isUpvoted ? .red : .gray)
-                    }
-                    Text("\(voteCount)")
-                        .font(.subheadline).fontWeight(.bold)
-                    Button(action: { /* downvote logic */ }) {
-                        Image(systemName: "arrow.down")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(isDownvoted ? .blue : .gray)
-                    }
-                }
-                
-                Button(action: {}) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "message")
-                        Text("\(newsItem.commentsCount)")
-                    }
-                }
-                
-                Spacer()
-                
-                Button(action: {}) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Share")
-                    }
-                }
-            }
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-        }
-        .padding(16)
-        .background(Color(UIColor.systemBackground))
-    }
-}
-
 
 // MARK: - SwiftUI Preview
 struct NewsFeedView1_Previews: PreviewProvider {
