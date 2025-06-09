@@ -86,3 +86,21 @@ extension LocalUser {
 struct DummylocalUser{
     static var user1 = LocalUser(id: "kfjiehoi342", name: "Parthik", username: "padda", email: "padda@gmail.com", bio: "i am padda", profileImageUrl: "klodsfjlds", postCount: 20, likedCount: 10, SavedPostsCount: 0, commentCount: 5)
 }
+
+
+// MARK :- For creating temp Dictionary for storing the user detials like username and profilePictureURL
+
+
+struct CachedUser {
+    let username: String
+    let profilePictureUrl: String
+}
+
+class UserCache {
+    static let shared = UserCache()
+    
+    private init() {}  // Prevent instantiation
+
+    // Temp in-memory dictionary: [userId: CachedUser]
+    var cacheusers: [String: CachedUser] = [:]
+}

@@ -146,8 +146,6 @@ class PostViewModel: ObservableObject {
     func uploadNews(caption: String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        // Fetch user details so we can embed them in the News document
-        let author = try await fetchCurrentUser(uid)
         
         // Get current location
         let currentPincode = await getCurrentPincode()
@@ -157,8 +155,7 @@ class PostViewModel: ObservableObject {
                         timestamp: Timestamp(),
                         likesCount: 0,
                         commentsCount: 0,
-                        postalCode: currentPincode,
-                        user: author)
+                        postalCode: currentPincode)
         
         try await NewsService.uploadNews(news)
         
@@ -170,7 +167,6 @@ class PostViewModel: ObservableObject {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
 
-        let author = try await fetchCurrentUser(uid)
         
         // Get current location
         let currentPincode = await getCurrentPincode()
@@ -181,7 +177,6 @@ class PostViewModel: ObservableObject {
                         likesCount: 0,
                         commentsCount: 0,
                         postalCode: currentPincode,
-                        user: author,
                         newsImageURLs: imageURLS)
         try await NewsService.uploadNews(news)
         
@@ -490,17 +485,6 @@ class PostViewModel: ObservableObject {
                 print("[PostVM] Failed to update local postCount: \(error)")
             }
         }
-    }
-    
-    // MARK: - Helpers
-    
-    private func fetchCurrentUser(_ uid: String) async throws -> User {
-        let docRef = Firestore.firestore().collection("users").document(uid)
-        let snapshot = try await docRef.getDocument()
-        guard let user = try? snapshot.data(as: User.self) else {
-            throw NSError(domain: "PostViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode current user"])
-        }
-        return user
     }
     
     // MARK: - Validation
