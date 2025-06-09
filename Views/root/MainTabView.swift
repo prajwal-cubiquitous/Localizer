@@ -148,7 +148,7 @@ struct MainTabView: View {
                 .tag(2)
             
             // Notifications Tab
-            NotificationsView(pincode: pincode)
+            ActivityView(pincode: pincode)
                 .environmentObject(appState)
                 .tabItem {
                     Label {

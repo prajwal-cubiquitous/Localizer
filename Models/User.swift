@@ -105,3 +105,11 @@ class UserCache {
     // Temp in-memory dictionary: [userId: CachedUser]
     var cacheusers: [String: CachedUser] = [:]
 }
+
+
+struct UserNewsActivity: Codable, Identifiable {
+    var id: String
+    var savedNews: [String]
+    var likedNews: [String]
+    var commentedNews: [String]
+}
