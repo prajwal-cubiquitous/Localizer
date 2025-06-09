@@ -12,14 +12,12 @@ struct Reply: Identifiable, Codable ,Hashable {
 struct Comment: Identifiable, Hashable, Codable {
     var id = UUID()
     var userId: String
-    var username: String
+    var username: String?
     var text: String
-    var profileImageName: String // For placeholder system images
+    var profileImageName: String?// For placeholder system images
     var timestamp: Date = Date()
     var likes: Int = 0
-    var isLikedByCurrentUser: Bool = false
     var replies: [Reply] = []
-    var areRepliesVisible: Bool = false // New property to control reply visibility
 }
 
 
@@ -29,7 +27,7 @@ func getSampleComments() -> [Comment] {
             Reply(username: "TravelBug", text: "I think it's near the Rockies!", profileImageName: "airplane", timestamp: Calendar.current.date(byAdding: .minute, value: -5, to: Date())!),
             Reply(username: "NatureLover", text: "Oh, good to know! Thanks @TravelBug", profileImageName: "leaf.fill", timestamp: Calendar.current.date(byAdding: .minute, value: -2, to: Date())!)
         ]),
-        Comment(userId: "ldhgfoivdjfhojgdf", username: "TravelBug", text: "Wow, adding this to my travel list! 😍", profileImageName: "airplane", timestamp: Calendar.current.date(byAdding: .hour, value: -1, to: Date())!, likes: 22, isLikedByCurrentUser: true),
+        Comment(userId: "ldhgfoivdjfhojgdf", username: "TravelBug", text: "Wow, adding this to my travel list! 😍", profileImageName: "airplane", timestamp: Calendar.current.date(byAdding: .hour, value: -1, to: Date())!, likes: 22),
         Comment(userId: "ldhgfoivdjfhojgdf" , username: "FoodieGal", text: "Looks delicious! Recipe please? 😋", profileImageName: "fork.knife", timestamp: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, likes: 5, replies: [
             Reply(username: "ChefJohn", text: "Coming right up!", profileImageName: "figure.cook", timestamp: Calendar.current.date(byAdding: .minute, value: -10, to: Date())!)
         ]),

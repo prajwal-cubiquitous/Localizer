@@ -52,19 +52,26 @@ struct CommentRowView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Main comment content
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: comment.profileImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 40, height: 40)
-                    .foregroundColor(.gray)
-                    .padding(5)
-                    .background(Color.gray.opacity(0.2))
-                    .clipShape(Circle())
+                if let user = UserCache.shared.cacheusers[comment.userId]{
+                    Image(systemName: user.profilePictureUrl)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .foregroundColor(.gray)
+                        .padding(5)
+                        .background(Color.gray.opacity(0.2))
+                        .clipShape(Circle())
+                }
                 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text(comment.username)
-                            .font(.system(size: 14, weight: .semibold))
+                        if let user = UserCache.shared.cacheusers[comment.userId]{
+                            Text(user.username)
+                                .font(.system(size: 14, weight: .semibold))
+                        }else{
+                            Text("Unknown User")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
                         Text(comment.timestamp, style: .relative)
                             .font(.caption)
                             .foregroundColor(.gray)
@@ -193,9 +200,15 @@ struct CommentsView: View {
                             Text("Replying to")
                                 .font(.caption)
                                 .foregroundColor(.gray)
-                            Text("@\(targetComment.username)")
-                                .font(.caption.bold())
-                                .foregroundColor(.gray)
+                            if let user = UserCache.shared.cacheusers[targetComment.userId]{
+                                Text("@\(user.username)")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.gray)
+                            }else{
+                                Text("@Unknow")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.gray)
+                            }
                             Spacer()
                             Button {
                                 replyingToComment = nil
@@ -235,13 +248,6 @@ struct CommentsView: View {
                                             replyText: trimmedText
                                         )
                                         replyingToComment = nil
-                                        
-                                        
-                                        // Optionally update local comment list to show new reply immediately
-                                        if let index = comments.firstIndex(where: { $0.id == targetComment.id }) {
-                                            comments[index].areRepliesVisible = true
-                                            // Optionally: trigger fetchReplies() if you display replies from Firestore
-                                        }
                                         
                                     } catch {
                                         print("Failed to add reply: \(error.localizedDescription)")
@@ -293,58 +299,12 @@ struct CommentsView: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
-    // New function to toggle reply visibility
-    private func toggleRepliesVisibility(for commentId: UUID) {
-        if let index = viewModel.comments.firstIndex(where: { $0.id == commentId }) {
-            viewModel.comments[index].areRepliesVisible.toggle()
-        }
-    }
-    
     private func startReply(to comment: Comment) {
         replyingToComment = comment
         newCommentText = ""
         // Consider focusing TextField if possible
     }
     
-    private func submitInput() {
-        let trimmedText = newCommentText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedText.isEmpty else { return }
-        
-        Task {
-            print(replyingToComment)
-            if let targetComment = replyingToComment {
-                // Firestore: Save reply to comment
-                print("Started replying to the comment")
-                do {
-                    try await viewModel.addReply(
-                        toNewsId: localNews.id,
-                        commentId: targetComment.id.uuidString, // Must be String
-                        replyText: trimmedText
-                    )
-                    
-                    // Optionally update local comment list to show new reply immediately
-                    if let index = comments.firstIndex(where: { $0.id == targetComment.id }) {
-                        comments[index].areRepliesVisible = true
-                        // Optionally: trigger fetchReplies() if you display replies from Firestore
-                    }
-                    
-                } catch {
-                    print("Failed to add reply: \(error.localizedDescription)")
-                }
-            } else {
-                print("gone to comment section")
-                // Firestore: Save new top-level comment
-                do {
-                    try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
-                } catch {
-                    print("Failed to add comment: \(error.localizedDescription)")
-                }
-            }
-        }
-        newCommentText = ""
-        replyingToComment = nil
-        hideKeyboard()
-    }
 }
 
 // 5. Main Content View

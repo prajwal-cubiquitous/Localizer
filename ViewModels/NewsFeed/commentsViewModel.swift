@@ -18,10 +18,8 @@ class CommentsViewModel: ObservableObject {
     func addComment(toNewsId newsId: String, commentText: String) async throws {
         
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        let currentUser = try await fetchCurrentUser(uid)
-        
-        let comment = Comment(userId: currentUser.id, username: currentUser.name, text: commentText, profileImageName: currentUser.profileImageUrl)
+                
+        let comment = Comment(userId: uid, text: commentText)
         
         let commentRef = Firestore.firestore()
             .collection("news")
@@ -56,10 +54,15 @@ class CommentsViewModel: ObservableObject {
             }
             
             self.comments = fetchedComments
+            
+            for comment in comments {
+                let FetchedUser = try await fetchCurrentUser(comment.userId)
+
+                UserCache.shared.cacheusers[comment.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
+            }
         } catch {
             print("❌ Failed to fetch comments: \(error.localizedDescription)")
              throw error
-            
         }
     }
     
@@ -89,7 +92,6 @@ class CommentsViewModel: ObservableObject {
                 await MainActor.run {
                     if let index = comments.firstIndex(where: { $0.id == comment.id }) {
                         comments[index].likes -= 1
-                        comments[index].isLikedByCurrentUser = false
                     }
                 }
 
@@ -106,7 +108,6 @@ class CommentsViewModel: ObservableObject {
                 await MainActor.run {
                     if let index = comments.firstIndex(where: { $0.id == comment.id }) {
                         comments[index].likes += 1
-                        comments[index].isLikedByCurrentUser = true
                     }
                 }
             }
