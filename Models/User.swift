@@ -108,7 +108,7 @@ class UserCache {
 
 
 struct UserNewsActivity: Codable, Identifiable {
-    var id: String
+    var id: String = UUID().uuidString
     var savedNews: [String]
     var likedNews: [String]
     var commentedNews: [String]

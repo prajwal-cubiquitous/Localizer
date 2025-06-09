@@ -19,6 +19,7 @@ class NewsCellViewModel: ObservableObject{
     // Animation states for button scaling
     @Published var upvoteScale: CGFloat = 1.0
     @Published var downvoteScale: CGFloat = 1.0
+    @Published var savedByCurrentUser: Bool = false
     
     
     private let db = Firestore.firestore()
@@ -170,6 +171,108 @@ class NewsCellViewModel: ObservableObject{
             }
         }
     }
+    
+    // MARK: - Save Post Function
+        func savePost1(postId: String) async throws {
+            guard let uid = Auth.auth().currentUser?.uid else { return }
+            
+            let docRef = db.collection("users").document(uid).collection("userNewsActivity").document(uid)
+            
+            do {
+                // First check if already saved to avoid duplicates
+                let document = try await docRef.getDocument()
+                
+                if let data = document.data(),
+                   let savedNews = data["savedNews"] as? [String],
+                   savedNews.contains(postId) {
+                    print("Post already saved")
+                    return
+                }
+                
+                try await docRef.setData([
+                    "savedNews": FieldValue.arrayUnion([postId])
+                ], merge: true)
+                
+                // Update local state
+                await MainActor.run {
+                    self.savedByCurrentUser = true
+                }
+                
+            } catch {
+                print("Error saving post: \(error.localizedDescription)")
+                throw error
+            }
+        }
+        
+        // MARK: - Check If News Is Saved
+        func checkIfNewsIsSaved1(postId: String) async {
+            guard let userId = Auth.auth().currentUser?.uid else { return }
+            
+            // Fixed: Use consistent collection name "users" (lowercase)
+            let docRef = db
+                .collection("users")  // Changed from "Users" to "users"
+                .document(userId)
+                .collection("userNewsActivity")
+                .document(userId)
+
+            do {
+                let document = try await docRef.getDocument()
+
+                if let data = document.data(),
+                   let savedNews = data["savedNews"] as? [String] {
+                    await MainActor.run {
+                        self.savedByCurrentUser = savedNews.contains(postId)
+                    }
+                } else {
+                    await MainActor.run {
+                        self.savedByCurrentUser = false
+                    }
+                }
+            } catch {
+                print("Error checking saved status: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.savedByCurrentUser = false
+                }
+            }
+        }
+        
+        // MARK: - Remove Saved News
+        func removeSavedNews1(postId: String) async throws {
+            guard let userId = Auth.auth().currentUser?.uid else { return }
+            
+            // Fixed: Use consistent collection name "users" (lowercase)
+            let docRef = db
+                .collection("users")  // Changed from "Users" to "users"
+                .document(userId)
+                .collection("userNewsActivity")
+                .document(userId)
+
+            do {
+                // First check if actually saved
+                let document = try await docRef.getDocument()
+                
+                if let data = document.data(),
+                   let savedNews = data["savedNews"] as? [String],
+                   !savedNews.contains(postId) {
+                    print("Post not in saved list")
+                    return
+                }
+                
+                print("Removing postId: \(postId)")
+                try await docRef.setData([
+                    "savedNews": FieldValue.arrayRemove([postId])
+                ], merge: true)
+                
+                // Update local state
+                await MainActor.run {
+                    self.savedByCurrentUser = false
+                }
+                
+            } catch {
+                print("Error removing postId: \(error.localizedDescription)")
+                throw error
+            }
+        }
 }
 
 enum VoteState {

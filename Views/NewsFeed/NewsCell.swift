@@ -54,9 +54,17 @@ struct NewsCell: View {
                 // Three Dots Menu
                 Menu {
                     Button {
-                        // Save post action
+                        Task{
+                            if viewModel.savedByCurrentUser{
+                                try await viewModel.removeSavedNews1(postId: localNews.id)
+                                viewModel.savedByCurrentUser = false
+                            }else{
+                                try await viewModel.savePost1(postId: localNews.id)
+                                viewModel.savedByCurrentUser = true
+                            }
+                        }
                     } label: {
-                        Label("Save Post", systemImage: "bookmark")
+                        Label(viewModel.savedByCurrentUser ? "Unsave Post" : "Save Post", systemImage: viewModel.savedByCurrentUser ? "bookmark.slash" :"bookmark")
                     }
                     
                     Button {
@@ -184,6 +192,7 @@ struct NewsCell: View {
         .clipShape(RoundedRectangle(cornerRadius: 0))
         .task {
             await viewModel.fetchVotesStatus(postId: localNews.id)
+            await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
         }
         .sheet(isPresented: $showingCommentsSheet) {
             CommentsView(localNews: localNews)
