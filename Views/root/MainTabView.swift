@@ -123,7 +123,7 @@ struct MainTabView: View {
                 .tag(0)
             
             // Services Tab
-            ServicesView(pincode: pincode)
+            DataView(pincode: pincode)
                 .environmentObject(appState)
                 .tabItem {
                     Label {

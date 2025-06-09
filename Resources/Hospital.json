@@ -1,0 +1,92 @@
+[
+    {
+        "Constituency": "Chickpet",
+        "Name": "Victoria Hospital",
+        "Type": "Hospital",
+        "Full address ": "K.R. Road, Fort, Bengaluru",
+        "Pincode": "560002",
+        "Phone Number": "+91 80 26703240",
+        "Google Map Link": "https://www.google.com/maps/search/Victoria+Hospital,+K.R.+Road,+Fort,+Bengaluru+560002"
+    },
+    {
+        "Constituency": "Shivajinagar",
+        "Name": "Bowring & Lady Curzon Hospital",
+        "Type": "Hospital",
+        "Full address ": "Lady Curzon Road, Shivaji Nagar, Tasker Town, Bengaluru",
+        "Pincode": "560001",
+        "Phone Number": "+91 80 25591362",
+        "Google Map Link": "https://www.google.com/maps/search/Bowring+%26+Lady+Curzon+Hospital,+Lady+Curzon+Road,+Shivaji+Nagar,+Bengaluru+560001"
+    },
+    {
+        "Constituency": "Chickpet",
+        "Name": "Vani Vilas Hospital",
+        "Type": "Hospital",
+        "Full address ": "K.R. Road, Fort, Bengaluru",
+        "Pincode": "560002",
+        "Phone Number": "+91 80 26703224",
+        "Google Map Link": "https://www.google.com/maps/search/Vani+Vilas+Hospital,+K.R.+Road,+Fort,+Bengaluru+560002"
+    },
+    {
+        "Constituency": "Jayanagar",
+        "Name": "Indira Gandhi Institute of Child Health",
+        "Type": "Hospital",
+        "Full address ": "South Hospital Complex, Dharmaram College Post, Bengaluru",
+        "Pincode": "560029",
+        "Phone Number": "+91 80 26919200",
+        "Google Map Link": "https://www.google.com/maps/search/Indira+Gandhi+Institute+of+Child+Health,+Dharmaram+College+Post,+Bengaluru+560029"
+    },
+    {
+        "Constituency": "Jayanagar",
+        "Name": "NIMHANS",
+        "Type": "Hospital",
+        "Full address ": "Hosur Road, Bengaluru",
+        "Pincode": "560029",
+        "Phone Number": "+91 80 26995001",
+        "Google Map Link": "https://www.google.com/maps/search/NIMHANS,+Hosur+Road,+Bengaluru+560029"
+    },
+    {
+        "Constituency": "Malleswaram",
+        "Name": "KC General Hospital",
+        "Type": "Hospital",
+        "Full address ": "#89, 5th Cross Road, Behind Police Station, Malleswaram, Bengaluru",
+        "Pincode": "560003",
+        "Phone Number": "+91 80 23341433",
+        "Google Map Link": "https://www.google.com/maps/search/KC+General+Hospital,+5th+Cross+Road,+Malleswaram,+Bengaluru+560003"
+    },
+    {
+        "Constituency": "Rajajinagar",
+        "Name": "ESI Hospital, Rajajinagar",
+        "Type": "Hospital",
+        "Full address ": "8/3, E Block, I Block, I Stage, Rajajinagar, Bengaluru",
+        "Pincode": "560010",
+        "Phone Number": "+91 80 23324112",
+        "Google Map Link": "https://www.google.com/maps/search/ESI+Hospital,+Rajajinagar,+Bengaluru+560010"
+    },
+    {
+        "Constituency": "Jayanagar",
+        "Name": "Jayadeva Institute of Cardiology",
+        "Type": "Hospital",
+        "Full address ": "Bannerghatta Main Rd, Phase 3, Jayanagara 9th Block, Bengaluru",
+        "Pincode": "560069",
+        "Phone Number": "+91 80 26534600",
+        "Google Map Link": "https://www.google.com/maps/search/Jayadeva+Institute+of+Cardiology,+Bannerghatta+Main+Rd,+Bengaluru+560069"
+    },
+    {
+        "Constituency": "Jayanagar",
+        "Name": "Kidwai Memorial Institute of Oncology",
+        "Type": "Hospital",
+        "Full address ": "Dr M H Mari Gowda Road, Hombegowda Nagar, Bengaluru",
+        "Pincode": "560029",
+        "Phone Number": "+91 80 26094000",
+        "Google Map Link": "https://www.google.com/maps/search/Kidwai+Memorial+Institute+of+Oncology,+Dr+M+H+Mari+Gowda+Road,+Bengaluru+560029"
+    },
+    {
+        "Constituency": "Shivajinagar",
+        "Name": "Epidemic Diseases Hospital",
+        "Type": "Hospital",
+        "Full address ": "Old Madras Road, Indiranagar, Bengaluru",
+        "Pincode": "560038",
+        "Phone Number": "+91 80 25260571",
+        "Google Map Link": "https://www.google.com/maps/search/Epidemic+Diseases+Hospital,+Old+Madras+Road,+Indiranagar,+Bengaluru+560038"
+    }
+]

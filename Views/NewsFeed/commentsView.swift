@@ -8,19 +8,35 @@ struct ReplyRowView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: reply.profileImageName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 30, height: 30)
-                .foregroundColor(.gray)
-                .padding(4)
-                .background(Color.gray.opacity(0.15))
-                .clipShape(Circle())
+            if let user = UserCache.shared.cacheusers[reply.userId]{
+                Image(systemName: user.profilePictureUrl)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.gray)
+                    .padding(4)
+                    .background(Color.gray.opacity(0.15))
+                    .clipShape(Circle())
+            }else{
+                Image(systemName:"person.crop.circle.badge.questionmark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.gray)
+                    .padding(4)
+                    .background(Color.gray.opacity(0.15))
+                    .clipShape(Circle())
+            }
             
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text(reply.username)
-                        .font(.system(size: 13, weight: .semibold))
+                    if let user = UserCache.shared.cacheusers[reply.userId]{
+                        Text(user.username)
+                            .font(.system(size: 13, weight: .semibold))
+                    }else{
+                        Text("Unkown User")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
                     Text(reply.timestamp, style: .relative)
                         .font(.caption2)
                         .foregroundColor(.gray)
@@ -152,6 +168,12 @@ struct CommentRowView: View {
         .task {
             do{
                 replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: comment.id.uuidString)
+                
+                for reply in replies {
+                    let FetchedUser = try await viewModel.fetchCurrentUser(reply.userId)
+                    
+                    UserCache.shared.cacheusers[reply.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
+                }
             }catch{
                 print(error.localizedDescription)
             }

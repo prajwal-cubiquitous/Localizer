@@ -138,13 +138,9 @@ class CommentsViewModel: ObservableObject {
     func addReply(toNewsId newsId: String, commentId: String, replyText: String) async throws {
         guard let currentUser = Auth.auth().currentUser else { return }
 
-        // Fetch user info if needed (adjust as per your app logic)
-        let user = try await fetchCurrentUser(currentUser.uid)
-
         let reply = Reply(
-            username: user.name,
+            userId: currentUser.uid,
             text: replyText,
-            profileImageName: user.profileImageUrl,
             timestamp: Date()
         )
 
@@ -176,7 +172,7 @@ class CommentsViewModel: ObservableObject {
         }
     }
     
-    private func fetchCurrentUser(_ uid: String) async throws -> User {
+    func fetchCurrentUser(_ uid: String) async throws -> User {
         let docRef = Firestore.firestore().collection("users").document(uid)
         let snapshot = try await docRef.getDocument()
         guard let user = try? snapshot.data(as: User.self) else {

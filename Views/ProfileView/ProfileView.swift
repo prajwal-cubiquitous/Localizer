@@ -27,10 +27,11 @@ struct ProfileView: View {
     private var currentUser: LocalUser? {
         return localUsers.first
     }
+    @State private var path: [String] = []
     
     var body: some View {
-        NavigationStack {
-            ScrollView {                
+        NavigationStack(path: $path) {
+            ScrollView {
                 VStack(spacing: 20) {
                     // Header with profile image
                     VStack {
@@ -87,7 +88,7 @@ struct ProfileView: View {
                                 }
                             }
                             .padding(.top, 16)
-                        }                        
+                        }
                         // Edit profile button
                         if currentUser != nil {
                             Button {
@@ -142,6 +143,11 @@ struct ProfileView: View {
                         settingsRow(icon: "gearshape", title: "Settings"){
                             
                         }
+                        if currentUser?.id == "jWMfJAquzQfxbYLjuMbCxBUEk2q2" {
+                            settingsRow(icon: "square.and.arrow.up.on.square", title: "UploadData"){
+                                path.append("Upload")
+                            }
+                        }
                         settingsRow(icon: "arrow.left.square", title: "Logout"){
                             Task {
                                 // First clear the local user data while we have access
@@ -166,6 +172,11 @@ struct ProfileView: View {
                     EditProfileView(isPresented: $isEditingProfile, localUser: currentUser, modelContext: modelContext)
                 }
             }
+            .navigationDestination(for: String.self) { value in
+                if value == "Upload" {
+                    UploadDataView()
+                }
+            }
         }
     }
     
@@ -175,13 +186,13 @@ struct ProfileView: View {
                 Image(systemName: icon)
                     .frame(width: 24, height: 24)
                     .foregroundStyle(colorScheme == .dark ? .white : .black)
-
+                
                 Text(title)
                     .font(.body)
                     .foregroundStyle(colorScheme == .dark ? .white : .black)
-
+                
                 Spacer()
-
+                
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundStyle(.gray)
@@ -228,7 +239,7 @@ struct EditProfileView: View {
         self.localUser = localUser
         self.modelContext = modelContext
         self._name = State(initialValue: localUser.name)
-        self._bio = State(initialValue: localUser.bio ?? "")
+        self._bio = State(initialValue: localUser.bio)
     }
     
     var body: some View {
@@ -300,7 +311,7 @@ struct EditProfileView: View {
                         Button("Save") {
                             // Update the LocalUser with new values
                             Task{
-                               await  AuthViewModel.updateUserProfile(userID: localUser.id, name: name, bio: bio)
+                                await  AuthViewModel.updateUserProfile(userID: localUser.id, name: name, bio: bio)
                             }
                             localUser.name = name
                             localUser.bio = bio
