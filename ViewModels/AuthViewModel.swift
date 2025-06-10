@@ -206,7 +206,9 @@ class AuthViewModel: ObservableObject {
                     bio: firestoreUser.bio,
                     profileImageUrl: firestoreUser.profileImageUrl,
                     postCount: firestoreUser.postsCount,
-                    likedCount: firestoreUser.likedCount, SavedPostsCount: firestoreUser.SavedPostsCount,
+                    likedCount: firestoreUser.likedCount,
+                    dislikedCount: firestoreUser.dislikedCount,
+                    SavedPostsCount: firestoreUser.SavedPostsCount,
                     commentCount: firestoreUser.commentsCount
                 )
                 modelContext.insert(localUser)
@@ -227,7 +229,9 @@ class AuthViewModel: ObservableObject {
                     bio: firestoreUser.bio,
                     profileImageUrl: firestoreUser.profileImageUrl,
                     postCount: firestoreUser.postsCount,
-                    likedCount: firestoreUser.likedCount, SavedPostsCount: firestoreUser.SavedPostsCount,
+                    likedCount: firestoreUser.likedCount,
+                    dislikedCount: firestoreUser.dislikedCount,
+                    SavedPostsCount: firestoreUser.SavedPostsCount,
                     commentCount: firestoreUser.commentsCount
                 )
                 

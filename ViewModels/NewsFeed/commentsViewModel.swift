@@ -28,6 +28,9 @@ class CommentsViewModel: ObservableObject {
             .document(comment.id.uuidString)
         
         try commentRef.setData(from: comment)
+        Task{
+            try await AddCommentedNews(postId: newsId)
+        }
         comments.append(comment)
         try await incrementLikesCount(forPostId: newsId, by: 1)
     }
@@ -178,6 +181,61 @@ class CommentsViewModel: ObservableObject {
             throw NSError(domain: "PostViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode current user"])
         }
         return user
+    }
+    
+    func AddCommentedNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+        
+        do {
+            
+            try await docRef.setData([
+                "CommentedNews": FieldValue.arrayUnion([postId])
+            ], merge: true)
+            try await db.collection("users")
+                .document(userId)
+                .updateData([
+                    "commentsCount": FieldValue.increment(Int64(1))
+                ])
+            
+        } catch {
+            print("Error saving post: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    func removeCommentedNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+
+        do {
+            // First check if actually saved
+            let document = try await docRef.getDocument()
+            
+            if let data = document.data(),
+               let LikedNews = data["CommentedNews"] as? [String],
+               !LikedNews.contains(postId) {
+                print("Post not in Liked list")
+                return
+            }
+            
+            print("Removing postId: \(postId)")
+            try await docRef.setData([
+                "CommentedNews": FieldValue.arrayRemove([postId])
+            ], merge: true)
+            
+            try await db.collection("users")
+                .document(userId)
+                .updateData([
+                    "commentsCount": FieldValue.increment(Int64(-1))
+                ])
+
+        } catch {
+            print("Error removing postId: \(error.localizedDescription)")
+            throw error
+        }
     }
     
 }

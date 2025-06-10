@@ -109,6 +109,7 @@ class NewsCellViewModel: ObservableObject{
             likesCount += 1
             do{
                 try await saveVote(postId: postId, voteType: 1, PostLikeCount: 1)
+                Task{ try await AddLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
             }
@@ -117,6 +118,7 @@ class NewsCellViewModel: ObservableObject{
             likesCount -= 1
             do{
                 try await saveVote(postId: postId, voteType: 0, PostLikeCount: -1)
+                Task{ try await removeLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
             }
@@ -125,6 +127,8 @@ class NewsCellViewModel: ObservableObject{
             likesCount += 2
             do{
                 try await saveVote(postId: postId, voteType: 1, PostLikeCount: 2)
+                Task{ try await removeDisLikedNews(postId: postId) }
+                Task{ try await AddLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
             }
@@ -150,6 +154,7 @@ class NewsCellViewModel: ObservableObject{
             likesCount -= 1
             do{
                 try await saveVote(postId: postId, voteType: -1, PostLikeCount: -1)
+                Task{ try await AddDisLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
             }
@@ -158,6 +163,7 @@ class NewsCellViewModel: ObservableObject{
             likesCount += 1
             do{
                 try await saveVote(postId: postId, voteType: 0, PostLikeCount: 1)
+                Task{ try await removeDisLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
             }
@@ -166,6 +172,8 @@ class NewsCellViewModel: ObservableObject{
             likesCount -= 2 // Remove upvote (+1) and add downvote (-1) = -2
             do{
                 try await saveVote(postId: postId, voteType: -1, PostLikeCount: -2)
+                Task{ try await removeLikedNews(postId: postId) }
+                Task{ try await AddDisLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
             }
@@ -174,9 +182,9 @@ class NewsCellViewModel: ObservableObject{
     
     // MARK: - Save Post Function
         func savePost1(postId: String) async throws {
-            guard let uid = Auth.auth().currentUser?.uid else { return }
+            guard let userId = Auth.auth().currentUser?.uid else { return }
             
-            let docRef = db.collection("users").document(uid).collection("userNewsActivity").document(uid)
+            let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
             
             do {
                 // First check if already saved to avoid duplicates
@@ -197,6 +205,12 @@ class NewsCellViewModel: ObservableObject{
                 await MainActor.run {
                     self.savedByCurrentUser = true
                 }
+                try await db.collection("users")
+                    .document(userId)
+                    .updateData([
+                        "SavedPostsCount": FieldValue.increment(Int64(1))
+                    ])
+                
                 
             } catch {
                 print("Error saving post: \(error.localizedDescription)")
@@ -267,12 +281,128 @@ class NewsCellViewModel: ObservableObject{
                 await MainActor.run {
                     self.savedByCurrentUser = false
                 }
+                try await db.collection("users")
+                    .document(userId)
+                    .updateData([
+                        "SavedPostsCount": FieldValue.increment(Int64(-1))
+                    ])
+
                 
             } catch {
                 print("Error removing postId: \(error.localizedDescription)")
                 throw error
             }
         }
+    
+    func AddLikedNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+        
+        do {
+            
+            try await docRef.setData([
+                "LikedNews": FieldValue.arrayUnion([postId])
+            ], merge: true)
+            try await db.collection("users")
+                .document(userId)
+                .updateData([
+                    "likedCount": FieldValue.increment(Int64(1))
+                ])
+            
+        } catch {
+            print("Error saving post: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    func removeLikedNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+
+        do {
+            // First check if actually saved
+            let document = try await docRef.getDocument()
+            
+            if let data = document.data(),
+               let LikedNews = data["LikedNews"] as? [String],
+               !LikedNews.contains(postId) {
+                print("Post not in Liked list")
+                return
+            }
+            
+            print("Removing postId: \(postId)")
+            try await docRef.setData([
+                "LikedNews": FieldValue.arrayRemove([postId])
+            ], merge: true)
+            
+            try await db.collection("users")
+                .document(userId)
+                .updateData([
+                    "likedCount": FieldValue.increment(Int64(-1))
+                ])
+
+        } catch {
+            print("Error removing postId: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    func AddDisLikedNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+        
+        do {
+            
+            try await docRef.setData([
+                "DisLikedNews": FieldValue.arrayUnion([postId])
+            ], merge: true)
+            try await db.collection("users")
+                .document(userId)
+                .updateData([
+                    "dislikedCount": FieldValue.increment(Int64(1))
+                ])
+            
+        } catch {
+            print("Error saving post: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    func removeDisLikedNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+
+        do {
+            // First check if actually saved
+            let document = try await docRef.getDocument()
+            
+            if let data = document.data(),
+               let DisLikedNews = data["DisLikedNews"] as? [String],
+               !DisLikedNews.contains(postId) {
+                print("Post not in Liked list")
+                return
+            }
+            
+            print("Removing postId: \(postId)")
+            try await docRef.setData([
+                "DisLikedNews": FieldValue.arrayRemove([postId])
+            ], merge: true)
+            
+            try await db.collection("users")
+                .document(userId)
+                .updateData([
+                    "dislikedCount": FieldValue.increment(Int64(-1))
+                ])
+
+        } catch {
+            print("Error removing postId: \(error.localizedDescription)")
+            throw error
+        }
+    }
 }
 
 enum VoteState {

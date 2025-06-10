@@ -16,6 +16,7 @@ struct NewsFeedView: View {
     @StateObject private var viewModel = NewsFeedViewModel()
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
+    @State private var hasFetched = false
     
     init(pincode: String) {
         self.pincode = pincode
@@ -88,9 +89,9 @@ struct NewsFeedView: View {
             }
             .background(colorScheme == .dark ? Color.black : Color.white)
         }
-        .onAppear {
-            print("DEBUG: NewsFeedView appeared with pincode: \(pincode)")
-            Task {
+        .task {
+            if !hasFetched {
+                hasFetched = true
                 await viewModel.fetchAndCacheNews(for: pincode, context: modelContext)
             }
         }

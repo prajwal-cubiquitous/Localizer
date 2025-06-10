@@ -8,11 +8,12 @@ import SwiftUI
 
 struct ActivityView: View {
     @StateObject var viewModel = ActivityViewModel()
-    @State private var selectedFilter: FilterType = .saved
+    @State private var selectedFilter: FilterType = .news
     let pincode: String
     enum FilterType: String, CaseIterable {
         case news = "My News"
         case liked = "Liked"
+        case disliked = "Disliked"
         case commented = "Commented"
         case saved = "Saved"
         
@@ -20,6 +21,7 @@ struct ActivityView: View {
             switch self {
             case .news: return "newspaper"
             case .liked: return "heart"
+            case .disliked: return "hand.thumbsdown"
             case .commented: return "text.bubble"
             case .saved: return "bookmark.fill"
             }
@@ -34,41 +36,7 @@ struct ActivityView: View {
                     ForEach(FilterType.allCases, id: \.self) { filter in
                         Button(action: {
                             self.selectedFilter = filter
-                            switch filter {
-                            case .news:
-                                Task{
-                                    do{
-                                        try await viewModel.fetchNews(postalCode: pincode)
-                                    }catch{
-                                        print(error.localizedDescription)
-                                    }
-                                }
-                            case .liked:
-                                Task{
-                                    do{
-                                        try await viewModel.fetchLikedNews()
-                                    }catch{
-                                        print(error.localizedDescription)
-                                    }
-                                }
-                            case .commented:
-                                Task{
-                                    do{
-                                        try await viewModel.commentedNews()
-                                    }catch{
-                                        print(error.localizedDescription)
-                                    }
-                                }
-                            case .saved:
-                                Task{
-                                    do{
-                                        try await viewModel.fetchSavedNews()
-                                    }catch{
-                                        print(error.localizedDescription)
-                                    }
-                                }
-                                // Add more cases as needed
-                            }
+                            
                         }) {
                             VStack(spacing: 5) {
                                 Image(systemName: filter.iconName)
@@ -98,6 +66,52 @@ struct ActivityView: View {
             }
             .navigationTitle("My Activity")
             .navigationBarTitleDisplayMode(.inline)
+        }
+        .task(id: selectedFilter){
+            switch selectedFilter {
+            case .news:
+                Task{
+                    do{
+                        try await viewModel.fetchNews(postalCode: pincode)
+                    }catch{
+                        print(error.localizedDescription)
+                    }
+                }
+            case .liked:
+                Task{
+                    do{
+                        try await viewModel.fetchLikedNews(postalCode: pincode)
+                    }catch{
+                        print(error.localizedDescription)
+                    }
+                }
+                
+            case .disliked:
+                Task{
+                    do{
+                        try await viewModel.fetchDisLikedNews(postalCode: pincode)
+                    }catch{
+                        print(error.localizedDescription)
+                    }
+                }
+            case .commented:
+                Task{
+                    do{
+                        try await viewModel.commentedNews(postalCode: pincode)
+                    }catch{
+                        print(error.localizedDescription)
+                    }
+                }
+            case .saved:
+                Task{
+                    do{
+                        try await viewModel.fetchSavedNews(postalCode: pincode)
+                    }catch{
+                        print(error.localizedDescription)
+                    }
+                }
+                // Add more cases as needed
+            }
         }
     }
 }

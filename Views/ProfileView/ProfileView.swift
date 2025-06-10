@@ -80,6 +80,14 @@ struct ProfileView: View {
                                 }
                                 
                                 VStack {
+                                    Text("\(user.dislikedCount)")
+                                        .font(.headline)
+                                    Text("Dislikes")
+                                        .font(.caption)
+                                        .foregroundStyle(.gray)
+                                }
+                                
+                                VStack {
                                     Text("\(user.commentCount)")
                                         .font(.headline)
                                     Text("Comments")
@@ -108,38 +116,10 @@ struct ProfileView: View {
                     }
                     .padding(.bottom, 20)
                     
-                    // Posts section
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Recent Posts")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 4) {
-                            ForEach(1...9, id: \.self) { index in
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.2))
-                                    .aspectRatio(1, contentMode: .fit)
-                                    .overlay(
-                                        Image(systemName: "photo")
-                                            .font(.title)
-                                            .foregroundStyle(.gray)
-                                    )
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
                     
                     // Settings and more section
                     VStack(spacing: 0) {
-                        settingsRow(icon: "bookmark", title: "Saved Posts"){
-                            
-                        }
-                        settingsRow(icon: "person.2", title: "Close Friends"){
-                            
-                        }
-                        settingsRow(icon: "star", title: "Favorites"){
-                            
-                        }
+
                         settingsRow(icon: "gearshape", title: "Settings"){
                             
                         }

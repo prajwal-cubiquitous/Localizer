@@ -17,6 +17,7 @@ struct User: Identifiable, Codable{
     var profileImageUrl: String = ""
     var postsCount: Int = 0
     var likedCount: Int = 0
+    var dislikedCount: Int = 0
     var SavedPostsCount: Int = 0
     var commentsCount: Int = 0
 }
@@ -31,6 +32,7 @@ class LocalUser {
     var profileImageUrl: String
     var postCount: Int
     var likedCount: Int
+    var dislikedCount: Int
     var SavedPostsCount: Int
     var commentCount: Int
     
@@ -38,7 +40,7 @@ class LocalUser {
     @Relationship(deleteRule: .cascade, inverse: \LocalNews.user) 
     var newsItems: [LocalNews] = []
     
-    init(id: String, name: String,username: String, email: String, bio: String, profileImageUrl: String, postCount: Int, likedCount: Int,SavedPostsCount: Int, commentCount: Int) {
+    init(id: String, name: String,username: String, email: String, bio: String, profileImageUrl: String, postCount: Int, likedCount: Int,dislikedCount: Int, SavedPostsCount: Int, commentCount: Int) {
         self.id = id
         self.name = name
         self.email = email
@@ -47,6 +49,7 @@ class LocalUser {
         self.profileImageUrl = profileImageUrl
         self.postCount = postCount
         self.likedCount = likedCount
+        self.dislikedCount = dislikedCount
         self.SavedPostsCount = SavedPostsCount
         self.commentCount = commentCount
     }
@@ -62,7 +65,7 @@ extension LocalUser {
             bio: user.bio,
             profileImageUrl: user.profileImageUrl,
             postCount: user.postsCount,
-            likedCount: user.likedCount, SavedPostsCount: user.SavedPostsCount,
+            likedCount: user.likedCount, dislikedCount: user.dislikedCount, SavedPostsCount: user.SavedPostsCount,
             commentCount: user.commentsCount
         )
     }
@@ -84,7 +87,7 @@ extension LocalUser {
 }
 
 struct DummylocalUser{
-    static var user1 = LocalUser(id: "kfjiehoi342", name: "Parthik", username: "padda", email: "padda@gmail.com", bio: "i am padda", profileImageUrl: "klodsfjlds", postCount: 20, likedCount: 10, SavedPostsCount: 0, commentCount: 5)
+    static var user1 = LocalUser(id: "kfjiehoi342", name: "Parthik", username: "padda", email: "padda@gmail.com", bio: "i am padda", profileImageUrl: "klodsfjlds", postCount: 20, likedCount: 10, dislikedCount: 10, SavedPostsCount: 0, commentCount: 5)
 }
 
 

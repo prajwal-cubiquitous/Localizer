@@ -152,10 +152,10 @@ struct MainTabView: View {
                 .environmentObject(appState)
                 .tabItem {
                     Label {
-                        Text("Notifications")
+                        Text("My Activities")
                             .font(.caption)
                     } icon: {
-                        Image(systemName: selectedTab == 3 ? "bell.fill" : "bell")
+                        Image(systemName: selectedTab == 3 ? "figure.walk.diamond.fill" : "figure.walk.diamond")
                     }
                 }
                 .tag(3)
