@@ -78,8 +78,8 @@ class PostViewModel: ObservableObject {
             if !mediaItems.isEmpty {
                 // For now, just create text post even if media is present
                 // Uncomment the line below when Firebase Storage is enabled
-                // try await uploadMultipleImages(caption: caption)
-                try await uploadNews(caption: caption)
+                 try await uploadMultipleImages(caption: caption)
+//                try await uploadNews(caption: caption)
             } else {
                 try await uploadNews(caption: caption)
             }
@@ -100,14 +100,16 @@ class PostViewModel: ObservableObject {
         }
     }
     
+    @MainActor
     func uploadMultipleImages(caption: String) async throws {
         print("Starting upload process")
-        urls.removeAll()
+        DispatchQueue.main.async {
+            self.urls.removeAll()
+        }
         
         // MARK: - COMMENTED OUT - Firebase Storage Upload
         // Uncomment when Firebase Storage is enabled
         
-        /*
         // Upload images
         for image in images {
             do {
@@ -127,7 +129,9 @@ class PostViewModel: ObservableObject {
                 let compressedData = await compressVideo(data: videoData)
                 
                 let uploadedURL = try await VideoUploader.uploadVideo(withData: compressedData ?? videoData)
-                urls.append(uploadedURL)
+                DispatchQueue.main.async {
+                    self.urls.append(uploadedURL)
+                }
                 print("Uploaded video: \(uploadedURL)")
             } catch {
                 print("Video upload error: \(error.localizedDescription)")
@@ -136,11 +140,10 @@ class PostViewModel: ObservableObject {
         }
         
         try await uploadNewsimages(caption: caption, imageURLS: urls)
-        */
         
         // For now, just create text post without media URLs
-        print("Media upload disabled - Firebase Storage not enabled")
-        try await uploadNews(caption: caption)
+//        print("Media upload disabled - Firebase Storage not enabled")
+//        try await uploadNews(caption: caption)
     }
     
     func uploadNews(caption: String) async throws {

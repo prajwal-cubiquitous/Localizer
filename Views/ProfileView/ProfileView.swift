@@ -15,6 +15,7 @@ struct ProfileView: View {
     @State private var isEditingProfile = false
     @EnvironmentObject var AuthViewModel : AuthViewModel
     @State private var isRefreshing = false
+    @State private var hasFetchedUser = false
     
     // Use a properly configured query to fetch the current user without any filters
     // This will show ALL users in the database, which should include our current user
@@ -140,6 +141,12 @@ struct ProfileView: View {
                     .padding(.top, 10)
                 }
                 .padding(.vertical)
+            }
+            .task {
+                if !hasFetchedUser {
+                    hasFetchedUser = true
+                    await refreshUserData()
+                }
             }
             .refreshable {
                 await refreshUserData()

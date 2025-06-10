@@ -7,7 +7,6 @@ struct VideoUploader {
         // MARK: - COMMENTED OUT - Firebase Storage not enabled
         // Uncomment when Firebase Storage is configured
         
-        /*
         let filename = UUID().uuidString + ".mov"
         let ref = Storage.storage().reference(withPath: "/news_videos/\(filename)")
         
@@ -18,7 +17,7 @@ struct VideoUploader {
         let url = try await ref.downloadURL()
         
         return url.absoluteString
-        */
+        
         
         // Placeholder implementation - throws error when Firebase Storage is not enabled
         throw NSError(domain: "VideoUploader", code: -1, userInfo: [NSLocalizedDescriptionKey: "Firebase Storage is not enabled. Please configure Firebase Storage to upload videos."])
