@@ -21,7 +21,7 @@ class AuthViewModel: ObservableObject {
     @Published var confirmPassword = ""
     @Published var fullName = ""
     @Published var authState: AuthState = .login
-    
+
     @Published var errorMessage: AuthError?
     let db = Firestore.firestore()
     

@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SwiftData
+import PhotosUI
+import Kingfisher
 
 struct ProfileView: View {
     let pincode: String
@@ -36,16 +38,7 @@ struct ProfileView: View {
                 VStack(spacing: 20) {
                     // Header with profile image
                     VStack {
-                        Circle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(width: 100, height: 100)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .font(.system(size: 40))
-                                    .foregroundStyle(.gray)
-                            )
-                            .padding(.bottom, 8)
-                        
+                        ProfilePictureView(currentUser: currentUser, width: 100, height: 100)
                         if let user = currentUser {
                             Text(user.name)
                                 .font(.title2)
@@ -120,7 +113,7 @@ struct ProfileView: View {
                     
                     // Settings and more section
                     VStack(spacing: 0) {
-
+                        
                         settingsRow(icon: "gearshape", title: "Settings"){
                             
                         }
@@ -216,8 +209,11 @@ struct EditProfileView: View {
     var localUser: LocalUser
     var modelContext: ModelContext
     @EnvironmentObject var AuthViewModel : AuthViewModel
+    @StateObject private var viewModel = EditProfileViewModel()
     @State private var name: String
     @State private var bio: String
+    @State private var selectedItem: PhotosPickerItem? = nil
+    @State private var selectedImage: UIImage? = nil
     
     init(isPresented: Binding<Bool>, localUser: LocalUser, modelContext: ModelContext) {
         self._isPresented = isPresented
@@ -231,30 +227,35 @@ struct EditProfileView: View {
         NavigationStack {
             VStack(spacing: 20) {
                 // Profile image
-                Circle()
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(width: 100, height: 100)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 40))
-                            .foregroundStyle(.gray)
-                    )
-                    .overlay(
-                        Circle()
-                            .stroke(Color.white, lineWidth: 4)
-                            .padding(-4)
-                    )
-                    .overlay(alignment: .bottomTrailing) {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 30, height: 30)
+                PhotosPicker(
+                    selection: $selectedItem,
+                    matching: .images,
+                    photoLibrary: .shared()
+                ) {
+                    if let selectedImage {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
                             .overlay(
-                                Image(systemName: "camera.fill")
-                                    .font(.caption)
-                                    .foregroundStyle(.white)
+                                Circle()
+                                    .stroke(Color.blue, lineWidth: 3)
                             )
-                            .offset(x: 5, y: 5)
                     }
+                    else {
+                        ProfilePictureView(currentUser: localUser, width: 100, height: 100)
+                    }
+                }
+                .onChange(of: selectedItem) { oldValue, newValue in
+                    Task {
+                        if let data = try? await newValue?.loadTransferable(type: Data.self) {
+                            if let uiImage = UIImage(data: data) {
+                                selectedImage = uiImage
+                            }
+                        }
+                    }
+                }
                 
                 // Form
                 VStack(spacing: 20) {
@@ -297,6 +298,9 @@ struct EditProfileView: View {
                             // Update the LocalUser with new values
                             Task{
                                 await  AuthViewModel.updateUserProfile(userID: localUser.id, name: name, bio: bio)
+                                if let selectedImage = selectedImage {
+                                    try await viewModel.uploadProfileImage(profileImage: selectedImage)
+                                }
                             }
                             localUser.name = name
                             localUser.bio = bio

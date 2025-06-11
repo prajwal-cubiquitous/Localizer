@@ -206,7 +206,7 @@ class PostViewModel: ObservableObject {
                             let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
                             try videoData.write(to: tempURL)
                             
-                            let duration = try await getVideoDuration(from: tempURL)
+                            let _ = try await getVideoDuration(from: tempURL)
                             
                             await MainActor.run {
                                 selectedVideoURL = tempURL
@@ -336,7 +336,7 @@ class PostViewModel: ObservableObject {
             
             // Check if the asset is valid
             do {
-                let duration = try await asset.load(.duration)
+                let _ = try await asset.load(.duration)
             } catch {
                 try? FileManager.default.removeItem(at: tempInputURL)
                 return nil
@@ -366,7 +366,7 @@ class PostViewModel: ObservableObject {
                     let compressedData = try Data(contentsOf: tempOutputURL)
                     let originalSize = data.count
                     let compressedSize = compressedData.count
-                    let compressionRatio = Double(compressedSize) / Double(originalSize)
+                    let _ = Double(compressedSize) / Double(originalSize)
                     
                     
                     // Clean up temp files
