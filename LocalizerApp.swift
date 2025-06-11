@@ -36,20 +36,13 @@ struct LocalizerApp: App {
 //                allowsCloudEncryption: false
             )
             
-            print("🔧 Attempting to create SwiftData container with models:")
-            print("   - LocalUser")
-            print("   - LocalNews (with JSON-based newsImageURLs)")
-            print("   - LocalVote")
             
             container = try ModelContainer(
                 for: LocalUser.self, LocalNews.self, LocalVote.self,
                 configurations: config
             )
-            print("✅ Fresh SwiftData container created with new schema")
-            print("📁 Container URL: \(config.url)")
         } catch {
             // Fallback: Try in-memory database if persistent fails
-            print("⚠️ Failed to create persistent container, falling back to in-memory: \(error)")
             do {
                 let memoryConfig = ModelConfiguration(
                     "Localizer_Memory",
@@ -59,7 +52,6 @@ struct LocalizerApp: App {
                     for: LocalUser.self, LocalNews.self, LocalVote.self,
                     configurations: memoryConfig
                 )
-                print("✅ In-memory SwiftData container created")
             } catch {
                 fatalError("❌ Failed to initialize any SwiftData container: \(error)")
             }
@@ -118,7 +110,6 @@ struct LocalizerApp: App {
             }
         }
         
-        print("🔥 SwiftData store completely reset")
     }
     
     private static func deleteSwiftDataFiles(at baseURL: URL, storeName: String) {
@@ -147,9 +138,7 @@ struct LocalizerApp: App {
             if fileManager.fileExists(atPath: fileURL.path) {
                 do {
                     try fileManager.removeItem(at: fileURL)
-                    print("🗑️ Deleted: \(fileURL.path)")
                 } catch {
-                    print("❌ Failed to delete \(fileName): \(error)")
                 }
             }
         }
@@ -159,9 +148,7 @@ struct LocalizerApp: App {
         if fileManager.fileExists(atPath: storeDirectory.path) {
             do {
                 try fileManager.removeItem(at: storeDirectory)
-                print("🗑️ Deleted directory: \(storeDirectory.path)")
             } catch {
-                print("❌ Failed to delete directory \(storeDirectory.path): \(error)")
             }
         }
     }

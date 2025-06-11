@@ -21,9 +21,5 @@ struct ImageUploaderForNews {
         let url = try await ref.downloadURL()
         
         return url.absoluteString
-        
-        
-        // Placeholder implementation - throws error when Firebase Storage is not enabled
-        throw NSError(domain: "ImageUploader", code: -1, userInfo: [NSLocalizedDescriptionKey: "Firebase Storage is not enabled. Please configure Firebase Storage to upload images."])
     }
 } 

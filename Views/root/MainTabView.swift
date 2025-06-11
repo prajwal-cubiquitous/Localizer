@@ -29,18 +29,13 @@ struct MainTabView: View {
     
     init(modelContext: ModelContext) {
         // Pass the modelContext to the singleton instance
-        print("DEBUG: Setting modelContext in MainTabView init")
         AuthViewModel.shared.setModelContext(modelContext)
         
         // Request location permissions when the MainTabView is initialized
         LocationManager.shared.requestLocationPermission()
         
-        // For debugging purposes
-        print("DEBUG: Current stored pincode in LocationManager: \(LocationManager.shared.pincode)")
-        
         // If we already have a pincode from a previous session, use it immediately
         if !LocationManager.shared.pincode.isEmpty {
-            print("DEBUG: Using existing pincode from LocationManager: \(LocationManager.shared.pincode)")
             _pincode.wrappedValue = LocationManager.shared.pincode
             _isLocationReady.wrappedValue = true
         } else {
@@ -64,42 +59,29 @@ struct MainTabView: View {
             }
         }
         .onAppear {
-            print("DEBUG: MainTabView body appeared, isLocationReady: \(isLocationReady), pincode: \(pincode)")
-            
             // Always initiate pincode fetch on appear if needed
             if pincode.isEmpty {
-                print("DEBUG: Initiating pincode fetch on appear")
                 fetchPincode()
             } else if !isLocationReady {
                 // Force state update if we already have a pincode but isLocationReady is false
-                print("DEBUG: Fixing inconsistent state - we have pincode but isLocationReady is false")
                 DispatchQueue.main.async {
                     self.isLocationReady = true
                 }
             }
         }
         .onAppear {
-            print("DEBUG: MainTabView appeared")
-            
             // Ensure the current user is loaded
             if let sessionUserId = appState.userSession?.uid {
-                print("DEBUG: Session user ID in MainTabView: \(sessionUserId)")
-                
                 // Trigger user loading if not already done
                 Task { @MainActor in
                     let users = try? modelContext.fetch(FetchDescriptor<LocalUser>())
-                    print("DEBUG: Found \(users?.count ?? 0) users in MainTabView")
                     
                     if users?.isEmpty == true {
-                        print("DEBUG: No users found, fetching current user")
                         AuthviewModel.fetchAndStoreUser(userId: sessionUserId)
                     } else if let users = users, !users.contains(where: { $0.id == sessionUserId }) {
-                        print("DEBUG: Current session user not found in local storage")
                         AuthviewModel.fetchAndStoreUser(userId: sessionUserId)
                     }
                 }
-            } else {
-                print("DEBUG: No session user in MainTabView")
             }
         }
     }
@@ -165,9 +147,7 @@ struct MainTabView: View {
                 .environment(\.modelContext, modelContext) // Explicitly pass modelContext to ProfileView
                 .environmentObject(AuthviewModel)
                 .environmentObject(appState)
-                .onAppear {
-                    print("DEBUG: Profile tab appeared with modelContext: \(modelContext)")
-                }
+
                 .tabItem {
                     Label {
                         Text("Profile")
@@ -255,7 +235,6 @@ struct MainTabView: View {
                     .padding()
                 
                 Button("Retry") {
-                    print("DEBUG: Retry button tapped, initiating new pincode fetch")
                     locationError = nil
                     fetchPincode()
                 }
@@ -281,8 +260,6 @@ struct MainTabView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(UIColor.systemBackground))
         .onAppear {
-            print("DEBUG: Loading view appeared, isLocationReady: \(isLocationReady), pincode: \(pincode)")
-            
             // Ensure pincode fetch is initiated
             if pincode.isEmpty && locationError == nil {
                 fetchPincode()
@@ -294,20 +271,17 @@ struct MainTabView: View {
     
     /// Enhanced pincode fetching with better error handling and state management
     private func fetchPincode() {
-        print("DEBUG: Starting pincode fetch process")
         LocationManager.shared.getCurrentPincode { fetchedPincode in
             // No need for weak self or guard since MainTabView is a struct (value type)
             
             DispatchQueue.main.async {
                 if let fetchedPincode = fetchedPincode, !fetchedPincode.isEmpty {
-                    print("DEBUG: Pincode fetch success: \(fetchedPincode)")
                     self.pincode = fetchedPincode
                     self.locationError = nil
                     
                     // Set location ready and force refresh
                     self.isLocationReady = true
                     self.refreshID = UUID()
-                    print("DEBUG: Location state updated - isLocationReady: \(self.isLocationReady), pincode: \(self.pincode)")
                 } else {
                     // Check for location authorization status to provide more specific error
                     let authStatus = LocationManager.shared.authorizationStatus
@@ -325,7 +299,6 @@ struct MainTabView: View {
                         }
                     }
                     
-                    print("DEBUG: Location fetch failed with error: \(self.locationError ?? "unknown")")
                     self.isLocationReady = false
                 }
             }

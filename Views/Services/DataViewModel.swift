@@ -36,7 +36,6 @@ class DataViewModel: ObservableObject {
             .whereField("Pincode", isEqualTo: postalCode)
             .getDocuments { [weak self] (querySnapshot, error) in
                 if let error = error {
-                    print("Error fetching schools: \(error)")
                     return
                 }
                 
@@ -50,7 +49,6 @@ class DataViewModel: ObservableObject {
             .whereField("Pincode", isEqualTo: postalCode)
             .getDocuments { [weak self] (querySnapshot, error) in
                 if let error = error {
-                    print("Error fetching hospitals: \(error)")
                     return
                 }
                 
@@ -64,7 +62,6 @@ class DataViewModel: ObservableObject {
             .whereField("Pincode", isEqualTo: postalCode)
             .getDocuments { [weak self] (querySnapshot, error) in
                 if let error = error {
-                    print("Error fetching police stations: \(error)")
                     return
                 }
                 

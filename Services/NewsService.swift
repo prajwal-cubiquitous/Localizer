@@ -8,7 +8,6 @@ struct NewsService {
         do{
             let newsData = try Firestore.Encoder().encode(news)
             try await db.collection("news").addDocument(data: newsData)
-            print("News uploaded successfully")
         }catch{
             throw error
         }

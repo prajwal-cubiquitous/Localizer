@@ -50,7 +50,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["LikedNews"] as? [String] else {
-                print("No savedNews array found")
                 return
             }
             
@@ -63,7 +62,6 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
         }
 
     }
@@ -84,7 +82,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["savedNews"] as? [String] else {
-                print("No savedNews array found")
                 return
             }
             
@@ -97,7 +94,6 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
         }
     }
     
@@ -116,7 +112,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["CommentedNews"] as? [String] else {
-                print("No savedNews array found")
                 return
             }
             
@@ -129,7 +124,6 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
         }
     }
     func fetchDisLikedNews(postalCode: String) async throws{
@@ -147,7 +141,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["DisLikedNews"] as? [String] else {
-                print("No savedNews array found")
                 return
             }
             
@@ -160,7 +153,6 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
         }
     }
 }

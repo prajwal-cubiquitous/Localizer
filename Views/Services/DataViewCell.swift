@@ -144,15 +144,12 @@ struct DataViewCellForSchool: View {
 func openGoogleMaps(withAddress address: String) {
     // Ensure it's just a plain address, not a full Google URL
     let encodedAddress = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-    print("first debug: \(encodedAddress)")
     
     if let appURL = URL(string: "comgooglemaps://?q=\(encodedAddress)"),
        UIApplication.shared.canOpenURL(appURL) {
-        print("second debug: \(appURL)")
         UIApplication.shared.open(appURL)
     } else if let webURL = URL(string: "https://www.google.com/maps/search/\(encodedAddress)") {
         UIApplication.shared.open(webURL)
     } else {
-        print("Cannot open Google Maps or build URL.")
     }
 }

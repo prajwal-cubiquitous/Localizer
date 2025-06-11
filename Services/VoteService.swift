@@ -39,7 +39,6 @@ struct VoteService {
             await cacheRemoteVote(postId: postId, type: type, modelContext: modelContext)
             return type
         } catch {
-            print("[VoteService] remoteVote error: \(error)")
             return 0
         }
     }
@@ -58,7 +57,6 @@ struct VoteService {
                 modelContext.insert(LocalVote(id: voteId, postId: postId, userId: uid, voteType: type))
             }
         } catch {
-            print("[VoteService] cacheRemoteVote error: \(error)")
         }
     }
 
@@ -98,7 +96,6 @@ struct VoteService {
             // Sync local vote cache & likes count
             syncLocal(voteId: voteId, postId: postId, uid: uid, type: newType, delta: delta, context: modelContext)
         } catch {
-            print("[VoteService] Firestore error: \(error)")
         }
     }
 
@@ -124,7 +121,6 @@ struct VoteService {
                 }
             }
         } catch {
-            print("[VoteService] Local sync error: \(error)")
         }
     }
 

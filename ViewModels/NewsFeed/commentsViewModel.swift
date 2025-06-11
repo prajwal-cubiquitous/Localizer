@@ -64,7 +64,6 @@ class CommentsViewModel: ObservableObject {
                 UserCache.shared.cacheusers[comment.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
             }
         } catch {
-            print("❌ Failed to fetch comments: \(error.localizedDescription)")
              throw error
         }
     }
@@ -115,7 +114,6 @@ class CommentsViewModel: ObservableObject {
                 }
             }
         } catch {
-            print("❌ Failed to toggle like: \(error.localizedDescription)")
         }
     }
 
@@ -200,7 +198,6 @@ class CommentsViewModel: ObservableObject {
                 ])
             
         } catch {
-            print("Error saving post: \(error.localizedDescription)")
             throw error
         }
     }
@@ -217,11 +214,9 @@ class CommentsViewModel: ObservableObject {
             if let data = document.data(),
                let LikedNews = data["CommentedNews"] as? [String],
                !LikedNews.contains(postId) {
-                print("Post not in Liked list")
                 return
             }
             
-            print("Removing postId: \(postId)")
             try await docRef.setData([
                 "CommentedNews": FieldValue.arrayRemove([postId])
             ], merge: true)
@@ -233,7 +228,6 @@ class CommentsViewModel: ObservableObject {
                 ])
 
         } catch {
-            print("Error removing postId: \(error.localizedDescription)")
             throw error
         }
     }

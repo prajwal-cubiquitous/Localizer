@@ -73,7 +73,6 @@ class NewsCellViewModel: ObservableObject{
                 }
             }
         } catch {
-            print("DEBUG: Unable to fetch the vote status: \(error.localizedDescription)")
             DispatchQueue.main.async {
                 self.voteState = .none
             }
@@ -193,7 +192,6 @@ class NewsCellViewModel: ObservableObject{
                 if let data = document.data(),
                    let savedNews = data["savedNews"] as? [String],
                    savedNews.contains(postId) {
-                    print("Post already saved")
                     return
                 }
                 
@@ -213,7 +211,6 @@ class NewsCellViewModel: ObservableObject{
                 
                 
             } catch {
-                print("Error saving post: \(error.localizedDescription)")
                 throw error
             }
         }
@@ -243,7 +240,6 @@ class NewsCellViewModel: ObservableObject{
                     }
                 }
             } catch {
-                print("Error checking saved status: \(error.localizedDescription)")
                 await MainActor.run {
                     self.savedByCurrentUser = false
                 }
@@ -268,11 +264,9 @@ class NewsCellViewModel: ObservableObject{
                 if let data = document.data(),
                    let savedNews = data["savedNews"] as? [String],
                    !savedNews.contains(postId) {
-                    print("Post not in saved list")
                     return
                 }
                 
-                print("Removing postId: \(postId)")
                 try await docRef.setData([
                     "savedNews": FieldValue.arrayRemove([postId])
                 ], merge: true)
@@ -289,7 +283,6 @@ class NewsCellViewModel: ObservableObject{
 
                 
             } catch {
-                print("Error removing postId: \(error.localizedDescription)")
                 throw error
             }
         }
@@ -311,7 +304,6 @@ class NewsCellViewModel: ObservableObject{
                 ])
             
         } catch {
-            print("Error saving post: \(error.localizedDescription)")
             throw error
         }
     }
@@ -328,11 +320,9 @@ class NewsCellViewModel: ObservableObject{
             if let data = document.data(),
                let LikedNews = data["LikedNews"] as? [String],
                !LikedNews.contains(postId) {
-                print("Post not in Liked list")
                 return
             }
             
-            print("Removing postId: \(postId)")
             try await docRef.setData([
                 "LikedNews": FieldValue.arrayRemove([postId])
             ], merge: true)
@@ -344,7 +334,6 @@ class NewsCellViewModel: ObservableObject{
                 ])
 
         } catch {
-            print("Error removing postId: \(error.localizedDescription)")
             throw error
         }
     }
@@ -366,7 +355,6 @@ class NewsCellViewModel: ObservableObject{
                 ])
             
         } catch {
-            print("Error saving post: \(error.localizedDescription)")
             throw error
         }
     }
@@ -383,11 +371,9 @@ class NewsCellViewModel: ObservableObject{
             if let data = document.data(),
                let DisLikedNews = data["DisLikedNews"] as? [String],
                !DisLikedNews.contains(postId) {
-                print("Post not in Liked list")
                 return
             }
             
-            print("Removing postId: \(postId)")
             try await docRef.setData([
                 "DisLikedNews": FieldValue.arrayRemove([postId])
             ], merge: true)
@@ -399,7 +385,6 @@ class NewsCellViewModel: ObservableObject{
                 ])
 
         } catch {
-            print("Error removing postId: \(error.localizedDescription)")
             throw error
         }
     }

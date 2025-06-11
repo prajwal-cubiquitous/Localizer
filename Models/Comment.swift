@@ -1,13 +1,22 @@
 import Foundation
 import FirebaseFirestore
 
-struct Reply: Identifiable, Codable ,Hashable {
-    let id = UUID()
+struct Reply: Identifiable, Codable, Hashable {
+    var id = UUID()
     var userId: String
     var username: String?
     var text: String
     var profileImageName: String? // For placeholder system images
-    var timestamp: Date = Date()
+    var timestamp: Date
+    
+    init(id: UUID = UUID(), userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date()) {
+        self.id = id
+        self.userId = userId
+        self.username = username
+        self.text = text
+        self.profileImageName = profileImageName
+        self.timestamp = timestamp
+    }
 }
 
 struct Comment: Identifiable, Hashable, Codable {
@@ -15,10 +24,21 @@ struct Comment: Identifiable, Hashable, Codable {
     var userId: String
     var username: String?
     var text: String
-    var profileImageName: String?// For placeholder system images
-    var timestamp: Date = Date()
-    var likes: Int = 0
-    var replies: [Reply] = []
+    var profileImageName: String? // For placeholder system images
+    var timestamp: Date
+    var likes: Int
+    var replies: [Reply]
+    
+    init(id: UUID = UUID(), userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date(), likes: Int = 0, replies: [Reply] = []) {
+        self.id = id
+        self.userId = userId
+        self.username = username
+        self.text = text
+        self.profileImageName = profileImageName
+        self.timestamp = timestamp
+        self.likes = likes
+        self.replies = replies
+    }
 }
 
 

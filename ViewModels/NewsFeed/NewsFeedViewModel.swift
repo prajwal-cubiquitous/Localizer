@@ -37,7 +37,6 @@ final class NewsFeedViewModel: ObservableObject {
             await cache(remoteNews, pincode: pincode, context: context)
         } catch {
             // Prefer logging over crashing – surface this to UI if needed.
-            print("[NewsFeedVM] Failed to fetch news: \(error)")
         }
         isLoading = false
     }
@@ -90,7 +89,6 @@ final class NewsFeedViewModel: ObservableObject {
             }
             
         } catch {
-            print("[NewsFeedVM] Caching error: \(error)")
         }
     }
     

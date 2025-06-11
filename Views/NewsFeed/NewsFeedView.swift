@@ -28,7 +28,7 @@ struct NewsFeedView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if newsItems.isEmpty {
+                if !newsItems.isEmpty {
                     VStack(spacing: 24) {
                         Image(systemName: "square.and.pencil")
                             .resizable()
@@ -104,6 +104,6 @@ struct NewsFeedView: View {
     }
 }
 
-//#Preview {
-//    NewsFeedView(pincode: "560043")
-//}
+#Preview {
+    NewsFeedView(pincode: "560043")
+}

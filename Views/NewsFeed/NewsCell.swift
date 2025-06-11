@@ -7,6 +7,13 @@
 
 import SwiftUI
 import FirebaseFirestore
+import AVKit
+import AVFoundation
+import Combine
+import ObjectiveC
+import Network
+import Kingfisher
+import FirebaseStorage
 
 struct NewsCell: View {
     @State private var showingCommentsSheet = false
@@ -18,12 +25,23 @@ struct NewsCell: View {
         self.localNews = localNews
     }
     
+    // MARK: - Computed Properties
+    private var validProfileImageURL: URL? {
+        guard let profileImageUrl = localNews.user?.profileImageUrl,
+              !profileImageUrl.isEmpty,
+              !profileImageUrl.hasPrefix("person."),  // Avoid SF Symbol names
+              profileImageUrl.hasPrefix("http") else {
+            return nil
+        }
+        return URL(string: profileImageUrl)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // User Info Header
             HStack {
                 // Profile Image
-                AsyncImage(url: URL(string: localNews.user?.profileImageUrl ?? "")) { image in
+                AsyncImage(url: validProfileImageURL) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -100,19 +118,9 @@ struct NewsCell: View {
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
             
-            // Image Placeholder or Actual Image
-            if let imageUrls = localNews.newsImageURLs,
-               let firstImageUrl = imageUrls.first,
-               !firstImageUrl.isEmpty {
-                AsyncImage(url: URL(string: firstImageUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    imagePlaceholder
-                }
-                .frame(maxHeight: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            // Media Gallery - Display all media items
+            if let imageUrls = localNews.newsImageURLs, !imageUrls.isEmpty {
+                MediaGalleryView(mediaURLs: imageUrls)
             }
             
             // Interaction Buttons
@@ -209,17 +217,136 @@ struct NewsCell: View {
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: localNews.timestamp, relativeTo: Date())
     }
+}
+
+// MARK: - Media Gallery Component
+struct MediaGalleryView: View {
+    let mediaURLs: [String]
+    @State private var currentIndex = 0
     
-    // Image Placeholder View
-    private var imagePlaceholder: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.secondary.opacity(0.2))
-            .frame(height: 200)
-            .overlay(
-                Image(systemName: "photo")
-                    .font(.system(size: 40))
-                    .foregroundColor(.secondary.opacity(0.6))
-            )
+    var body: some View {
+        VStack(spacing: 0) {
+            if mediaURLs.count == 1 {
+                // Single media item - ensure consistent height and proper video handling
+                let urlString = mediaURLs[0]
+                
+                if urlString.contains("news_videos") {
+                    // Single Video - use proper frame constraints
+                    if let videoUrl = URL(string: urlString) {
+                        VideoPlayer(player: AVPlayer(url: videoUrl))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 300)
+                            .background(Color.black)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    } else {
+                        Rectangle()
+                            .fill(Color.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                Text("Invalid video URL")
+                                    .foregroundColor(.white)
+                            )
+                    }
+                } else {
+                    // Single Image
+                    KFImage(URL(string: urlString))
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 300)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            } else {
+                // Multiple media items - use TabView
+                ZStack {
+                    TabView(selection: $currentIndex) {
+                        ForEach(Array(mediaURLs.enumerated()), id: \.offset) { index, urlString in
+                            MediaItemView(urlString: urlString)
+                                .tag(index)
+                        }
+                    }
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    .frame(height: 300)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    // Page indicators for multiple items
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            
+                            // Custom page indicators
+                            HStack(spacing: 6) {
+                                ForEach(0..<mediaURLs.count, id: \.self) { index in
+                                    Circle()
+                                        .fill(index == currentIndex ? Color.white : Color.white.opacity(0.5))
+                                        .frame(width: 8, height: 8)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Capsule())
+                            
+                            Spacer()
+                        }
+                        .padding(.bottom, 16)
+                    }
+                    
+                    // Media counter
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Text("\(currentIndex + 1) of \(mediaURLs.count)")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.black.opacity(0.7))
+                                .clipShape(Capsule())
+                                .padding(.trailing, 12)
+                                .padding(.top, 12)
+                        }
+                        Spacer()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Individual Media Item Component  
+struct MediaItemView: View {
+    let urlString: String
+    
+    var body: some View {
+        if urlString.contains("news_videos") {
+            // Video Player for TabView
+            if let videoUrl = URL(string: urlString) {
+                VideoPlayer(player: AVPlayer(url: videoUrl))
+                    .frame(maxWidth: .infinity, maxHeight: 300)
+                    .background(Color.black)
+            } else {
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(maxWidth: .infinity, maxHeight: 300)
+                    .overlay(
+                        Text("Invalid video URL")
+                            .foregroundColor(.white)
+                    )
+            }
+        } else {
+            // Image for TabView
+            KFImage(URL(string: urlString))
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: 300)
+                .clipped()
+        }
     }
 }
 

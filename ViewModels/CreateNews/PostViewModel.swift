@@ -102,10 +102,7 @@ class PostViewModel: ObservableObject {
     
     @MainActor
     func uploadMultipleImages(caption: String) async throws {
-        print("Starting upload process")
-        DispatchQueue.main.async {
-            self.urls.removeAll()
-        }
+        urls.removeAll()
         
         // MARK: - COMMENTED OUT - Firebase Storage Upload
         // Uncomment when Firebase Storage is enabled
@@ -115,9 +112,7 @@ class PostViewModel: ObservableObject {
             do {
                 let url = try await ImageUploaderForNews.uploadImage(image)
                 urls.append(url)
-                print("Uploaded image: \(url)")
             } catch {
-                print("Image upload error: \(error.localizedDescription)")
                 throw error
             }
         }
@@ -129,20 +124,16 @@ class PostViewModel: ObservableObject {
                 let compressedData = await compressVideo(data: videoData)
                 
                 let uploadedURL = try await VideoUploader.uploadVideo(withData: compressedData ?? videoData)
-                DispatchQueue.main.async {
-                    self.urls.append(uploadedURL)
-                }
-                print("Uploaded video: \(uploadedURL)")
+                urls.append(uploadedURL)
             } catch {
-                print("Video upload error: \(error.localizedDescription)")
                 throw error
             }
         }
         
+        
         try await uploadNewsimages(caption: caption, imageURLS: urls)
         
         // For now, just create text post without media URLs
-//        print("Media upload disabled - Firebase Storage not enabled")
 //        try await uploadNews(caption: caption)
     }
     
@@ -169,7 +160,6 @@ class PostViewModel: ObservableObject {
     func uploadNewsimages(caption: String, imageURLS: [String]?) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-
         
         // Get current location
         let currentPincode = await getCurrentPincode()
@@ -181,7 +171,10 @@ class PostViewModel: ObservableObject {
                         commentsCount: 0,
                         postalCode: currentPincode,
                         newsImageURLs: imageURLS)
+        
+        
         try await NewsService.uploadNews(news)
+        
         
         // Increment post count
         try await incrementPostCount(for: uid)
@@ -198,7 +191,6 @@ class PostViewModel: ObservableObject {
     // MARK: - Media Processing
     
     func processPickedPhotos(_ photos: [PhotosPickerItem]) async {
-        print("DEBUG: Starting to process \(photos.count) picked photos")
         
         await MainActor.run {
             isProcessing = true
@@ -210,39 +202,30 @@ class PostViewModel: ObservableObject {
                     let isVideo = contentType.conforms(to: .movie)
                     
                     if isVideo {
-                        print("DEBUG: Processing video item")
                         if let videoData = try await photo.loadTransferable(type: Data.self) {
                             let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
                             try videoData.write(to: tempURL)
-                            print("DEBUG: Created temporary video file at: \(tempURL)")
                             
                             let duration = try await getVideoDuration(from: tempURL)
-                            print("DEBUG: Video duration: \(duration) seconds")
                             
                             await MainActor.run {
-                                print("DEBUG: Showing video trimmer for user selection")
                                 selectedVideoURL = tempURL
                                 videoBeingRetrimmed = nil // This is a new video, not a re-trim
                                 isShowingVideoTrimmer = true
                             }
                         }
                     } else {
-                        print("DEBUG: Processing image item")
                         if let imageData = try await photo.loadTransferable(type: Data.self),
                            let uiImage = UIImage(data: imageData) {
-                            print("DEBUG: Processing image with size: \(imageData.count) bytes")
                             await MainActor.run {
                                 mediaItems.append(.image(uiImage))
                                 images.append(uiImage)
-                                print("DEBUG: Added image to media items and images array")
                             }
                         }
                     }
                 } else {
-                    print("DEBUG: No content type found for item")
                 }
             } catch {
-                print("DEBUG: Error processing photo: \(error)")
                 await MainActor.run {
                     errorMessage = "Failed to process media: \(error.localizedDescription)"
                     showError = true
@@ -254,11 +237,9 @@ class PostViewModel: ObservableObject {
             isProcessing = false
         }
         
-        print("DEBUG: Finished processing all photos. Media items count: \(mediaItems.count)")
     }
     
     func addTrimmedVideo(_ trimmedURL: URL) {
-        print("DEBUG: Adding trimmed video: \(trimmedURL)")
         
         Task {
             let thumbnail: UIImage?
@@ -284,7 +265,6 @@ class PostViewModel: ObservableObject {
                return false
            }) {
             // Replace existing video
-            print("DEBUG: Replacing existing video at index \(index)")
             
             // Remove old video file
             if case .video(let oldURL, _) = mediaItems[index] {
@@ -297,7 +277,6 @@ class PostViewModel: ObservableObject {
             videos.append(trimmedURL)
         } else {
             // Add new video
-            print("DEBUG: Adding new trimmed video")
             mediaItems.append(.video(trimmedURL, thumbnail: thumbnail))
             videos.append(trimmedURL)
         }
@@ -312,33 +291,27 @@ class PostViewModel: ObservableObject {
         videoBeingRetrimmed = nil
         isShowingVideoTrimmer = false
         
-        print("DEBUG: Added trimmed video to media items. Total videos: \(videos.count)")
     }
     
     func startVideoRetrimming(for videoURL: URL) {
-        print("DEBUG: Starting video re-trimming for: \(videoURL)")
         selectedVideoURL = videoURL
         videoBeingRetrimmed = videoURL
         isShowingVideoTrimmer = true
     }
     
     func removeMediaItem(at index: Int) {
-        print("DEBUG: Removing media item at index: \(index)")
         if index < mediaItems.count {
             let item = mediaItems[index]
             switch item {
             case .video(let url, _):
-                print("DEBUG: Removing video from videos array: \(url)")
                 videos.removeAll { $0 == url }
                 try? FileManager.default.removeItem(at: url)
             case .image(let image):
-                print("DEBUG: Removing image from images array")
                 if let imageIndex = images.firstIndex(of: image) {
                     images.remove(at: imageIndex)
                 }
             }
             mediaItems.remove(at: index)
-            print("DEBUG: Current media items count: \(mediaItems.count)")
         }
     }
     
@@ -360,53 +333,80 @@ class PostViewModel: ObservableObject {
             try data.write(to: tempInputURL)
             
             let asset = AVURLAsset(url: tempInputURL)
-            guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality) else {
-                return nil
-            }
             
-            exportSession.outputURL = tempOutputURL
-            exportSession.outputFileType = .mov
-            
+            // Check if the asset is valid
             do {
-                try await exportSession.export(to: tempOutputURL, as: .mov)
-                let compressedData = try Data(contentsOf: tempOutputURL)
-                try? FileManager.default.removeItem(at: tempInputURL)
-                try? FileManager.default.removeItem(at: tempOutputURL)
-                return compressedData
+                let duration = try await asset.load(.duration)
             } catch {
-                print("Video compression export error: \(error.localizedDescription)")
+                try? FileManager.default.removeItem(at: tempInputURL)
                 return nil
             }
+            
+            // Try different compression presets in order of preference
+            let presets = [
+                AVAssetExportPresetMediumQuality,
+                AVAssetExportPresetLowQuality,
+                AVAssetExportPresetHighestQuality
+            ]
+            
+            for preset in presets {
+                guard let exportSession = AVAssetExportSession(asset: asset, presetName: preset) else {
+                    continue
+                }
+                
+                exportSession.outputURL = tempOutputURL
+                exportSession.outputFileType = .mov
+                exportSession.shouldOptimizeForNetworkUse = true
+                
+                
+                do {
+                    try await exportSession.export(to: tempOutputURL, as: .mov)
+                    
+                    // If we reach here, export was successful
+                    let compressedData = try Data(contentsOf: tempOutputURL)
+                    let originalSize = data.count
+                    let compressedSize = compressedData.count
+                    let compressionRatio = Double(compressedSize) / Double(originalSize)
+                    
+                    
+                    // Clean up temp files
+                    try? FileManager.default.removeItem(at: tempInputURL)
+                    try? FileManager.default.removeItem(at: tempOutputURL)
+                    
+                    return compressedData
+                } catch {
+                    // Try next preset
+                    continue
+                }
+            }
+            
+            
         } catch {
-            print("Video compression error: \(error.localizedDescription)")
         }
         
+        // Clean up temp files
         try? FileManager.default.removeItem(at: tempInputURL)
         try? FileManager.default.removeItem(at: tempOutputURL)
+        
         return nil
     }
     
     func getVideoDuration(from url: URL) async throws -> Double {
-        print("DEBUG: Getting video duration from: \(url)")
         let asset = AVURLAsset(url: url)
         let duration = try await asset.load(.duration)
-        print("DEBUG: Video duration loaded: \(duration.seconds) seconds")
         return duration.seconds
     }
     
     @available(iOS, deprecated: 18.0, message: "Use async thumbnail generation instead")
     func generateThumbnail(from videoURL: URL) -> UIImage? {
-        print("DEBUG: Generating thumbnail for video: \(videoURL)")
         let asset = AVURLAsset(url: videoURL)
         let imageGenerator = AVAssetImageGenerator(asset: asset)
         imageGenerator.appliesPreferredTrackTransform = true
         
         do {
             let cgImage = try imageGenerator.copyCGImage(at: .zero, actualTime: nil)
-            print("DEBUG: Successfully generated thumbnail")
             return UIImage(cgImage: cgImage)
         } catch {
-            print("DEBUG: Error generating thumbnail: \(error)")
             return nil
         }
     }
@@ -421,7 +421,6 @@ class PostViewModel: ObservableObject {
                 if let cgImage = cgImage {
                     continuation.resume(returning: UIImage(cgImage: cgImage))
                 } else {
-                    print("Failed to generate thumbnail: \(error?.localizedDescription ?? "Unknown error")")
                     continuation.resume(returning: nil)
                 }
             }
@@ -437,19 +436,33 @@ class PostViewModel: ObservableObject {
         let videoTracks = try await asset.loadTracks(withMediaType: .video)
         let audioTracks = try await asset.loadTracks(withMediaType: .audio)
         
-        guard let videoTrack = videoTracks.first,
-              let audioTrack = audioTracks.first,
-              let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
-              let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
-            throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create composition tracks"])
+        // Ensure we have at least a video track
+        guard let videoTrack = videoTracks.first else {
+            throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "No video track found in the video file"])
+        }
+        
+        // Create video composition track
+        guard let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+            throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create video composition track"])
         }
         
         let start = CMTime(seconds: startTime, preferredTimescale: 600)
         let end = CMTime(seconds: endTime, preferredTimescale: 600)
         let timeRange = CMTimeRange(start: start, end: end)
         
+        // Insert video track
         try compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
-        try compositionAudioTrack.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+        
+        // Handle audio track only if it exists
+        if let audioTrack = audioTracks.first,
+           let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
+            do {
+                try compositionAudioTrack.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+            } catch {
+                // Continue without audio if audio insertion fails
+            }
+        } else {
+        }
         
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
         
@@ -485,7 +498,6 @@ class PostViewModel: ObservableObject {
                     localUser.postCount += 1
                 }
             } catch {
-                print("[PostVM] Failed to update local postCount: \(error)")
             }
         }
     }

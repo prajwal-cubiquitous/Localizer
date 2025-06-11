@@ -194,12 +194,10 @@ struct ProfileView: View {
     @MainActor
     private func refreshUserData() async {
         guard let userId = AppState.shared.userSession?.uid else {
-            print("DEBUG: No user session found during refresh")
             return
         }
         
         isRefreshing = true
-        print("DEBUG: Refreshing user data for ID: \(userId)")
         
         // Use the injected AuthViewModel instance to refresh user data
         self.AuthViewModel.fetchAndStoreUser(userId: userId)
@@ -307,7 +305,6 @@ struct EditProfileView: View {
                             do {
                                 try modelContext.save()
                             } catch {
-                                print("Error saving user profile: \(error.localizedDescription)")
                             }
                             
                             isPresented = false

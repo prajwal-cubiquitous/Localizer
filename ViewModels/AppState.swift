@@ -24,7 +24,6 @@ class AppState: ObservableObject {
     
     func updatePincode(_ pincode: String) {
         self.userPincode = pincode
-        print("DEBUG: AppState updated with pincode: \(pincode)")
     }
     
     func signIn(email: String, password: String, completion: @escaping (User.ID) -> Void) async throws {
@@ -85,7 +84,6 @@ class AppState: ObservableObject {
                 if let error = error {
                     continuation.resume(throwing: AuthError(error: error))
                 } else {
-                    print("DEBUG: User profile successfully updated")
                     continuation.resume()
                 }
             }

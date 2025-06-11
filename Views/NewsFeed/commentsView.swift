@@ -250,7 +250,7 @@ struct CommentsView: View {
                             .frame(width: 40, height: 40)
                             .foregroundColor(.gray)
                         
-                        TextField(replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToComment!.username)...", text: $newCommentText, axis: .vertical)
+                        TextField(replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToComment?.username ?? "unknown")...", text: $newCommentText, axis: .vertical)
                             .textFieldStyle(.plain)
                             .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
                             .background(Color(UIColor.systemGray6))
@@ -271,13 +271,11 @@ struct CommentsView: View {
                                         replyingToComment = nil
                                         
                                     } catch {
-                                        print("Failed to add reply: \(error.localizedDescription)")
                                     }
                                 }else{
                                     do {
                                         try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
                                     } catch {
-                                        print("Failed to add comment: \(error.localizedDescription)")
                                     }
                                 }
                                 newCommentText = ""
@@ -311,7 +309,6 @@ struct CommentsView: View {
             do{
                 try await viewModel.fetchComments(forNewsId: localNews.id)
             }catch{
-                print("Error fetching comments: \(error)")
             }
         }
     }

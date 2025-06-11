@@ -105,20 +105,17 @@ class LocationManager: NSObject, ObservableObject {
                 if let error = error {
                     self.error = error
                     self.isLoading = false
-                    print("DEBUG: Geocoding error: \(error.localizedDescription)")
                     return
                 }
                 
                 guard let placemark = placemarks?.first else {
                     self.error = NSError(domain: "LocationManager", code: 3, userInfo: [NSLocalizedDescriptionKey: "No placemark found"])
                     self.isLoading = false
-                    print("DEBUG: No placemark found")
                     return
                 }
                 
                 if let postalCode = placemark.postalCode {
                     self.pincode = postalCode
-                    print("DEBUG: Found pincode: \(postalCode)")
                     
                     // Update AppState with the pincode
                     AppState.shared.updatePincode(postalCode)
@@ -128,7 +125,6 @@ class LocationManager: NSObject, ObservableObject {
                     self.pincodeCompletionHandler = nil  // Clear the handler after use
                 } else {
                     self.error = NSError(domain: "LocationManager", code: 4, userInfo: [NSLocalizedDescriptionKey: "No postal code found"])
-                    print("DEBUG: No postal code found in placemark")
                     
                     // Call the completion handler with nil to indicate failure
                     self.pincodeCompletionHandler?(nil)
@@ -152,7 +148,6 @@ extension LocationManager: CLLocationManagerDelegate {
             return
         }
         
-        print("DEBUG: Location updated: \(location.coordinate.latitude), \(location.coordinate.longitude)")
         reverseGeocodeLocation(location)
     }
     
@@ -161,22 +156,18 @@ extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         DispatchQueue.main.async {
             self.error = error
-            print("DEBUG: Location manager error: \(error.localizedDescription)")
             
             // If we haven't exceeded max retries, try again automatically
             if self.retryCount < self.maxRetries {
                 self.retryCount += 1
-                print("DEBUG: Retry attempt \(self.retryCount) of \(self.maxRetries)")
                 
                 // Wait 2 seconds before retrying
                 self.retryTimer?.invalidate()
                 self.retryTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
-                    print("DEBUG: Retrying location request automatically")
                     self.locationManager.requestLocation()
                 }
             } else {
                 self.isLoading = false
-                print("DEBUG: Maximum retry attempts reached")
                 
                 // Call completion handler with nil to indicate failure
                 self.pincodeCompletionHandler?(nil)
