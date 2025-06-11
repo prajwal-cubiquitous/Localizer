@@ -20,7 +20,6 @@ struct NewsCell: View {
     @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
     
-    
     init(localNews: LocalNews) {
         self.localNews = localNews
     }
@@ -36,10 +35,24 @@ struct NewsCell: View {
         return URL(string: profileImageUrl)
     }
     
+    // Responsive padding based on device size
+    private var horizontalPadding: CGFloat {
+        // Use different padding for different screen sizes
+        let screenWidth = UIScreen.main.bounds.width
+        switch screenWidth {
+        case 0..<375: // iPhone SE, Mini
+            return 16
+        case 375..<428: // iPhone 13, 14, 15 Standard
+            return 20
+        default: // iPhone Plus, Pro Max
+            return 24
+        }
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             // User Info Header
-            HStack {
+            HStack(spacing: 12) {
                 // Profile Image
                 AsyncImage(url: validProfileImageURL) { image in
                     image
@@ -57,10 +70,11 @@ struct NewsCell: View {
                 .frame(width: 44, height: 44)
                 .clipShape(Circle())
                 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(localNews.user?.name ?? "Unknown User")
                         .font(.headline)
                         .foregroundColor(.primary)
+                        .lineLimit(1)
                     
                     Text(timeAgo)
                         .font(.subheadline)
@@ -105,28 +119,32 @@ struct NewsCell: View {
                 } label: {
                     Image(systemName: "ellipsis")
                         .foregroundColor(.secondary)
-                        .font(.title2)
+                        .font(.title3)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
             }
             
             // Post Content
-            Text(localNews.caption)
-                .font(.body)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
+            if !localNews.caption.isEmpty {
+                Text(localNews.caption)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 4) // Slight indent for content
+            }
             
             // Media Gallery - Display all media items
             if let imageUrls = localNews.newsImageURLs, !imageUrls.isEmpty {
                 MediaGalleryView(mediaURLs: imageUrls)
+                    .padding(.vertical, 4)
             }
             
             // Interaction Buttons
             HStack(spacing: 24) {
                 // Reddit-style Voting System
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     // Upvote Button
                     Button {
                         Task{
@@ -145,6 +163,7 @@ struct NewsCell: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
+                        .monospacedDigit() // Prevents layout jumping
                     
                     // Downvote Button
                     Button {
@@ -164,7 +183,7 @@ struct NewsCell: View {
                 Button {
                     showingCommentsSheet = true
                 } label: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         Image(systemName: "message")
                             .foregroundColor(.secondary)
                             .font(.title3)
@@ -172,6 +191,7 @@ struct NewsCell: View {
                         Text("\(localNews.commentsCount)")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .monospacedDigit()
                     }
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -182,7 +202,7 @@ struct NewsCell: View {
                 Button {
                     // Share action
                 } label: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         Image(systemName: "arrowshape.turn.up.right")
                             .foregroundColor(.secondary)
                             .font(.title3)
@@ -194,10 +214,16 @@ struct NewsCell: View {
                 }
                 .buttonStyle(PlainButtonStyle())
             }
+            .padding(.top, 4)
         }
-        .padding(16)
-        .background(Color(UIColor.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 0))
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(UIColor.systemBackground))
+                .shadow(color: .black.opacity(0.05), radius: 1, x: 0, y: 1)
+        )
+        .padding(.horizontal, 16) // Outer margin from screen edges
         .task {
             await viewModel.fetchVotesStatus(postId: localNews.id)
             await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
@@ -207,7 +233,6 @@ struct NewsCell: View {
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
     }
-    
     
     // MARK: - Voting Functions
     
@@ -224,6 +249,16 @@ struct MediaGalleryView: View {
     let mediaURLs: [String]
     @State private var currentIndex = 0
     
+    // Responsive media height based on screen size
+    private var mediaHeight: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        let availableWidth = screenWidth - 64 // Account for margins and padding
+        
+        // Maintain 16:9 aspect ratio but with reasonable limits
+        let calculatedHeight = availableWidth * 9 / 16
+        return min(max(calculatedHeight, 200), 320) // Between 200-320pt
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             if mediaURLs.count == 1 {
@@ -235,18 +270,19 @@ struct MediaGalleryView: View {
                     if let videoUrl = URL(string: urlString) {
                         VideoPlayer(player: AVPlayer(url: videoUrl))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 300)
+                            .frame(height: mediaHeight)
                             .background(Color.black)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     } else {
                         Rectangle()
                             .fill(Color.black)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 300)
+                            .frame(height: mediaHeight)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .overlay(
                                 Text("Invalid video URL")
                                     .foregroundColor(.white)
+                                    .font(.caption)
                             )
                     }
                 } else {
@@ -255,7 +291,7 @@ struct MediaGalleryView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 300)
+                        .frame(height: mediaHeight)
                         .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
@@ -264,12 +300,12 @@ struct MediaGalleryView: View {
                 ZStack {
                     TabView(selection: $currentIndex) {
                         ForEach(Array(mediaURLs.enumerated()), id: \.offset) { index, urlString in
-                            MediaItemView(urlString: urlString)
+                            MediaItemView(urlString: urlString, height: mediaHeight)
                                 .tag(index)
                         }
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .frame(height: 300)
+                    .frame(height: mediaHeight)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     
                     // Page indicators for multiple items
@@ -322,21 +358,23 @@ struct MediaGalleryView: View {
 // MARK: - Individual Media Item Component  
 struct MediaItemView: View {
     let urlString: String
+    let height: CGFloat
     
     var body: some View {
         if urlString.contains("news_videos") {
             // Video Player for TabView
             if let videoUrl = URL(string: urlString) {
                 VideoPlayer(player: AVPlayer(url: videoUrl))
-                    .frame(maxWidth: .infinity, maxHeight: 300)
+                    .frame(maxWidth: .infinity, maxHeight: height)
                     .background(Color.black)
             } else {
                 Rectangle()
                     .fill(Color.black)
-                    .frame(maxWidth: .infinity, maxHeight: 300)
+                    .frame(maxWidth: .infinity, maxHeight: height)
                     .overlay(
                         Text("Invalid video URL")
                             .foregroundColor(.white)
+                            .font(.caption)
                     )
             }
         } else {
@@ -344,7 +382,7 @@ struct MediaItemView: View {
             KFImage(URL(string: urlString))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: 300)
+                .frame(maxWidth: .infinity, maxHeight: height)
                 .clipped()
         }
     }

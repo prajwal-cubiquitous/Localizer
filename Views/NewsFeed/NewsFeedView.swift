@@ -28,7 +28,8 @@ struct NewsFeedView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if !newsItems.isEmpty {
+                if newsItems.isEmpty {
+                    // Empty State
                     VStack(spacing: 24) {
                         Image(systemName: "square.and.pencil")
                             .resizable()
@@ -54,15 +55,24 @@ struct NewsFeedView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .padding()
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
                 } else {
+                    // News Feed Content
                     ScrollView {
-                        VStack(spacing: 16) {
+                        LazyVStack(spacing: 0) {
                             ForEach(newsItems) { item in
                                 NewsCell(localNews: item)
+                                    .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
+                                    .padding(.bottom, 8) // Space between news items
                             }
                         }
-                        .padding()
+                        .padding(.top, 8) // Top spacing from navigation
+                        .padding(.bottom, 20) // Bottom spacing for safe area
+                    }
+                    .scrollIndicators(.hidden) // Clean modern look
+                    .refreshable {
+                        await viewModel.refresh(for: pincode, context: modelContext)
                     }
                 }
             }
@@ -87,16 +97,13 @@ struct NewsFeedView: View {
                     }
                 }
             }
-            .background(colorScheme == .dark ? Color.black : Color.white)
+            .background(colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground))
         }
         .task {
             if !hasFetched {
                 hasFetched = true
                 await viewModel.fetchAndCacheNews(for: pincode, context: modelContext)
             }
-        }
-        .refreshable {
-            await viewModel.refresh(for: pincode, context: modelContext)
         }
         .sheet(isPresented: $showCreatePostSheet) {
             PostView(pincode: pincode)
