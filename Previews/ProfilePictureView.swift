@@ -10,13 +10,12 @@ import Kingfisher
 
 struct ProfilePictureView: View {
     
-    let currentUser: LocalUser?
+    let userProfileUrl: String?
     let width: CGFloat
     let height: CGFloat
     
     var body: some View {
-        if currentUser?.profileImageUrl != ""{
-            if let profileUrl = currentUser?.profileImageUrl {
+            if let profileUrl = userProfileUrl {
                 KFImage(URL(string: profileUrl))
                     .resizable()
                     .scaledToFill()
@@ -24,12 +23,12 @@ struct ProfilePictureView: View {
                     .clipShape(Circle())
                     .overlay(
                         Circle()
-                            .stroke(Color.blue, lineWidth: 3)
+                            .stroke(Color.primary, lineWidth: 1)
                     )
                     .shadow(radius: 5)
                     .padding(.bottom, 8)
             }
-        }else{
+        else{
             Circle()
                 .fill(Color.gray.opacity(0.2))
                 .frame(width: width, height: height)
@@ -44,5 +43,5 @@ struct ProfilePictureView: View {
 }
 
 #Preview {
-    ProfilePictureView(currentUser: DummylocalUser.user1, width: 100, height: 100)
+    ProfilePictureView(userProfileUrl: "", width: 100, height: 100)
 }

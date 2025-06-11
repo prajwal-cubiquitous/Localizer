@@ -54,21 +54,7 @@ struct NewsCell: View {
             // User Info Header
             HStack(spacing: 12) {
                 // Profile Image
-                AsyncImage(url: validProfileImageURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(Color.secondary.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .foregroundColor(.secondary)
-                                .font(.title2)
-                        )
-                }
-                .frame(width: 44, height: 44)
-                .clipShape(Circle())
+                ProfilePictureView(userProfileUrl: localNews.user?.profileImageUrl, width: 44, height: 44)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(localNews.user?.name ?? "Unknown User")

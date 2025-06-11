@@ -38,7 +38,7 @@ struct ProfileView: View {
                 VStack(spacing: 20) {
                     // Header with profile image
                     VStack {
-                        ProfilePictureView(currentUser: currentUser, width: 100, height: 100)
+                        ProfilePictureView(userProfileUrl: currentUser?.profileImageUrl, width: 100, height: 100)
                         if let user = currentUser {
                             Text(user.name)
                                 .font(.title2)
@@ -203,17 +203,32 @@ struct ProfileView: View {
 }
 
 
-// Edit profile view
+// MARK: - Edit Profile View
 struct EditProfileView: View {
     @Binding var isPresented: Bool
     var localUser: LocalUser
     var modelContext: ModelContext
-    @EnvironmentObject var AuthViewModel : AuthViewModel
+    @EnvironmentObject var AuthViewModel: AuthViewModel
     @StateObject private var viewModel = EditProfileViewModel()
+    
+    // Form state
     @State private var name: String
     @State private var bio: String
-    @State private var selectedItem: PhotosPickerItem? = nil
-    @State private var selectedImage: UIImage? = nil
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var selectedImage: UIImage?
+    
+    // UI state
+    @State private var isLoading = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var hasChanges = false
+    
+    // Focus management
+    @FocusState private var focusedField: Field?
+    
+    enum Field: Hashable {
+        case name, bio
+    }
     
     init(isPresented: Binding<Bool>, localUser: LocalUser, modelContext: ModelContext) {
         self._isPresented = isPresented
@@ -225,98 +240,313 @@ struct EditProfileView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                // Profile image
-                PhotosPicker(
-                    selection: $selectedItem,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    if let selectedImage {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.blue, lineWidth: 3)
-                            )
-                    }
-                    else {
-                        ProfilePictureView(currentUser: localUser, width: 100, height: 100)
-                    }
-                }
-                .onChange(of: selectedItem) { oldValue, newValue in
-                    Task {
-                        if let data = try? await newValue?.loadTransferable(type: Data.self) {
-                            if let uiImage = UIImage(data: data) {
-                                selectedImage = uiImage
+            Form {
+                // MARK: - Profile Photo Section
+                Section {
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 12) {
+                            PhotosPicker(
+                                selection: $selectedItem,
+                                matching: .images,
+                                photoLibrary: .shared()
+                            ) {
+                                ZStack {
+                                    if let selectedImage {
+                                        Image(uiImage: selectedImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 120, height: 120)
+                                            .clipShape(Circle())
+                                            .overlay {
+                                                Circle()
+                                                    .stroke(Color.blue, lineWidth: 3)
+                                            }
+                                            .overlay(alignment: .bottomTrailing) {
+                                                editBadge
+                                            }
+                                    } else {
+                                        ProfilePictureView(userProfileUrl: localUser.profileImageUrl, width: 120, height: 120)
+                                            .overlay(alignment: .bottomTrailing) {
+                                                editBadge
+                                            }
+                                    }
+                                }
+                                .scaleEffect(isLoading ? 0.95 : 1.0)
+                                .animation(.easeInOut(duration: 0.2), value: isLoading)
                             }
+                            .disabled(isLoading)
+                            
+                            Text("Tap to change photo")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
+                        Spacer()
                     }
+                    .listRowBackground(Color.clear)
+                } header: {
+                    Text("Profile Photo")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
                 }
                 
-                // Form
-                VStack(spacing: 20) {
+                // MARK: - Personal Information Section
+                Section {
+                    // Name Field
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Name")
-                            .font(.headline)
-                        
-                        TextField("Name", text: $name)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Bio")
-                            .font(.headline)
-                        
-                        TextEditor(text: $bio)
-                            .frame(height: 100)
-                            .padding(4)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
-                    }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                }
-                .padding(.top, 20)
-                .navigationTitle("Edit Profile")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
-                            isPresented = false
+                        HStack {
+                            Label("Name", systemImage: "person.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            if name.count > 50 {
+                                Text("\(name.count)/50")
+                                    .font(.caption2)
+                                    .foregroundStyle(.red)
+                            }
                         }
-                    }
-                    
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Save") {
-                            // Update the LocalUser with new values
-                            Task{
-                                await  AuthViewModel.updateUserProfile(userID: localUser.id, name: name, bio: bio)
-                                if let selectedImage = selectedImage {
-                                    try await viewModel.uploadProfileImage(profileImage: selectedImage)
+                        
+                        TextField("Enter your name", text: $name)
+                            .focused($focusedField, equals: .name)
+                            .textFieldStyle(.plain)
+                            .font(.body)
+                            .submitLabel(.next)
+                            .onSubmit {
+                                focusedField = .bio
+                            }
+                            .onChange(of: name) { oldValue, newValue in
+                                checkForChanges()
+                                if newValue.count > 50 {
+                                    name = String(newValue.prefix(50))
                                 }
                             }
-                            localUser.name = name
-                            localUser.bio = bio
-                            
-                            // Save the changes to SwiftData
-                            do {
-                                try modelContext.save()
-                            } catch {
-                            }
-                            
-                            isPresented = false
+                    }
+                    .padding(.vertical, 8)
+                    
+                    Divider()
+                    
+                    // Bio Field
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Label("Bio", systemImage: "text.alignleft")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(bio.count)/150")
+                                .font(.caption2)
+                                .foregroundStyle(bio.count > 150 ? .red : .secondary)
                         }
+                        
+                        TextField("Tell us about yourself", text: $bio, axis: .vertical)
+                            .focused($focusedField, equals: .bio)
+                            .textFieldStyle(.plain)
+                            .font(.body)
+                            .lineLimit(4...8)
+                            .submitLabel(.done)
+                            .onSubmit {
+                                focusedField = nil
+                            }
+                            .onChange(of: bio) { oldValue, newValue in
+                                checkForChanges()
+                                if newValue.count > 150 {
+                                    bio = String(newValue.prefix(150))
+                                }
+                            }
+                    }
+                    .padding(.vertical, 8)
+                    
+                } header: {
+                    Text("Personal Information")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                } footer: {
+                    Text("Your name and bio will be visible to other users.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                // MARK: - Account Information Section (Read-only)
+                Section {
+                    HStack {
+                        Label("Email", systemImage: "envelope.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(localUser.email)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                    
+                } header: {
+                    Text("Account Information")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                } footer: {
+                    Text("Your email address cannot be changed.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("Edit Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismissView()
+                    }
+                    .disabled(isLoading)
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveProfile()
+                    }
+                    .disabled(!hasChanges || isLoading || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .fontWeight(.semibold)
+                }
+                
+                ToolbarItem(placement: .keyboard) {
+                    HStack {
+                        Spacer()
+                        Button("Done") {
+                            focusedField = nil
+                        }
+                        .fontWeight(.medium)
                     }
                 }
             }
+            .disabled(isLoading)
+            .overlay {
+                if isLoading {
+                    loadingOverlay
+                }
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
+            .onChange(of: selectedItem) { oldValue, newValue in
+                loadSelectedImage()
+            }
+            .onAppear {
+                checkForChanges()
+            }
         }
+        .interactiveDismissDisabled(hasChanges)
+    }
+    
+    // MARK: - UI Components
+    private var editBadge: some View {
+        Circle()
+            .fill(.blue)
+            .frame(width: 32, height: 32)
+            .overlay {
+                Image(systemName: "camera.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+    }
+    
+    private var loadingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                
+                Text("Saving Profile...")
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+            }
+            .padding(24)
+            .background {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.regularMaterial)
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    private func checkForChanges() {
+        let nameChanged = name.trimmingCharacters(in: .whitespacesAndNewlines) != localUser.name
+        let bioChanged = bio.trimmingCharacters(in: .whitespacesAndNewlines) != localUser.bio
+        let imageChanged = selectedImage != nil
+        
+        hasChanges = nameChanged || bioChanged || imageChanged
+    }
+    
+    private func loadSelectedImage() {
+        Task {
+            if let data = try? await selectedItem?.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                await MainActor.run {
+                    selectedImage = uiImage
+                    checkForChanges()
+                }
+            }
+        }
+    }
+    
+    private func saveProfile() {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "Name cannot be empty"
+            showError = true
+            return
+        }
+        
+        isLoading = true
+        
+        Task {
+            do {
+                // Update profile data
+                await AuthViewModel.updateUserProfile(
+                    userID: localUser.id,
+                    name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                    bio: bio.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+                
+                // Upload profile image if selected
+                if let selectedImage = selectedImage {
+                    try await viewModel.uploadProfileImage(profileImage: selectedImage)
+                }
+                
+                // Update local user
+                await MainActor.run {
+                    localUser.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    localUser.bio = bio.trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    // Save to SwiftData
+                    do {
+                        try modelContext.save()
+                    } catch {
+                        errorMessage = "Failed to save locally: \(error.localizedDescription)"
+                        showError = true
+                    }
+                    
+                    isLoading = false
+                    isPresented = false
+                }
+                
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    errorMessage = "Failed to update profile: \(error.localizedDescription)"
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    private func dismissView() {
+        if hasChanges {
+            // Could add confirmation dialog here if needed
+        }
+        isPresented = false
     }
 }
 

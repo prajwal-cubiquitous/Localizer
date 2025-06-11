@@ -1,6 +1,6 @@
 import SwiftUI
 // Sample data
-
+import FirebaseAuth
 
 // 2. View for a Single Reply Row
 struct ReplyRowView: View {
@@ -9,14 +9,7 @@ struct ReplyRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             if let user = UserCache.shared.cacheusers[reply.userId]{
-                Image(systemName: user.profilePictureUrl)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.gray)
-                    .padding(4)
-                    .background(Color.gray.opacity(0.15))
-                    .clipShape(Circle())
+                ProfilePictureView(userProfileUrl: user.profilePictureUrl, width: 30, height: 30)
             }else{
                 Image(systemName:"person.crop.circle.badge.questionmark")
                     .resizable()
@@ -69,14 +62,7 @@ struct CommentRowView: View {
             // Main comment content
             HStack(alignment: .top, spacing: 12) {
                 if let user = UserCache.shared.cacheusers[comment.userId]{
-                    Image(systemName: user.profilePictureUrl)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .foregroundColor(.gray)
-                        .padding(5)
-                        .background(Color.gray.opacity(0.2))
-                        .clipShape(Circle())
+                    ProfilePictureView(userProfileUrl: user.profilePictureUrl, width: 30, height: 30)
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -188,9 +174,11 @@ struct CommentsView: View {
     @State private var newCommentText: String = ""
     @State private var replyingToComment: Comment? = nil
     let localNews: LocalNews
+    @State var currentUser: User?
     init(localNews: LocalNews) {
         self.localNews = localNews
     }
+    
     
     @Environment(\.dismiss) var dismiss
     
@@ -245,10 +233,7 @@ struct CommentsView: View {
                     }
                     
                     HStack(spacing: 12) {
-                        Image(systemName: "person.circle.fill")
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .foregroundColor(.gray)
+                        ProfilePictureView(userProfileUrl: currentUser?.profileImageUrl, width: 40, height: 40)
                         
                         TextField(replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToComment?.username ?? "unknown")...", text: $newCommentText, axis: .vertical)
                             .textFieldStyle(.plain)
@@ -307,7 +292,14 @@ struct CommentsView: View {
         }
         .task{
             do{
+                guard let uid = Auth.auth().currentUser?.uid else { return }
+                let fetchedUser = try await viewModel.fetchCurrentUser(uid)
                 try await viewModel.fetchComments(forNewsId: localNews.id)
+                
+                // Ensure assignment happens on main actor
+                await MainActor.run {
+                    self.currentUser = fetchedUser
+                }
             }catch{
             }
         }
