@@ -158,7 +158,6 @@ struct MainTabView: View {
                 }
                 .tag(4)
         }
-        .tint(colorScheme == .dark ? .white : .blue)
         .onChange(of: selectedTab) { oldValue, newValue in
             if newValue == 2 {
                 showPostView = true
