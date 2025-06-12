@@ -43,6 +43,7 @@ final class NewsFeedViewModel: ObservableObject {
     
     /// Convenience wrapper used by pull-to-refresh.
     func refresh(for pincode: String, context: ModelContext) async {
+        MediaHandler.clearTemporaryMedia()
         await fetchAndCacheNews(for: pincode, context: context)
     }
     

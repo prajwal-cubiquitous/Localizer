@@ -14,6 +14,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         FirebaseApp.configure()
         return true
     }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        MediaHandler.clearTemporaryMedia()
+    }
+    
 }
 
 @main
