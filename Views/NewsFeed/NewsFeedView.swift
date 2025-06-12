@@ -16,8 +16,7 @@ struct NewsFeedView: View {
     @StateObject private var viewModel = NewsFeedViewModel()
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
-    @State private var hasFetched = false
-    
+
     init(pincode: String) {
         self.pincode = pincode
         _newsItems = Query(filter: #Predicate<LocalNews> { news in
@@ -100,10 +99,7 @@ struct NewsFeedView: View {
             .background(colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground))
         }
         .task {
-            if !hasFetched {
-                hasFetched = true
                 await viewModel.fetchAndCacheNews(for: pincode, context: modelContext)
-            }
         }
         .sheet(isPresented: $showCreatePostSheet) {
             PostView(pincode: pincode)

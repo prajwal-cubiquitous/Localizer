@@ -23,12 +23,12 @@ class MediaHandler{
                         continuation.resume(returning: cachedURL)
                         return
                     } else {
-                        // Remove invalid cache entry
+                        // Remove stale cache entry
                         downloadCache.removeValue(forKey: url.absoluteString)
                     }
                 }
                 
-                // Perform download
+                // Download the file
                 Task {
                     do {
                         let localURL = try await performDownload(from: url, fileName: fileName)
@@ -40,8 +40,7 @@ class MediaHandler{
                         
                         continuation.resume(returning: localURL)
                     } catch {
-                        // ✅ Always fall back to original URL on download failure
-                        print("⚠️ Download failed for \(url), using original URL: \(error)")
+                        // ✅ Always return original URL when download fails
                         continuation.resume(returning: url)
                     }
                 }
@@ -49,90 +48,87 @@ class MediaHandler{
         }
     }
     
-    // ✅ Separate download method for cleaner code
     private static func performDownload(from url: URL, fileName: String) async throws -> URL {
-        let tempDirectory = FileManager.default.temporaryDirectory
-        let localURL = tempDirectory.appendingPathComponent(fileName)
+        let (data, _) = try await URLSession.shared.data(from: url)
         
-        // ✅ Don't re-download if file already exists
-        if FileManager.default.fileExists(atPath: localURL.path) {
-            return localURL
-        }
+        // Create temporary directory if it doesn't exist
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("LocalizerMedia")
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         
-        // ✅ Use URLSessionConfiguration for better performance and timeout handling
-        let config = URLSessionConfiguration.default
-        config.requestCachePolicy = .returnCacheDataElseLoad
-        config.urlCache = URLCache.shared
-        config.timeoutIntervalForRequest = 30.0 // 30 second timeout
-        config.timeoutIntervalForResource = 60.0 // 1 minute resource timeout
-        let session = URLSession(configuration: config)
+        // Create local file URL
+        let localURL = tempDir.appendingPathComponent(fileName)
         
-        let (data, response) = try await session.data(from: url)
-        
-        // ✅ Validate response
-        if let httpResponse = response as? HTTPURLResponse {
-            guard 200...299 ~= httpResponse.statusCode else {
-                throw URLError(.badServerResponse)
-            }
-        }
-        
+        // Write data to local file
         try data.write(to: localURL)
+        
         return localURL
     }
     
-    // ✅ Enhanced cache clearing that also clears our download cache
-    static func clearTemporaryMedia() {
-        let tempDir = FileManager.default.temporaryDirectory
-        do {
-            let filePaths = try FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil)
-            for file in filePaths {
-                try FileManager.default.removeItem(at: file)
-            }
-            
-            // Clear our download cache
-            cacheQueue.async(flags: .barrier) {
-                downloadCache.removeAll()
-            }
-            
-            print("✅ Temporary media and cache cleared.")
-        } catch {
-            print("❌ Error clearing temp files: \(error)")
-        }
-    }
-    
-    // ✅ Enhanced method for bulk downloads with better error handling and fallback
-    static func downloadMediaConcurrently(from urls: [URL]) async -> [String] {
+    // ✅ Enhanced method to download multiple media items concurrently
+    static func downloadMediaConcurrently(urls: [String]) async -> [String] {
+        guard !urls.isEmpty else { return [] }
+        
+        // ✅ Use TaskGroup for concurrent downloads
         return await withTaskGroup(of: (Int, String).self, returning: [String].self) { group in
-            var results: [String] = Array(repeating: "", count: urls.count)
-            
-            for (index, url) in urls.enumerated() {
+            // Add download tasks for each URL
+            for (index, urlString) in urls.enumerated() {
                 group.addTask {
-                    let filename = url.lastPathComponent.isEmpty ? UUID().uuidString : url.lastPathComponent
+                    guard let url = URL(string: urlString) else {
+                        return (index, urlString) // Return original if invalid
+                    }
+                    
                     do {
+                        let filename = url.lastPathComponent
                         let localURL = try await downloadMedia(from: url, fileName: filename)
-                        print("✅ Successfully downloaded/cached: \(url) -> \(localURL)")
                         return (index, localURL.absoluteString)
                     } catch {
-                        print("⚠️ Background media download failed for \(url): \(error)")
-                        // ✅ Always return original URL if download fails
-                        return (index, url.absoluteString)
+                        return (index, urlString) // Return original URL on failure
                     }
                 }
             }
             
-            for await (index, urlString) in group {
-                results[index] = urlString
+            // Collect results maintaining original order
+            var results: [(Int, String)] = []
+            for await result in group {
+                results.append(result)
             }
             
-            print("📱 Processed \(results.count) media URLs (\(results.filter { $0.starts(with: "file://") }.count) local, \(results.filter { $0.starts(with: "https://") }.count) remote)")
-            return results
+            // Sort by index and return URLs
+            let sortedResults = results.sorted { $0.0 < $1.0 }.map { $0.1 }
+            return sortedResults
         }
     }
     
-    // ✅ New method to directly return original URLs without attempting download
-    static func useDirectURLs(from urls: [URL]) -> [String] {
-        print("📱 Using direct URLs for \(urls.count) media items")
-        return urls.map { $0.absoluteString }
+    // ✅ Clear temporary media files and cache
+    static func clearTemporaryMedia() {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("LocalizerMedia")
+        
+        do {
+            if FileManager.default.fileExists(atPath: tempDir.path) {
+                try FileManager.default.removeItem(at: tempDir)
+            }
+            
+            // Clear cache
+            cacheQueue.async(flags: .barrier) {
+                downloadCache.removeAll()
+            }
+        } catch {
+            // Silent error handling
+        }
+    }
+    
+    // ✅ Convenience method for single URL processing
+    static func processMediaURLs(_ urls: [String]) async -> [String] {
+        guard !urls.isEmpty else { return [] }
+        
+        // For small arrays, use concurrent download
+        if urls.count <= 10 {
+            let results = await downloadMediaConcurrently(urls: urls)
+            return results
+        } else {
+            // For larger arrays, return original URLs to avoid overwhelming the system
+            return urls
+        }
     }
 }
 

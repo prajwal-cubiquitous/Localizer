@@ -159,7 +159,7 @@ class AuthViewModel: ObservableObject {
     @MainActor
     private func storeUserLocallyAsync(firestoreUser: User) async {
         guard let modelContext = self.modelContext else {
-            print("ERROR: modelContext is nil in storeUserLocallyAsync")
+            // Silent error handling
             errorMessage = AuthError.custom(message: "Failed to save local user: No database context available")
             return
         }
@@ -190,10 +190,10 @@ class AuthViewModel: ObservableObject {
             modelContext.insert(localUser)
             try modelContext.save()
             
-            print("✅ Successfully stored user locally: \(firestoreUser.name)")
+            // Successfully stored user locally
             
         } catch {
-            print("❌ Failed to store user locally: \(error)")
+            // Silent error handling
             errorMessage = AuthError.custom(message: "Failed to save local user")
         }
     }
@@ -201,14 +201,14 @@ class AuthViewModel: ObservableObject {
     // Instance method that uses the stored modelContext
     func clearLocalUser() {
         guard let modelContext = self.modelContext else {
-            print("ERROR: No modelContext available in clearLocalUser")
+            // Silent error handling
             // Create a temporary context as fallback
             do {
                 let container = try ModelContainer(for: LocalUser.self, LocalNews.self, LocalVote.self)
                 let tempContext = ModelContext(container)
                 clearUserData(using: tempContext)
             } catch {
-                print("ERROR: Failed to create temporary context: \(error)")
+                // Silent error handling
             }
             return
         }
@@ -256,11 +256,11 @@ class AuthViewModel: ObservableObject {
                 // Save changes
                 try context.save()
                 success = true
-                print("✅ Successfully cleared all local user data, news, votes, and media")
+                // Successfully cleared all local data
                 
             } catch {
                 currentRetry += 1
-                print("❌ Failed to clear local data (attempt \(currentRetry)): \(error)")
+                // Silent error handling
                 
                 // Wait briefly before retrying
                 if currentRetry < maxRetries {

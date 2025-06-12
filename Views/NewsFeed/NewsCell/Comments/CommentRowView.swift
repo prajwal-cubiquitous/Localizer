@@ -120,7 +120,7 @@ struct CommentRowView: View {
                     UserCache.shared.cacheusers[reply.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
                 }
             }catch{
-                print(error.localizedDescription)
+                // Silent error handling
             }
         }
     }

@@ -11,7 +11,7 @@ struct ActivityView: View {
     @State private var selectedFilter: FilterType = .news
     let pincode: String
     enum FilterType: String, CaseIterable {
-        case news = "My News"
+        case news = "News"
         case liked = "Liked"
         case disliked = "Disliked"
         case commented = "Commented"
@@ -20,9 +20,9 @@ struct ActivityView: View {
         var iconName: String {
             switch self {
             case .news: return "newspaper"
-            case .liked: return "heart"
-            case .disliked: return "hand.thumbsdown"
-            case .commented: return "text.bubble"
+            case .liked: return "heart.fill"
+            case .disliked: return "heart.slash"
+            case .commented: return "message"
             case .saved: return "bookmark.fill"
             }
         }
@@ -74,7 +74,7 @@ struct ActivityView: View {
                     do{
                         try await viewModel.fetchNews(postalCode: pincode)
                     }catch{
-                        print(error.localizedDescription)
+                        // Silent error handling
                     }
                 }
             case .liked:
@@ -82,7 +82,7 @@ struct ActivityView: View {
                     do{
                         try await viewModel.fetchLikedNews(postalCode: pincode)
                     }catch{
-                        print(error.localizedDescription)
+                        // Silent error handling
                     }
                 }
                 
@@ -91,7 +91,7 @@ struct ActivityView: View {
                     do{
                         try await viewModel.fetchDisLikedNews(postalCode: pincode)
                     }catch{
-                        print(error.localizedDescription)
+                        // Silent error handling
                     }
                 }
             case .commented:
@@ -99,7 +99,7 @@ struct ActivityView: View {
                     do{
                         try await viewModel.commentedNews(postalCode: pincode)
                     }catch{
-                        print(error.localizedDescription)
+                        // Silent error handling
                     }
                 }
             case .saved:
@@ -107,7 +107,7 @@ struct ActivityView: View {
                     do{
                         try await viewModel.fetchSavedNews(postalCode: pincode)
                     }catch{
-                        print(error.localizedDescription)
+                        // Silent error handling
                     }
                 }
                 // Add more cases as needed

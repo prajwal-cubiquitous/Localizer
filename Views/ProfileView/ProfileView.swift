@@ -134,7 +134,7 @@ struct ProfileView: View {
                                 // Then sign out of Firebase
                                 AppState.shared.signOut()
                                 
-                                print("✅ Logout completed successfully")
+                                // Logout completed successfully
                             }
                         }
                     }
