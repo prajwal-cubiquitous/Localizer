@@ -123,11 +123,18 @@ struct ProfileView: View {
                             }
                         }
                         settingsRow(icon: "arrow.left.square", title: "Logout"){
-                            Task {
-                                // First clear the local user data while we have access
+                            Task { @MainActor in
+                                // ✅ Improved logout process with proper sequencing
+                                // First clear the local user data
                                 AuthViewModel.clearLocalUser()
-                                // Then sign out of Firebase which will trigger the UI update
+                                
+                                // Small delay to ensure data is cleared
+                                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+                                
+                                // Then sign out of Firebase
                                 AppState.shared.signOut()
+                                
+                                print("✅ Logout completed successfully")
                             }
                         }
                     }
@@ -183,7 +190,7 @@ struct ProfileView: View {
         .buttonStyle(PlainButtonStyle())
     }
     
-    /// Refreshes user data from Firestore and updates SwiftData using AuthViewModel's fetchAndStoreUser function
+    /// Refreshes user data from Firestore and updates SwiftData using AuthViewModel's fetchAndStoreUserAsync function
     @MainActor
     private func refreshUserData() async {
         guard let userId = AppState.shared.userSession?.uid else {
@@ -192,11 +199,8 @@ struct ProfileView: View {
         
         isRefreshing = true
         
-        // Use the injected AuthViewModel instance to refresh user data
-        self.AuthViewModel.fetchAndStoreUser(userId: userId)
-        
-        // Small delay to allow the UI to update (can be removed if not needed)
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay
+        // Use the injected AuthViewModel instance to refresh user data with async method
+        await self.AuthViewModel.fetchAndStoreUserAsync(userId: userId)
         
         isRefreshing = false
     }

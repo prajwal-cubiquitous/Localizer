@@ -63,8 +63,14 @@ class AuthViewModel: ObservableObject {
         }
         
         do{
+            // ✅ First clear any existing data to avoid conflicts
+            clearLocalUser()
+            
             try await AppState.shared.signIn(email: email, password: password) { success in
-                self.fetchAndStoreUser(userId: success)
+                // ✅ Fetch and store user data synchronously to ensure it's available immediately
+                Task { @MainActor in
+                    await self.fetchAndStoreUserAsync(userId: success)
+                }
             }
         }catch let error as AuthError{
             errorMessage = error
@@ -123,111 +129,72 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    func fetchAndStoreUser(userId: String) {
-        
-        Firestore.firestore().collection("users").document(userId).getDocument { [weak self] snapshot, error in
-            guard let self = self else {
-                return
+    // ✅ New async version of fetchAndStoreUser for better control
+    @MainActor
+    func fetchAndStoreUserAsync(userId: String) async {
+        do {
+            let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
+            
+            let firestoreUser: User
+            if let data = try? snapshot.data(as: User.self) {
+                firestoreUser = data
+            } else {
+                // Create fallback user if data is missing
+                firestoreUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser")
             }
             
-            if let error = error {
-                errorMessage = AuthError.custom(message: error.localizedDescription)
-                return
-            }
+            // Store user locally on main thread
+            await storeUserLocallyAsync(firestoreUser: firestoreUser)
             
+        } catch {
+            errorMessage = AuthError.custom(message: error.localizedDescription)
             
-            do {
-                // Decode Firestore data to User struct
-                let firestoreUser = try snapshot?.data(as: User.self)
-                
-                // Convert to LocalUser and store in SwiftData
-                if let firestoreUser = firestoreUser {
-                    self.storeUserLocally(firestoreUser: firestoreUser)
-                } else {
-                    // Create fallback user if data is missing
-                    let mockUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser")
-                    self.storeUserLocally(firestoreUser: mockUser)
-                }
-            } catch {
-                errorMessage = AuthError.custom(message: error.localizedDescription)
-                
-                // Create mock user as fallback
-                let mockUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser")
-                self.storeUserLocally(firestoreUser: mockUser)
-            }
+            // Create mock user as fallback
+            let mockUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser")
+            await storeUserLocallyAsync(firestoreUser: mockUser)
         }
     }
-    private func storeUserLocally(firestoreUser: User) {
-        // Ensure we have a valid modelContext
+    
+    // ✅ Async version for better error handling and immediate availability
+    @MainActor
+    private func storeUserLocallyAsync(firestoreUser: User) async {
         guard let modelContext = self.modelContext else {
-            print("ERROR: modelContext is nil in storeUserLocally. Cannot save user data.")
+            print("ERROR: modelContext is nil in storeUserLocallyAsync")
             errorMessage = AuthError.custom(message: "Failed to save local user: No database context available")
             return
         }
         
-        
         do {
-            let fetchDescriptor = FetchDescriptor<LocalUser>(predicate: #Predicate { user in
-                user.id == firestoreUser.id
-            })
-            let existingUsers = try modelContext.fetch(fetchDescriptor)
+            // First clear any existing users to avoid conflicts
+            let existingUsersFetch = FetchDescriptor<LocalUser>()
+            let existingUsers = try modelContext.fetch(existingUsersFetch)
+            for user in existingUsers {
+                modelContext.delete(user)
+            }
             
-            if let existingUser = existingUsers.first {
-                existingUser.name = firestoreUser.name
-                existingUser.email = firestoreUser.email
-                existingUser.username = firestoreUser.username
-                existingUser.bio = firestoreUser.bio
-                existingUser.profileImageUrl = firestoreUser.profileImageUrl
-                existingUser.postCount = firestoreUser.postsCount
-                existingUser.likedCount = firestoreUser.likedCount
-                existingUser.commentCount = firestoreUser.commentsCount
-            } else {
-                let localUser = LocalUser(
-                    id: firestoreUser.id,
-                    name: firestoreUser.name,
-                    username: firestoreUser.username,
-                    email: firestoreUser.email,
-                    bio: firestoreUser.bio,
-                    profileImageUrl: firestoreUser.profileImageUrl,
-                    postCount: firestoreUser.postsCount,
-                    likedCount: firestoreUser.likedCount,
-                    dislikedCount: firestoreUser.dislikedCount,
-                    SavedPostsCount: firestoreUser.SavedPostsCount,
-                    commentCount: firestoreUser.commentsCount
-                )
-                modelContext.insert(localUser)
-            }
+            // Create and insert the new user
+            let localUser = LocalUser(
+                id: firestoreUser.id,
+                name: firestoreUser.name,
+                username: firestoreUser.username,
+                email: firestoreUser.email,
+                bio: firestoreUser.bio,
+                profileImageUrl: firestoreUser.profileImageUrl,
+                postCount: firestoreUser.postsCount,
+                likedCount: firestoreUser.likedCount,
+                dislikedCount: firestoreUser.dislikedCount,
+                SavedPostsCount: firestoreUser.SavedPostsCount,
+                commentCount: firestoreUser.commentsCount
+            )
+            
+            modelContext.insert(localUser)
             try modelContext.save()
+            
+            print("✅ Successfully stored user locally: \(firestoreUser.name)")
+            
         } catch {
+            print("❌ Failed to store user locally: \(error)")
             errorMessage = AuthError.custom(message: "Failed to save local user")
-            // Try again with simplified approach if the first attempt failed
-            do {
-                let localUser = LocalUser(
-                    id: firestoreUser.id,
-                    name: firestoreUser.name,
-                    username: firestoreUser.username,
-                    email: firestoreUser.email,
-                    bio: firestoreUser.bio,
-                    profileImageUrl: firestoreUser.profileImageUrl,
-                    postCount: firestoreUser.postsCount,
-                    likedCount: firestoreUser.likedCount,
-                    dislikedCount: firestoreUser.dislikedCount,
-                    SavedPostsCount: firestoreUser.SavedPostsCount,
-                    commentCount: firestoreUser.commentsCount
-                )
-                
-                // Delete any existing user with same ID to avoid conflicts
-                if let existingUsers = try? modelContext.fetch(FetchDescriptor<LocalUser>()), !existingUsers.isEmpty {
-                    for user in existingUsers {
-                        modelContext.delete(user)
-                    }
-                }
-                
-                modelContext.insert(localUser)
-                try modelContext.save()
-            } catch {
-                errorMessage = AuthError.custom(message: "Failed to save local user after multiple attempts")
-            }
         }
     }
     
@@ -237,7 +204,7 @@ class AuthViewModel: ObservableObject {
             print("ERROR: No modelContext available in clearLocalUser")
             // Create a temporary context as fallback
             do {
-                let container = try ModelContainer(for: LocalUser.self)
+                let container = try ModelContainer(for: LocalUser.self, LocalNews.self, LocalVote.self)
                 let tempContext = ModelContext(container)
                 clearUserData(using: tempContext)
             } catch {
@@ -256,38 +223,52 @@ class AuthViewModel: ObservableObject {
     
     // Helper method to clear user data with a specific context
     private func clearUserData(using context: ModelContext) {
-        let fetchDescriptor = FetchDescriptor<LocalUser>()
-        
-        // Retry logic for robustness
         let maxRetries = 3
         var currentRetry = 0
         var success = false
         
         while !success && currentRetry < maxRetries {
             do {
-                // Fetch all users
-                let users = try context.fetch(fetchDescriptor)
-                
-                // Delete each user
+                // ✅ Clear LocalUsers
+                let userFetchDescriptor = FetchDescriptor<LocalUser>()
+                let users = try context.fetch(userFetchDescriptor)
                 for user in users {
                     context.delete(user)
                 }
                 
+                // ✅ Clear LocalNews data
+                let newsFetchDescriptor = FetchDescriptor<LocalNews>()
+                let newsItems = try context.fetch(newsFetchDescriptor)
+                for news in newsItems {
+                    context.delete(news)
+                }
+                
+                // ✅ Clear LocalVote data
+                let voteFetchDescriptor = FetchDescriptor<LocalVote>()
+                let votes = try context.fetch(voteFetchDescriptor)
+                for vote in votes {
+                    context.delete(vote)
+                }
+                
+                // ✅ Clear temporary media files
+                MediaHandler.clearTemporaryMedia()
+                
                 // Save changes
                 try context.save()
                 success = true
+                print("✅ Successfully cleared all local user data, news, votes, and media")
                 
             } catch {
                 currentRetry += 1
+                print("❌ Failed to clear local data (attempt \(currentRetry)): \(error)")
                 
                 // Wait briefly before retrying
                 if currentRetry < maxRetries {
                     Thread.sleep(forTimeInterval: 0.5)
                 } else {
-                    errorMessage = AuthError.custom(message: "Failed to clear local user after multiple attempts")
+                    errorMessage = AuthError.custom(message: "Failed to clear local data after multiple attempts")
                 }
             }
-            print("Recovery attempt also failed: ")
         }
     }
     

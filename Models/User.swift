@@ -8,7 +8,7 @@
 import Foundation
 import SwiftData
 
-struct User: Identifiable, Codable{
+struct User: Identifiable, Codable, Sendable {
     var id : String
     var name: String
     let email: String
@@ -23,7 +23,7 @@ struct User: Identifiable, Codable{
 }
 
 @Model
-class LocalUser {
+final class LocalUser: @unchecked Sendable {
     @Attribute(.unique) var id: String
     var name: String
     var email: String
@@ -57,6 +57,7 @@ class LocalUser {
 
 extension LocalUser {
     static func from(user: User) -> LocalUser {
+        
         return LocalUser(
             id: user.id,
             name: user.name,

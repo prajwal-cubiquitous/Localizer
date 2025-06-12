@@ -232,7 +232,7 @@ struct NewsCell: View {
 
 #Preview {
     VStack(spacing: 20) {
-        NewsCell(localNews: DummyLocalNews.News1)
+        NewsCell(localNews: DummyLocalNews.News3)
     }
     .background(Color(UIColor.systemGroupedBackground))
 }

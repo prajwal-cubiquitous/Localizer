@@ -77,9 +77,9 @@ struct MainTabView: View {
                     let users = try? modelContext.fetch(FetchDescriptor<LocalUser>())
                     
                     if users?.isEmpty == true {
-                        AuthviewModel.fetchAndStoreUser(userId: sessionUserId)
+                        await AuthviewModel.fetchAndStoreUserAsync(userId: sessionUserId)
                     } else if let users = users, !users.contains(where: { $0.id == sessionUserId }) {
-                        AuthviewModel.fetchAndStoreUser(userId: sessionUserId)
+                        await AuthviewModel.fetchAndStoreUserAsync(userId: sessionUserId)
                     }
                 }
             }

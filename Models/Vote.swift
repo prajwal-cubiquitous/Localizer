@@ -4,7 +4,7 @@ import SwiftData
 /// Local SwiftData model tracking a user's vote (upvote/downvote) on a post.
 /// `voteType`: 1 for upvote, -1 for down-vote, 0 means no active vote (entry is deleted).
 @Model
-class LocalVote {
+final class LocalVote: @unchecked Sendable {
     /// Composite primary key: "{userId}_{postId}" so each user can vote once per post.
     @Attribute(.unique) var id: String
     var postId: String
@@ -22,7 +22,7 @@ class LocalVote {
 }
 
 
-struct Vote: Identifiable, Codable {
+struct Vote: Identifiable, Codable, Sendable {
     var id: String { "\(userId)_\(postId)" } // Composite key
     let postId: String
     let userId: String

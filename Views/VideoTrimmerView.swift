@@ -39,231 +39,250 @@ struct VideoTrimmerView: View {
         return lowerBound...max(lowerBound, upperBound)
     }
     
+    // ✅ Safe calculation helpers to prevent invalid frame dimensions
+    private func safeWidth(for duration: Double, in geometry: GeometryProxy) -> CGFloat {
+        guard totalDuration > 0, geometry.size.width > 0, duration.isFinite else { return 0 }
+        let calculatedWidth = CGFloat(duration / totalDuration) * geometry.size.width
+        return max(0, min(calculatedWidth, geometry.size.width))
+    }
+    
+    private func safeOffset(for time: Double, in geometry: GeometryProxy) -> CGFloat {
+        guard totalDuration > 0, geometry.size.width > 0, time.isFinite else { return 0 }
+        let calculatedOffset = CGFloat(time / totalDuration) * geometry.size.width
+        return max(0, min(calculatedOffset, geometry.size.width))
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Video Player Section
-                VStack(spacing: 16) {
-                    if let player = player {
-                        VideoPlayer(player: player)
-                            .frame(height: 280)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
-                            )
-                    } else {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.secondary.opacity(0.3))
-                            .frame(height: 280)
-                            .overlay(
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                            )
-                    }
-                    
-                    // Playback Controls
-                    HStack(spacing: 20) {
-                        Button {
-                            seekToStart()
-                        } label: {
-                            Image(systemName: "backward.end.fill")
-                                .font(.title2)
-                                .foregroundStyle(.primary)
+            // ✅ Added ScrollView to make the entire view scrollable
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // Video Player Section
+                    VStack(spacing: 16) {
+                        if let player = player {
+                            VideoPlayer(player: player)
+                                .frame(height: 280)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                                )
+                        } else {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.secondary.opacity(0.3))
+                                .frame(height: 280)
+                                .overlay(
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                )
                         }
-                        .frame(width: 44, height: 44)
                         
-                        Button {
-                            isPlaying.toggle()
-                            if isPlaying {
-                                player?.play()
-                            } else {
-                                player?.pause()
-                            }
-                        } label: {
-                            Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                .font(.system(size: 50))
-                                .foregroundStyle(.blue)
-                        }
-                        .frame(width: 60, height: 60)
-                        
-                        Button {
-                            seekToEnd()
-                        } label: {
-                            Image(systemName: "forward.end.fill")
-                                .font(.title2)
-                                .foregroundStyle(.primary)
-                        }
-                        .frame(width: 44, height: 44)
-                    }
-                    .padding(.vertical, 8)
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                
-                Divider()
-                    .padding(.vertical, 16)
-                
-                // Trimming Controls Section
-                VStack(spacing: 20) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Select Video Range")
-                            .font(.headline)
-                            .bold()
-                            .foregroundStyle(.primary)
-                        
-                        // Duration info
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Total Duration")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text(formatTime(totalDuration))
-                                    .font(.subheadline)
-                                    .bold()
+                        // Playback Controls
+                        HStack(spacing: 20) {
+                            Button {
+                                seekToStart()
+                            } label: {
+                                Image(systemName: "backward.end.fill")
+                                    .font(.title2)
                                     .foregroundStyle(.primary)
                             }
+                            .frame(width: 44, height: 44)
                             
-                            Spacer()
-                            
-                            VStack(alignment: .trailing, spacing: 4) {
-                                Text("Selected Duration")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text(formatTime(endTime - startTime))
-                                    .font(.subheadline)
-                                    .bold()
+                            Button {
+                                isPlaying.toggle()
+                                if isPlaying {
+                                    player?.play()
+                                } else {
+                                    player?.pause()
+                                }
+                            } label: {
+                                Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                    .font(.system(size: 50))
                                     .foregroundStyle(.blue)
                             }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background(Color(UIColor.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
-                        
-                        // Visual Timeline
-                        VStack(spacing: 12) {
-                            // Timeline track
-                            GeometryReader { geometry in
-                                ZStack(alignment: .leading) {
-                                    // Background track
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(Color.secondary.opacity(0.3))
-                                        .frame(height: 8)
-                                    
-                                    // Selected range
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(Color.blue)
-                                        .frame(
-                                            width: max(0, CGFloat((endTime - startTime) / totalDuration) * geometry.size.width),
-                                            height: 8
-                                        )
-                                        .offset(x: CGFloat(startTime / totalDuration) * geometry.size.width)
-                                    
-                                    // Current playback position indicator
-                                    Circle()
-                                        .fill(Color.white)
-                                        .stroke(Color.blue, lineWidth: 2)
-                                        .frame(width: 16, height: 16)
-                                        .offset(x: CGFloat(currentTime / totalDuration) * geometry.size.width - 8)
-                                }
-                            }
-                            .frame(height: 20)
-                            .padding(.horizontal, 8)
+                            .frame(width: 60, height: 60)
                             
-                            // Time labels
-                            HStack {
-                                Text("0:00")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                                Text(formatTime(totalDuration))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                            Button {
+                                seekToEnd()
+                            } label: {
+                                Image(systemName: "forward.end.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(.primary)
                             }
-                            .padding(.horizontal, 8)
+                            .frame(width: 44, height: 44)
                         }
-                        
-                        // Start Time Slider
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Start Time")
-                                    .font(.subheadline)
-                                    .bold()
-                                Spacer()
-                                Text(formatTime(startTime))
-                                    .font(.subheadline)
-                                    .foregroundStyle(.blue)
-                                    .monospacedDigit()
-                            }
-                            
-                            Slider(value: $startTime, in: startTimeRange) { editing in
-                                if !editing {
-                                    seekToTime(startTime)
-                                }
-                            }
-                            .tint(.blue)
-                            .onChange(of: startTime) { _, newValue in
-                                // Ensure end time maintains at least 1 second duration
-                                if endTime - newValue < 1 {
-                                    endTime = min(totalDuration, newValue + 1)
-                                }
-                                // Ensure we don't exceed max duration
-                                if endTime - newValue > maxDuration {
-                                    endTime = min(totalDuration, newValue + maxDuration)
-                                }
-                            }
-                        }
-                        
-                        // End Time Slider
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("End Time")
-                                    .font(.subheadline)
-                                    .bold()
-                                Spacer()
-                                Text(formatTime(endTime))
-                                    .font(.subheadline)
-                                    .foregroundStyle(.blue)
-                                    .monospacedDigit()
-                            }
-                            
-                            Slider(value: $endTime, in: endTimeRange) { editing in
-                                if !editing {
-                                    seekToTime(endTime)
-                                }
-                            }
-                            .tint(.blue)
-                            .onChange(of: endTime) { _, newValue in
-                                // Ensure we maintain at least 1 second duration
-                                if newValue - startTime < 1 {
-                                    startTime = max(0, newValue - 1)
-                                }
-                                // Ensure we don't exceed max duration
-                                if newValue - startTime > maxDuration {
-                                    startTime = max(0, newValue - maxDuration)
-                                }
-                            }
-                        }
+                        .padding(.vertical, 8)
                     }
                     .padding(.horizontal, 20)
+                    .padding(.top, 20)
                     
-                    // Maximum duration warning
-                    if endTime - startTime > maxDuration {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
-                            Text("Maximum video duration is 60 seconds")
-                                .font(.caption)
-                                .foregroundStyle(.orange)
+                    Divider()
+                        .padding(.vertical, 16)
+                    
+                    // Trimming Controls Section
+                    VStack(spacing: 20) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Select Video Range")
+                                .font(.headline)
+                                .bold()
+                                .foregroundStyle(.primary)
+                            
+                            // Duration info
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Total Duration")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(formatTime(totalDuration))
+                                        .font(.subheadline)
+                                        .bold()
+                                        .foregroundStyle(.primary)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    Text("Selected Duration")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(formatTime(endTime - startTime))
+                                        .font(.subheadline)
+                                        .bold()
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                            
+                            // ✅ Fixed Visual Timeline with safe frame calculations
+                            VStack(spacing: 12) {
+                                // Timeline track
+                                GeometryReader { geometry in
+                                    ZStack(alignment: .leading) {
+                                        // Background track
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(Color.secondary.opacity(0.3))
+                                            .frame(height: 8)
+                                        
+                                        // ✅ Selected range with safe width calculation
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(Color.blue)
+                                            .frame(
+                                                width: safeWidth(for: endTime - startTime, in: geometry),
+                                                height: 8
+                                            )
+                                            .offset(x: safeOffset(for: startTime, in: geometry))
+                                        
+                                        // ✅ Current playback position indicator with safe offset
+                                        Circle()
+                                            .fill(Color.white)
+                                            .stroke(Color.blue, lineWidth: 2)
+                                            .frame(width: 16, height: 16)
+                                            .offset(x: max(0, safeOffset(for: currentTime, in: geometry) - 8))
+                                    }
+                                }
+                                .frame(height: 20)
+                                .padding(.horizontal, 8)
+                                
+                                // Time labels
+                                HStack {
+                                    Text("0:00")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Text(formatTime(totalDuration))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.horizontal, 8)
+                            }
+                            
+                            // Start Time Slider
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Start Time")
+                                        .font(.subheadline)
+                                        .bold()
+                                    Spacer()
+                                    Text(formatTime(startTime))
+                                        .font(.subheadline)
+                                        .foregroundStyle(.blue)
+                                        .monospacedDigit()
+                                }
+                                
+                                Slider(value: $startTime, in: startTimeRange) { editing in
+                                    if !editing {
+                                        seekToTime(startTime)
+                                    }
+                                }
+                                .tint(.blue)
+                                .onChange(of: startTime) { _, newValue in
+                                    // Ensure end time maintains at least 1 second duration
+                                    if endTime - newValue < 1 {
+                                        endTime = min(totalDuration, newValue + 1)
+                                    }
+                                    // Ensure we don't exceed max duration
+                                    if endTime - newValue > maxDuration {
+                                        endTime = min(totalDuration, newValue + maxDuration)
+                                    }
+                                }
+                            }
+                            
+                            // End Time Slider
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("End Time")
+                                        .font(.subheadline)
+                                        .bold()
+                                    Spacer()
+                                    Text(formatTime(endTime))
+                                        .font(.subheadline)
+                                        .foregroundStyle(.blue)
+                                        .monospacedDigit()
+                                }
+                                
+                                Slider(value: $endTime, in: endTimeRange) { editing in
+                                    if !editing {
+                                        seekToTime(endTime)
+                                    }
+                                }
+                                .tint(.blue)
+                                .onChange(of: endTime) { _, newValue in
+                                    // Ensure we maintain at least 1 second duration
+                                    if newValue - startTime < 1 {
+                                        startTime = max(0, newValue - 1)
+                                    }
+                                    // Ensure we don't exceed max duration
+                                    if newValue - startTime > maxDuration {
+                                        startTime = max(0, newValue - maxDuration)
+                                    }
+                                }
+                            }
                         }
                         .padding(.horizontal, 20)
+                        
+                        // Maximum duration warning
+                        if endTime - startTime > maxDuration {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                Text("Maximum video duration is 60 seconds")
+                                    .font(.caption)
+                                    .foregroundStyle(.orange)
+                            }
+                            .padding(.horizontal, 20)
+                        }
+                        
+                        // ✅ Add some spacing for scrollable content
+                        Spacer()
+                            .frame(height: 120) // Space for action buttons
                     }
                 }
-                
-                Spacer()
-                
-                // Action Buttons
+            }
+            // ✅ Action Buttons now fixed at bottom with background
+            .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 12) {
                     Divider()
                     

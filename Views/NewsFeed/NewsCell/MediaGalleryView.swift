@@ -13,52 +13,32 @@ struct MediaGalleryView: View {
     let mediaURLs: [String]
     @State private var currentIndex = 0
     
-    // Responsive media height based on screen size
+    // ✅ Enhanced responsive media height for all iPhone models including iPhone 13
     private var mediaHeight: CGFloat {
         let screenWidth = UIScreen.main.bounds.width
-        let availableWidth = screenWidth - 64 // Account for margins and padding
         
-        // Maintain 16:9 aspect ratio but with reasonable limits
-        let calculatedHeight = availableWidth * 9 / 16
-        return min(max(calculatedHeight, 200), 320) // Between 200-320pt
+        // Device-specific calculations
+        switch screenWidth {
+        case 0..<375: // iPhone SE (1st/2nd gen), iPhone 12/13 mini
+            return min(screenWidth * 0.75, 280)
+            
+        case 375..<390: // iPhone 6/7/8, iPhone X/XS, iPhone 12/13/14
+            return min(screenWidth * 0.7, 300)
+            
+        case 390..<430: // iPhone 12/13/14 Pro, iPhone 15/15 Pro
+            return min(screenWidth * 0.68, 320)
+            
+        default: // iPhone Plus, Pro Max models
+            return min(screenWidth * 0.65, 350)
+        }
     }
     
     var body: some View {
         VStack(spacing: 0) {
             if mediaURLs.count == 1 {
-                // Single media item - ensure consistent height and proper video handling
-                let urlString = mediaURLs[0]
-                
-                if urlString.contains("news_videos") {
-                    // Single Video - use proper frame constraints
-                    if let videoUrl = URL(string: urlString) {
-                        VideoPlayer(player: AVPlayer(url: videoUrl))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: mediaHeight)
-                            .background(Color.black)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    } else {
-                        Rectangle()
-                            .fill(Color.black)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: mediaHeight)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                Text("Invalid video URL")
-                                    .foregroundColor(.white)
-                                    .font(.caption)
-                            )
-                    }
-                } else {
-                    // Single Image
-                    KFImage(URL(string: urlString))
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: mediaHeight)
-                        .clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
+                // ✅ Single media item - use MediaItemView for consistency
+                MediaItemView(urlString: mediaURLs[0], height: mediaHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 // Multiple media items - use TabView
                 ZStack {

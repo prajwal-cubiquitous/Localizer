@@ -17,7 +17,6 @@ class ActivityViewModel : ObservableObject{
     func fetchNews(postalCode: String) async throws {
         self.newsItems = []
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let user = try await FetchCurrencyUser.fetchCurrentUser(uid)
         let db = Firestore.firestore()
         
         let snapshot = try await db.collection("news")
@@ -30,15 +29,16 @@ class ActivityViewModel : ObservableObject{
             try? doc.data(as: News.self)
         }
         
+        
         for item in newsItemsFromFirebase {
-            self.newsItems.append(LocalNews.from(news: item, user: LocalUser.from(user: user)))
+            let newsUser = try await FetchCurrencyUser.fetchCurrentUser(item.ownerUid)
+            await self.newsItems.append(LocalNews.from(news: item, user: LocalUser.from(user: newsUser)))
         }
     }
     
     func fetchLikedNews(postalCode: String) async throws{
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
-        let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
         let userActivityDocRef = db
             .collection("users")
@@ -58,7 +58,8 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { return }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.postalCode == postalCode {
-                    self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user)))
+                    let newsUser = try await FetchCurrencyUser.fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    await self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: newsUser)))
                 }
             }
         } catch {
@@ -70,7 +71,6 @@ class ActivityViewModel : ObservableObject{
     func fetchSavedNews(postalCode: String) async throws {
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
-        let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
         let userActivityDocRef = db
             .collection("users")
@@ -90,7 +90,8 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { return }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.postalCode == postalCode {
-                    self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user)))
+                    let newsUser = try await FetchCurrencyUser.fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    await self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: newsUser)))
                 }
             }
         } catch {
@@ -100,7 +101,6 @@ class ActivityViewModel : ObservableObject{
     func commentedNews(postalCode: String) async throws{
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
-        let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
         let userActivityDocRef = db
             .collection("users")
@@ -120,7 +120,8 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { return }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.postalCode == postalCode {
-                    self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user)))
+                    let newsUser = try await FetchCurrencyUser.fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    await self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: newsUser)))
                 }
             }
         } catch {
@@ -129,7 +130,6 @@ class ActivityViewModel : ObservableObject{
     func fetchDisLikedNews(postalCode: String) async throws{
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
-        let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
         let userActivityDocRef = db
             .collection("users")
@@ -149,7 +149,8 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { return }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.postalCode == postalCode {
-                    self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user)))
+                    let newsUser = try await FetchCurrencyUser.fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    await self.newsItems.append(LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: newsUser)))
                 }
             }
         } catch {

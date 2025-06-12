@@ -80,7 +80,7 @@ final class NewsFeedViewModel: ObservableObject {
                 
                 
                 // Create and insert LocalNews linked to its LocalUser (if available)
-                let localNews = LocalNews.from(news: news, user: NewsUserLocal)
+                let localNews = await LocalNews.from(news: news, user: NewsUserLocal)
                 context.insert(localNews)
                 
                 // If we have a local author, add this news item to their newsItems relationship
