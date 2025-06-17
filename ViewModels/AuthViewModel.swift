@@ -64,7 +64,7 @@ class AuthViewModel: ObservableObject {
         
         do{
             // ✅ First clear any existing data to avoid conflicts
-            clearLocalUser()
+            clearAllLocalData()
             
             try await AppState.shared.signIn(email: email, password: password) { success in
                 // ✅ Fetch and store user data synchronously to ensure it's available immediately
@@ -159,7 +159,7 @@ class AuthViewModel: ObservableObject {
     @MainActor
     private func storeUserLocallyAsync(firestoreUser: User) async {
         guard let modelContext = self.modelContext else {
-            // Silent error handling
+            print("ERROR: modelContext is nil in storeUserLocallyAsync")
             errorMessage = AuthError.custom(message: "Failed to save local user: No database context available")
             return
         }
@@ -190,85 +190,11 @@ class AuthViewModel: ObservableObject {
             modelContext.insert(localUser)
             try modelContext.save()
             
-            // Successfully stored user locally
+            print("✅ Successfully stored user locally: \(firestoreUser.name)")
             
         } catch {
-            // Silent error handling
+            print("❌ Failed to store user locally: \(error)")
             errorMessage = AuthError.custom(message: "Failed to save local user")
-        }
-    }
-    
-    // Instance method that uses the stored modelContext
-    func clearLocalUser() {
-        guard let modelContext = self.modelContext else {
-            // Silent error handling
-            // Create a temporary context as fallback
-            do {
-                let container = try ModelContainer(for: LocalUser.self, LocalNews.self, LocalVote.self)
-                let tempContext = ModelContext(container)
-                clearUserData(using: tempContext)
-            } catch {
-                // Silent error handling
-            }
-            return
-        }
-        
-        clearUserData(using: modelContext)
-    }
-    
-    // Static method for backwards compatibility
-    static func clearLocalUser() {
-        AuthViewModel.shared.clearLocalUser()
-    }
-    
-    // Helper method to clear user data with a specific context
-    private func clearUserData(using context: ModelContext) {
-        let maxRetries = 3
-        var currentRetry = 0
-        var success = false
-        
-        while !success && currentRetry < maxRetries {
-            do {
-                // ✅ Clear LocalUsers
-                let userFetchDescriptor = FetchDescriptor<LocalUser>()
-                let users = try context.fetch(userFetchDescriptor)
-                for user in users {
-                    context.delete(user)
-                }
-                
-                // ✅ Clear LocalNews data
-                let newsFetchDescriptor = FetchDescriptor<LocalNews>()
-                let newsItems = try context.fetch(newsFetchDescriptor)
-                for news in newsItems {
-                    context.delete(news)
-                }
-                
-                // ✅ Clear LocalVote data
-                let voteFetchDescriptor = FetchDescriptor<LocalVote>()
-                let votes = try context.fetch(voteFetchDescriptor)
-                for vote in votes {
-                    context.delete(vote)
-                }
-                
-                // ✅ Clear temporary media files
-                MediaHandler.clearTemporaryMedia()
-                
-                // Save changes
-                try context.save()
-                success = true
-                // Successfully cleared all local data
-                
-            } catch {
-                currentRetry += 1
-                // Silent error handling
-                
-                // Wait briefly before retrying
-                if currentRetry < maxRetries {
-                    Thread.sleep(forTimeInterval: 0.5)
-                } else {
-                    errorMessage = AuthError.custom(message: "Failed to clear local data after multiple attempts")
-                }
-            }
         }
     }
     
@@ -292,3 +218,65 @@ enum AuthState {
     case login
     case signup
 }
+
+
+extension AuthViewModel {
+    
+    func clearAllLocalData() {
+        guard let modelContext = self.modelContext else {
+            print("❌ No modelContext available. Creating temporary context.")
+            createTempContextAndClear()
+            print(7)
+            return
+        }
+        print(2)
+        clearData(in: modelContext)
+        print(5)
+    }
+    
+    static func clearAllLocalData() {
+        print(1)
+        AuthViewModel.shared.clearAllLocalData()
+        print(6)
+    }
+    
+    private func createTempContextAndClear() {
+        do {
+            let container = try ModelContainer(for: LocalUser.self, LocalNews.self, LocalVote.self)
+            let tempContext = ModelContext(container)
+            clearData(in: tempContext)
+        } catch {
+            print("❌ Failed to create temp context: \(error)")
+        }
+    }
+    
+    private func clearData(in context: ModelContext) {
+        do {
+            print(3)
+            // Delete LocalUser
+            let users = try context.fetch(FetchDescriptor<LocalUser>())
+            users.forEach { context.delete($0) }
+            print("✅ Cleared LocalUser")
+
+            // Delete LocalNews
+            let newsItems = try context.fetch(FetchDescriptor<LocalNews>())
+            newsItems.forEach { context.delete($0) }
+            print("✅ Cleared LocalNews")
+
+            // Delete LocalVote
+            let votes = try context.fetch(FetchDescriptor<LocalVote>())
+            votes.forEach { context.delete($0) }
+            print("✅ Cleared LocalVote")
+
+            // Optional: Clear temporary media
+            MediaHandler.clearTemporaryMedia()
+
+            try context.save()
+            print("✅ All data cleared and saved.")
+            print(4)
+        } catch {
+            print("❌ Failed to clear data: \(error)")
+        }
+    }
+}
+

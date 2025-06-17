@@ -39,6 +39,10 @@ struct UploadDataView: View {
                         UploadData.uploadPoliceStations()
                     }
                     .buttonStyle(CustomButtonStyle())
+                    Button("Constituency Data") {
+                        UploadData.uploadConstituencyJSON()
+                    }
+                    .buttonStyle(CustomButtonStyle())
                 }
                 .padding(.top, 10)
 

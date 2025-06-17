@@ -30,6 +30,7 @@ struct LocalizerApp: App {
 
     init() {
         // 🔥 RESET EVERYTHING ON EVERY APP LAUNCH - Enhanced reset
+        print(URL.applicationSupportDirectory.path())
         Self.resetSwiftDataStore()
         
         // Create fresh container with new configuration

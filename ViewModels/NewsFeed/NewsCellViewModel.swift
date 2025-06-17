@@ -2,185 +2,180 @@
 //  NewsCellViewModel.swift
 //  Localizer
 //
-//  Created by Prajwal S S Reddy on 6/4/25.
+//  Created by Prajwal S S Reddy on 6/5/25.
 //
 
 import Foundation
+import SwiftUI
 import FirebaseFirestore
 import FirebaseAuth
-import SwiftUI
 
 @MainActor
-class NewsCellViewModel: ObservableObject {
-    @Published var likesCount: Int = 0
+class NewsCellViewModel: ObservableObject{
+    
     @Published var voteState: VoteState = .none
-    @Published var savedByCurrentUser: Bool = false
+    @Published var likesCount: Int = 0
+    @Published var showingMenu: Bool = false
+    // Animation states for button scaling
     @Published var upvoteScale: CGFloat = 1.0
     @Published var downvoteScale: CGFloat = 1.0
+    @Published var savedByCurrentUser: Bool = false
+    
     
     private let db = Firestore.firestore()
     
-    enum VoteState {
-        case none, upvoted, downvoted
+    
+    /// Saves or updates a vote in the subcollection `votes` under the specific `news` document
+    func saveVote(postId: String, voteType: Int, PostLikeCount: Int) async throws {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let vote = Vote(postId: postId, userId: uid, voteType: voteType, timestamp: Date.now)
+        let docRef = db.collection("news")
+            .document(vote.postId)
+            .collection("votes")
+            .document(vote.userId) // each user has one vote per post
+        
+        try docRef.setData(from: vote)
+        
+        try await incrementLikesCount(forPostId: postId, by: PostLikeCount)
     }
     
-    // MARK: - Voting Functions
-    func handleUpvote(postId: String) async {
-        // Animate button
-        withAnimation(.easeInOut(duration: 0.1)) {
-            upvoteScale = 1.2
+    func fetchVotesStatus(postId: String) async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let docRef = db.collection("news")
+            .document(postId)
+        
+        do {
+            let document = try await docRef.getDocument()
+            if let data = document.data(),
+               let count = data["likesCount"] as? Int {
+                await MainActor.run {
+                    self.likesCount = count
+                }
+            }
+            let snapshot = try await docRef.collection("votes")
+                .document(uid).getDocument()
+            if let data = snapshot.data(), let voteType = data["voteType"] as? Int {
+                DispatchQueue.main.async {
+                    switch voteType {
+                    case 1:
+                        self.voteState = .upvoted
+                    case -1:
+                        self.voteState = .downvoted
+                    case 0:
+                        self.voteState = .none
+                    default:
+                        self.voteState = .none
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.voteState = .none
+                }
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.voteState = .none
+            }
         }
-        withAnimation(.easeInOut(duration: 0.1).delay(0.1)) {
-            upvoteScale = 1.0
+    }
+    
+    
+    func incrementLikesCount(forPostId postId: String, by amount: Int) async throws {
+        try await db.collection("news")
+            .document(postId)
+            .updateData([
+                "likesCount": FieldValue.increment(Int64(amount))
+            ])
+    }
+    
+    func handleUpvote(postId: String) async {
+        // Scale animation
+        
+        withAnimation(.easeInOut(duration: 0.1)) {
+            upvoteScale = 1.3
         }
         
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.easeInOut(duration: 0.1)) {
+                self.upvoteScale = 1.0
+            }
+        }
+        
+        // Vote logic
         switch voteState {
         case .none:
-            // Upvote the post
             voteState = .upvoted
             likesCount += 1
-            do {
-                try await upvotePost(postId: postId)
-                try await AddLikedNews(postId: postId)
-            } catch {
-                // Revert on error
-                voteState = .none
-                likesCount -= 1
+            do{
+                try await saveVote(postId: postId, voteType: 1, PostLikeCount: 1)
+                Task{ try await AddLikedNews(postId: postId) }
+            }catch{
+                print(error.localizedDescription)
             }
-            
         case .upvoted:
-            // Remove upvote
             voteState = .none
             likesCount -= 1
-            do {
-                try await removeUpvote(postId: postId)
-                try await removeLikedNews(postId: postId)
-            } catch {
-                // Revert on error
-                voteState = .upvoted
-                likesCount += 1
+            do{
+                try await saveVote(postId: postId, voteType: 0, PostLikeCount: -1)
+                Task{ try await removeLikedNews(postId: postId) }
+            }catch{
+                print(error.localizedDescription)
             }
-            
         case .downvoted:
-            // Switch from downvote to upvote
             voteState = .upvoted
-            likesCount += 2 // Remove downvote (-1) and add upvote (+1) = +2
-            do {
-                try await removeDownvote(postId: postId)
-                try await upvotePost(postId: postId)
-                try await AddLikedNews(postId: postId)
-                try await removeDisLikedNews(postId: postId)
-            } catch {
-                // Revert on error
-                voteState = .downvoted
-                likesCount -= 2
+            likesCount += 2
+            do{
+                try await saveVote(postId: postId, voteType: 1, PostLikeCount: 2)
+                Task{ try await removeDisLikedNews(postId: postId) }
+                Task{ try await AddLikedNews(postId: postId) }
+            }catch{
+                print(error.localizedDescription)
             }
         }
     }
     
     func handleDownvote(postId: String) async {
-        // Animate button
+        // Scale animation
         withAnimation(.easeInOut(duration: 0.1)) {
-            downvoteScale = 1.2
-        }
-        withAnimation(.easeInOut(duration: 0.1).delay(0.1)) {
-            downvoteScale = 1.0
+            downvoteScale = 1.3
         }
         
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.easeInOut(duration: 0.1)) {
+                self.downvoteScale = 1.0
+            }
+        }
+        
+        // Vote logic
         switch voteState {
         case .none:
-            // Downvote the post
             voteState = .downvoted
             likesCount -= 1
-            do {
-                try await downvotePost(postId: postId)
-                try await AddDisLikedNews(postId: postId)
-            } catch {
-                // Revert on error
-                voteState = .none
-                likesCount += 1
+            do{
+                try await saveVote(postId: postId, voteType: -1, PostLikeCount: -1)
+                Task{ try await AddDisLikedNews(postId: postId) }
+            }catch{
+                print(error.localizedDescription)
             }
-            
         case .downvoted:
-            // Remove downvote
             voteState = .none
             likesCount += 1
-            do {
-                try await removeDownvote(postId: postId)
-                try await removeDisLikedNews(postId: postId)
-            } catch {
-                // Revert on error
-                voteState = .downvoted
-                likesCount -= 1
+            do{
+                try await saveVote(postId: postId, voteType: 0, PostLikeCount: 1)
+                Task{ try await removeDisLikedNews(postId: postId) }
+            }catch{
+                print(error.localizedDescription)
             }
-            
         case .upvoted:
-            // Switch from upvote to downvote
             voteState = .downvoted
-            likesCount -= 2 // Remove upvote (-1) and add downvote (-1) = -2
-            do {
-                try await removeUpvote(postId: postId)
-                try await downvotePost(postId: postId)
-                try await AddDisLikedNews(postId: postId)
-                try await removeLikedNews(postId: postId)
-            } catch {
-                // Revert on error
-                voteState = .upvoted
-                likesCount += 2
+            likesCount -= 2 // Remove upvote (+1) and add downvote (-1) = -2
+            do{
+                try await saveVote(postId: postId, voteType: -1, PostLikeCount: -2)
+                Task{ try await removeLikedNews(postId: postId) }
+                Task{ try await AddDisLikedNews(postId: postId) }
+            }catch{
+                print(error.localizedDescription)
             }
-        }
-    }
-    
-    // MARK: - Firestore Operations
-    private func upvotePost(postId: String) async throws {
-        try await db.collection("news").document(postId).updateData([
-            "likesCount": FieldValue.increment(Int64(1))
-        ])
-    }
-    
-    private func downvotePost(postId: String) async throws {
-        try await db.collection("news").document(postId).updateData([
-            "likesCount": FieldValue.increment(Int64(-1))
-        ])
-    }
-    
-    private func removeUpvote(postId: String) async throws {
-        try await db.collection("news").document(postId).updateData([
-            "likesCount": FieldValue.increment(Int64(-1))
-        ])
-    }
-    
-    private func removeDownvote(postId: String) async throws {
-        try await db.collection("news").document(postId).updateData([
-            "likesCount": FieldValue.increment(Int64(1))
-        ])
-    }
-    
-    // MARK: - Fetch Vote Status
-    func fetchVotesStatus(postId: String) async {
-        guard let userId = Auth.auth().currentUser?.uid else { return }
-        
-        do {
-            // Fetch the post to get current likes count
-            let postDoc = try await db.collection("news").document(postId).getDocument()
-            if let data = postDoc.data(), let likes = data["likesCount"] as? Int {
-                self.likesCount = likes
-            }
-            
-            // Check user's vote status
-            let userVoteDoc = try await db.collection("users")
-                .document(userId)
-                .collection("votes")
-                .document(postId)
-                .getDocument()
-            
-            if let voteData = userVoteDoc.data(), let vote = voteData["vote"] as? String {
-                self.voteState = vote == "upvote" ? .upvoted : .downvoted
-            } else {
-                self.voteState = .none
-            }
-        } catch {
-            // Silent error handling
         }
     }
     
@@ -255,7 +250,12 @@ class NewsCellViewModel: ObservableObject {
         func removeSavedNews1(postId: String) async throws {
             guard let userId = Auth.auth().currentUser?.uid else { return }
             
-            let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+            // Fixed: Use consistent collection name "users" (lowercase)
+            let docRef = db
+                .collection("users")  // Changed from "Users" to "users"
+                .document(userId)
+                .collection("userNewsActivity")
+                .document(userId)
 
             do {
                 // First check if actually saved
@@ -275,13 +275,13 @@ class NewsCellViewModel: ObservableObject {
                 await MainActor.run {
                     self.savedByCurrentUser = false
                 }
-                
                 try await db.collection("users")
                     .document(userId)
                     .updateData([
                         "SavedPostsCount": FieldValue.increment(Int64(-1))
                     ])
 
+                
             } catch {
                 throw error
             }
@@ -351,7 +351,7 @@ class NewsCellViewModel: ObservableObject {
             try await db.collection("users")
                 .document(userId)
                 .updateData([
-                    "DislikedCount": FieldValue.increment(Int64(1))
+                    "dislikedCount": FieldValue.increment(Int64(1))
                 ])
             
         } catch {
@@ -381,7 +381,7 @@ class NewsCellViewModel: ObservableObject {
             try await db.collection("users")
                 .document(userId)
                 .updateData([
-                    "DislikedCount": FieldValue.increment(Int64(-1))
+                    "dislikedCount": FieldValue.increment(Int64(-1))
                 ])
 
         } catch {
@@ -389,3 +389,7 @@ class NewsCellViewModel: ObservableObject {
         }
     }
 }
+enum VoteState {
+    case upvoted, downvoted, none
+}
+

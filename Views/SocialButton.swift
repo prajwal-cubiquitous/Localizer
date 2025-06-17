@@ -27,7 +27,7 @@ struct SocialButton: View {
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    .background(Color(.systemBackground))
+                    .background(Color(.systemBackground)),
             )
             .foregroundStyle(Color.primary)
         }

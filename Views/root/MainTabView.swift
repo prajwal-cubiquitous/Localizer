@@ -117,14 +117,15 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            // Create Post Tab - Now just triggers sheet
-            Color.clear
+            // Constituency Tab
+            constituencyView(pincode: pincode)
+                .environmentObject(appState)
                 .tabItem {
                     Label {
-                        Text("Post")
+                        Text("Constituency")
                             .font(.caption)
                     } icon: {
-                        Image(systemName: selectedTab == 2 ? "plus.square.fill" : "plus.square")
+                        Image(systemName: selectedTab == 2 ? "building.2.fill" : "building.2")
                     }
                 }
                 .tag(2)
@@ -158,20 +159,7 @@ struct MainTabView: View {
                 }
                 .tag(4)
         }
-        .onChange(of: selectedTab) { oldValue, newValue in
-            if newValue == 2 {
-                showPostView = true
-                // Switch back to previous tab to avoid staying on empty tab
-                selectedTab = oldValue
-            }
-        }
-        .sheet(isPresented: $showPostView) {
-            PostViewWrapper(pincode: pincode) { shouldNavigateToNewsFeed in
-                if shouldNavigateToNewsFeed {
-                    selectedTab = 0 // Navigate to NewsFeed tab
-                }
-            }
-        }
+
         .onAppear {
             // Customize tab bar appearance for both light and dark mode
             let tabBarAppearance = UITabBarAppearance()

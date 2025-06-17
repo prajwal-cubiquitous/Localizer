@@ -126,7 +126,7 @@ struct ProfileView: View {
                             Task { @MainActor in
                                 // ✅ Improved logout process with proper sequencing
                                 // First clear the local user data
-                                AuthViewModel.clearLocalUser()
+                                AuthViewModel.clearAllLocalData()
                                 
                                 // Small delay to ensure data is cleared
                                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
@@ -134,7 +134,7 @@ struct ProfileView: View {
                                 // Then sign out of Firebase
                                 AppState.shared.signOut()
                                 
-                                // Logout completed successfully
+                                print("✅ Logout completed successfully")
                             }
                         }
                     }
