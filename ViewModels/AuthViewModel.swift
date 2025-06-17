@@ -164,33 +164,67 @@ class AuthViewModel: ObservableObject {
             return
         }
         
+        guard let currentUserId = AppState.shared.userSession?.uid else {
+            print("❌ No current user session - cannot store user locally")
+            return
+        }
+        
+        // ✅ Only store if this is the current user
+        guard firestoreUser.id == currentUserId else {
+            print("⚠️ Attempted to store non-current user in SwiftData: \(firestoreUser.id)")
+            return
+        }
+        
         do {
-            // First clear any existing users to avoid conflicts
-            let existingUsersFetch = FetchDescriptor<LocalUser>()
+            // ✅ First, find and update existing current user OR create new one
+            let existingUsersFetch = FetchDescriptor<LocalUser>(
+                predicate: #Predicate<LocalUser> { $0.id == currentUserId }
+            )
             let existingUsers = try modelContext.fetch(existingUsersFetch)
-            for user in existingUsers {
-                modelContext.delete(user)
+            
+            if let existingUser = existingUsers.first {
+                // Update existing user
+                existingUser.name = firestoreUser.name
+                existingUser.username = firestoreUser.username
+                existingUser.email = firestoreUser.email
+                existingUser.bio = firestoreUser.bio
+                existingUser.profileImageUrl = firestoreUser.profileImageUrl
+                existingUser.postCount = firestoreUser.postsCount
+                existingUser.likedCount = firestoreUser.likedCount
+                existingUser.dislikedCount = firestoreUser.dislikedCount
+                existingUser.SavedPostsCount = firestoreUser.SavedPostsCount
+                existingUser.commentCount = firestoreUser.commentsCount
+                
+                print("✅ Updated existing current user locally: \(firestoreUser.name)")
+            } else {
+                // Create new user - but first clear any existing users to avoid conflicts
+                let allUsersFetch = FetchDescriptor<LocalUser>()
+                let allUsers = try modelContext.fetch(allUsersFetch)
+                for user in allUsers {
+                    print("🗑️ Removing old user from SwiftData: \(user.name)")
+                    modelContext.delete(user)
+                }
+                
+                // Create and insert the new current user
+                let localUser = LocalUser(
+                    id: firestoreUser.id,
+                    name: firestoreUser.name,
+                    username: firestoreUser.username,
+                    email: firestoreUser.email,
+                    bio: firestoreUser.bio,
+                    profileImageUrl: firestoreUser.profileImageUrl,
+                    postCount: firestoreUser.postsCount,
+                    likedCount: firestoreUser.likedCount,
+                    dislikedCount: firestoreUser.dislikedCount,
+                    SavedPostsCount: firestoreUser.SavedPostsCount,
+                    commentCount: firestoreUser.commentsCount
+                )
+                
+                modelContext.insert(localUser)
+                print("✅ Created new current user locally: \(firestoreUser.name)")
             }
             
-            // Create and insert the new user
-            let localUser = LocalUser(
-                id: firestoreUser.id,
-                name: firestoreUser.name,
-                username: firestoreUser.username,
-                email: firestoreUser.email,
-                bio: firestoreUser.bio,
-                profileImageUrl: firestoreUser.profileImageUrl,
-                postCount: firestoreUser.postsCount,
-                likedCount: firestoreUser.likedCount,
-                dislikedCount: firestoreUser.dislikedCount,
-                SavedPostsCount: firestoreUser.SavedPostsCount,
-                commentCount: firestoreUser.commentsCount
-            )
-            
-            modelContext.insert(localUser)
             try modelContext.save()
-            
-            print("✅ Successfully stored user locally: \(firestoreUser.name)")
             
         } catch {
             print("❌ Failed to store user locally: \(error)")
@@ -267,6 +301,10 @@ extension AuthViewModel {
             let votes = try context.fetch(FetchDescriptor<LocalVote>())
             votes.forEach { context.delete($0) }
             print("✅ Cleared LocalVote")
+
+            // ✅ Clear UserCache
+            UserCache.shared.clearCache()
+            print("✅ Cleared UserCache")
 
             // Optional: Clear temporary media
             MediaHandler.clearTemporaryMedia()

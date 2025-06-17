@@ -104,28 +104,25 @@ extension LocalNews {
         // This doesn't block the UI and allows images to display immediately
         if let imageURLs = news.newsImageURLs, !imageURLs.isEmpty {
             // ✅ Fix Swift 6 concurrency issue by capturing newsId and avoiding mutable variable capture
-            let newsId = localNews.id
+            let _ = localNews.id
             Task.detached(priority: .background) { [imageURLs] in
-                var downloadedURLs: [String] = []
+                var _ = [String]()
                 
                 for urlString in imageURLs {
                     if let url = URL(string: urlString) {
                         let filename = url.lastPathComponent
                         do {
-                            let localImageURL = try await MediaHandler.downloadMedia(from: url, fileName: filename)
-                            downloadedURLs.append(localImageURL.absoluteString)
+                            let _ = try await MediaHandler.downloadMedia(from: url, fileName: filename)
+                            // Keep original URL if download fails
                         } catch {
                             // Keep original URL if download fails
-                            downloadedURLs.append(urlString)
                         }
-                    } else {
-                        downloadedURLs.append(urlString)
                     }
                 }
                 
                 // ✅ Update with local URLs once downloaded (optional optimization)
                 // Find the news item by ID to avoid capturing the mutable object
-                await MainActor.run { [downloadedURLs] in
+                await MainActor.run {
                     // Note: This is optional optimization - the original URLs work fine
                     // We're not updating here to avoid complex SwiftData context issues
                 }

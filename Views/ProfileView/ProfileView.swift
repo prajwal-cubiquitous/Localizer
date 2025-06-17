@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 import Kingfisher
+import FirebaseAuth
 
 struct ProfileView: View {
     let pincode: String
@@ -19,27 +20,27 @@ struct ProfileView: View {
     @State private var isRefreshing = false
     @State private var hasFetchedUser = false
     
-    // Use a properly configured query to fetch the current user without any filters
-    // This will show ALL users in the database, which should include our current user
+    // ✅ Query to fetch ONLY the current logged-in user from SwiftData
     @Query private var localUsers: [LocalUser]
     
-    // Add an onAppear action to debug what's happening
-    @State private var debugMessage = ""
-    
-    // Computed property to safely get current user
+    // ✅ Computed property to get current user - matches with Firebase Auth user
     private var currentUser: LocalUser? {
-        return localUsers.first
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return nil }
+        return localUsers.first { $0.id == currentUserId }
     }
+    
     @State private var path: [String] = []
     
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Header with profile image
-                    VStack {
-                        ProfilePictureView(userProfileUrl: currentUser?.profileImageUrl, width: 100, height: 100)
-                        if let user = currentUser {
+                    // ✅ Show current user data or loading/error state
+                    if let user = currentUser {
+                        // Header with profile image
+                        VStack {
+                            ProfilePictureView(userProfileUrl: user.profileImageUrl, width: 100, height: 100)
+                            
                             Text(user.name)
                                 .font(.title2)
                                 .fontWeight(.bold)
@@ -48,7 +49,7 @@ struct ProfileView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.gray)
                             
-                            if user.bio != ""{
+                            if !user.bio.isEmpty {
                                 Text(user.bio)
                                     .font(.body)
                                     .multilineTextAlignment(.center)
@@ -90,9 +91,8 @@ struct ProfileView: View {
                                 }
                             }
                             .padding(.top, 16)
-                        }
-                        // Edit profile button
-                        if currentUser != nil {
+                            
+                            // Edit profile button
                             Button {
                                 isEditingProfile = true
                             } label: {
@@ -107,21 +107,33 @@ struct ProfileView: View {
                             }
                             .padding(.top, 8)
                         }
+                        .padding(.bottom, 20)
+                        
+                    } else {
+                        // ✅ Loading state when no current user is found
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                            Text("Loading profile...")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(height: 200)
                     }
-                    .padding(.bottom, 20)
-                    
                     
                     // Settings and more section
                     VStack(spacing: 0) {
-                        
                         settingsRow(icon: "gearshape", title: "Settings"){
-                            
+                            // Settings functionality
                         }
+                        
+                        // ✅ Admin upload data access
                         if currentUser?.id == "jWMfJAquzQfxbYLjuMbCxBUEk2q2" {
                             settingsRow(icon: "square.and.arrow.up.on.square", title: "UploadData"){
                                 path.append("Upload")
                             }
                         }
+                        
                         settingsRow(icon: "arrow.left.square", title: "Logout"){
                             Task { @MainActor in
                                 // ✅ Improved logout process with proper sequencing
@@ -190,16 +202,17 @@ struct ProfileView: View {
         .buttonStyle(PlainButtonStyle())
     }
     
-    /// Refreshes user data from Firestore and updates SwiftData using AuthViewModel's fetchAndStoreUserAsync function
+    /// ✅ Refreshes ONLY current user data from Firestore and updates SwiftData
     @MainActor
     private func refreshUserData() async {
         guard let userId = AppState.shared.userSession?.uid else {
+            print("❌ No current user session for profile refresh")
             return
         }
         
         isRefreshing = true
         
-        // Use the injected AuthViewModel instance to refresh user data with async method
+        // Use the injected AuthViewModel instance to refresh ONLY current user data
         await self.AuthViewModel.fetchAndStoreUserAsync(userId: userId)
         
         isRefreshing = false

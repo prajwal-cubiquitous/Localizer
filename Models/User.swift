@@ -56,7 +56,12 @@ final class LocalUser: @unchecked Sendable {
 }
 
 extension LocalUser {
-    static func from(user: User) -> LocalUser {
+    static func fromCurrentUser(user: User, currentUserId: String) -> LocalUser? {
+        // Only create LocalUser for the current logged-in user
+        guard user.id == currentUserId else {
+            print("⚠️ Attempted to create LocalUser for non-current user: \(user.id)")
+            return nil
+        }
         
         return LocalUser(
             id: user.id,
@@ -66,7 +71,26 @@ extension LocalUser {
             bio: user.bio,
             profileImageUrl: user.profileImageUrl,
             postCount: user.postsCount,
-            likedCount: user.likedCount, dislikedCount: user.dislikedCount, SavedPostsCount: user.SavedPostsCount,
+            likedCount: user.likedCount, 
+            dislikedCount: user.dislikedCount, 
+            SavedPostsCount: user.SavedPostsCount,
+            commentCount: user.commentsCount
+        )
+    }
+    
+    static func from(user: User) -> LocalUser {
+        print("⚠️ WARNING: Creating LocalUser for potentially non-current user: \(user.id)")
+        return LocalUser(
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            bio: user.bio,
+            profileImageUrl: user.profileImageUrl,
+            postCount: user.postsCount,
+            likedCount: user.likedCount, 
+            dislikedCount: user.dislikedCount, 
+            SavedPostsCount: user.SavedPostsCount,
             commentCount: user.commentsCount
         )
     }
@@ -108,8 +132,66 @@ class UserCache {
 
     // Temp in-memory dictionary: [userId: CachedUser]
     var cacheusers: [String: CachedUser] = [:]
+    
+    // ✅ Enhanced user fetching with caching
+    func getUser(userId: String) async -> CachedUser? {
+        // First check if user is already cached
+        if let cachedUser = cacheusers[userId] {
+            return cachedUser
+        }
+        
+        // If not cached, fetch from Firestore
+        do {
+            let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
+            let cachedUser = CachedUser(username: user.username, profilePictureUrl: user.profileImageUrl)
+            
+            // Cache the user for future use
+            cacheusers[userId] = cachedUser
+            return cachedUser
+        } catch {
+            print("❌ Failed to fetch user \(userId): \(error)")
+            return nil
+        }
+    }
+    
+    // ✅ Batch fetch multiple users efficiently
+    func getUsers(userIds: [String]) async -> [String: CachedUser] {
+        var result: [String: CachedUser] = [:]
+        var usersToFetch: [String] = []
+        
+        // First, get cached users
+        for userId in userIds {
+            if let cachedUser = cacheusers[userId] {
+                result[userId] = cachedUser
+            } else {
+                usersToFetch.append(userId)
+            }
+        }
+        
+        // Fetch remaining users concurrently
+        await withTaskGroup(of: (String, CachedUser?).self) { group in
+            for userId in usersToFetch {
+                group.addTask {
+                    let cachedUser = await self.getUser(userId: userId)
+                    return (userId, cachedUser)
+                }
+            }
+            
+            for await (userId, cachedUser) in group {
+                if let cachedUser = cachedUser {
+                    result[userId] = cachedUser
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    // ✅ Clear cache when needed
+    func clearCache() {
+        cacheusers.removeAll()
+    }
 }
-
 
 struct UserNewsActivity: Codable, Identifiable {
     var id: String = UUID().uuidString

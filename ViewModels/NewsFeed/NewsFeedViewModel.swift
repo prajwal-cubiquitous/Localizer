@@ -71,25 +71,40 @@ final class NewsFeedViewModel: ObservableObject {
             for obj in existing {
                 context.delete(obj)
             }
-            // 3. Insert the newly fetched items (capped at 100) **with their authors**.
+            
+            // ✅ 2. Batch fetch all unique user IDs for caching
+            let uniqueUserIds = Array(Set(items.map { $0.ownerUid }))
+            let cachedUsers = await UserCache.shared.getUsers(userIds: uniqueUserIds)
+            
+            // ✅ 3. Insert the newly fetched items WITHOUT creating LocalUser objects
             for news in items.prefix(maxNewsItems) {
-                let NewsUser : User = try await fetchCurrentUser(news.ownerUid)
+                // Create LocalNews without LocalUser relationship
+                let localNews = LocalNews(
+                    id: news.id,
+                    ownerUid: news.ownerUid,
+                    caption: news.caption,
+                    timestamp: news.timestamp.dateValue(),
+                    likesCount: news.likesCount,
+                    commentsCount: news.commentsCount,
+                    postalCode: news.postalCode,
+                    newsImageURLs: news.newsImageURLs,
+                    user: nil // ✅ No LocalUser relationship for news feed users
+                )
                 
-                let NewsUserLocal : LocalUser? = LocalUser.from(user: NewsUser)
-                
-                
-                
-                // Create and insert LocalNews linked to its LocalUser (if available)
-                let localNews = await LocalNews.from(news: news, user: NewsUserLocal)
                 context.insert(localNews)
                 
-                // If we have a local author, add this news item to their newsItems relationship
-                if let author = NewsUserLocal {
-                    author.newsItems.append(localNews)
+                // ✅ Ensure user is cached in UserCache for UI display
+                if cachedUsers[news.ownerUid] == nil {
+                    // If user wasn't cached in batch, cache individually
+                    _ = await UserCache.shared.getUser(userId: news.ownerUid)
                 }
             }
             
+            try context.save()
+            print("✅ Cached \(items.count) news items for pincode: \(pincode)")
+            
         } catch {
+            print("❌ Failed to cache news items: \(error)")
         }
     }
     

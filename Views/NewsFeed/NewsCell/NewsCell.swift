@@ -14,14 +14,19 @@ import ObjectiveC
 import Network
 import Kingfisher
 import FirebaseStorage
+import SwiftData
 
 struct NewsCell: View {
-    @State private var showingCommentsSheet = false
-    @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
+    @ObservedObject var viewModel: NewsCellViewModel
+    @State private var showingCommentsSheet = false
+    
+    // ✅ State for cached user data
+    @State private var cachedUser: CachedUser?
     
     init(localNews: LocalNews) {
         self.localNews = localNews
+        self.viewModel = NewsCellViewModel(localNews: localNews)
     }
     
     // MARK: - Computed Properties
@@ -53,11 +58,16 @@ struct NewsCell: View {
         VStack(alignment: .leading, spacing: 16) {
             // User Info Header
             HStack(spacing: 12) {
-                // Profile Image
-                ProfilePictureView(userProfileUrl: localNews.user?.profileImageUrl, width: 44, height: 44)
+                // ✅ Profile Image from cached user
+                ProfilePictureView(
+                    userProfileUrl: cachedUser?.profilePictureUrl,
+                    width: 44, 
+                    height: 44
+                )
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(localNews.user?.name ?? "Unknown User")
+                    // ✅ Name from cached user
+                    Text(cachedUser?.username ?? "Unknown User")
                         .font(.headline)
                         .foregroundColor(.primary)
                         .lineLimit(1)
@@ -211,6 +221,9 @@ struct NewsCell: View {
         )
         .padding(.horizontal, 16) // Outer margin from screen edges
         .task {
+            // ✅ Fetch user data from cache
+            cachedUser = await UserCache.shared.getUser(userId: localNews.ownerUid)
+            
             await viewModel.fetchVotesStatus(postId: localNews.id)
             await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
         }

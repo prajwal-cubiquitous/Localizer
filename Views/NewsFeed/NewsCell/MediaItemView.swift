@@ -38,7 +38,7 @@ struct MediaItemView: View {
         } else {
             // ✅ Image with better error handling
             KFImage(URL(string: urlString))
-                .onFailure { error in
+                .onFailure { _ in
                     // Silent error handling - no debug prints
                 }
                 .placeholder {
@@ -170,7 +170,7 @@ struct DownloadableVideoPlayer: View {
                 case .failed:
                     hasError = true
                     isLoading = false
-                    if let error = playerItem.error {
+                    if playerItem.error != nil {
                         // Silent error handling - no debug prints
                     }
                 case .unknown:
@@ -205,7 +205,7 @@ struct DownloadableVideoPlayer: View {
         NotificationCenter.default.publisher(for: .AVPlayerItemFailedToPlayToEndTime, object: playerItem)
             .receive(on: DispatchQueue.main)
             .sink { notification in
-                if let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error {
+                if notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] != nil {
                     // Silent error handling - no debug prints
                 }
                 hasError = true

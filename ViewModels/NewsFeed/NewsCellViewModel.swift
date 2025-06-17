@@ -24,6 +24,15 @@ class NewsCellViewModel: ObservableObject{
     
     private let db = Firestore.firestore()
     
+    // ✅ Constructor that accepts LocalNews
+    init(localNews: LocalNews) {
+        self.likesCount = localNews.likesCount
+    }
+    
+    // ✅ Default constructor for cases where LocalNews isn't available
+    init() {
+        self.likesCount = 0
+    }
     
     /// Saves or updates a vote in the subcollection `votes` under the specific `news` document
     func saveVote(postId: String, voteType: Int, PostLikeCount: Int) async throws {
