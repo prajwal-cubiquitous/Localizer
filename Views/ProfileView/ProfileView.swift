@@ -19,7 +19,8 @@ struct ProfileView: View {
     @EnvironmentObject var AuthViewModel : AuthViewModel
     @State private var isRefreshing = false
     @State private var hasFetchedUser = false
-    
+    @Binding var constituencies : [ConstituencyDetails]?
+    @Binding var selectedName: String 
     // ✅ Query to fetch ONLY the current logged-in user from SwiftData
     @Query private var localUsers: [LocalUser]
     
@@ -35,6 +36,9 @@ struct ProfileView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 20) {
+                    if let list = constituencies {
+                        StylishPicker(list: list, selectedName: $selectedName)
+                    }
                     // ✅ Show current user data or loading/error state
                     if let user = currentUser {
                         // Header with profile image

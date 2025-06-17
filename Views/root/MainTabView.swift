@@ -25,6 +25,14 @@ struct MainTabView: View {
     @StateObject private var locationManager = LocationManager.shared
     @Environment(\.modelContext) private var modelContext
     
+    // for Constituency Fetching 
+    @StateObject var ConstituencyViewModel = constituencyViewModel()
+    @State var constituencies : [ConstituencyDetails]?
+    @State private var selectedName: String = ""
+    var selectedConstituency: ConstituencyDetails? {
+        constituencies?.first { $0.constituencyName == selectedName }
+    }
+    
     // MARK: - Initialization
     
     init(modelContext: ModelContext) {
@@ -84,6 +92,12 @@ struct MainTabView: View {
                 }
             }
         }
+        .task(id: pincode){
+            constituencies = await ConstituencyViewModel.fetchConstituency(forPincode: pincode)
+            if let first = constituencies?.first {
+                selectedName = first.constituencyName
+            }
+        }
     }
     
     // MARK: - Views
@@ -118,7 +132,7 @@ struct MainTabView: View {
                 .tag(1)
             
             // Constituency Tab
-            constituencyView(pincode: pincode)
+            constituencyView(ConstituencyInfo: selectedConstituency)
                 .environmentObject(appState)
                 .tabItem {
                     Label {
@@ -144,7 +158,7 @@ struct MainTabView: View {
                 .tag(3)
             
             // Profile Tab
-            ProfileView(pincode: pincode)
+            ProfileView(pincode: pincode, constituencies: $constituencies, selectedName: $selectedName)
                 .environment(\.modelContext, modelContext) // Explicitly pass modelContext to ProfileView
                 .environmentObject(AuthviewModel)
                 .environmentObject(appState)

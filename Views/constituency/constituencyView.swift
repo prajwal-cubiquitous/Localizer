@@ -9,24 +9,10 @@ import SwiftUI
 
 struct constituencyView: View {
     @StateObject var viewModel = constituencyViewModel()
-    let pincode: String
-    @State var constituencies : [ConstituencyDetails]?
-    @State private var selectedName: String = ""
-    var selectedConstituency: ConstituencyDetails? {
-        constituencies?.first { $0.constituencyName == selectedName }
-    }
+    let ConstituencyInfo : ConstituencyDetails?
     var body: some View {
         ScrollView {
-            if let list = constituencies {
-//                Picker("Select Constituency", selection: $selectedName) {
-//                    ForEach(list, id: \.constituencyName) { item in
-//                        Text(item.constituencyName).tag(item.constituencyName)
-//                    }
-//                }
-//                .pickerStyle(.menu)
-                StylishPicker(list: list, selectedName: $selectedName)
-                
-                if let ConstituencyInfo = selectedConstituency {
+                if let ConstituencyInfo = ConstituencyInfo{
                     VStack(spacing: 20) {
                         // Profile Header Section
                         VStack(spacing: 12) {
@@ -122,24 +108,17 @@ struct constituencyView: View {
     
                         Spacer()
                     }
-                }
-            } else {
+                }else {
                 ProgressView("Loading constituencies...")
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemBackground))
-        .task(id: pincode){
-            constituencies = await viewModel.fetchConstituency(forPincode: pincode)
-            if let first = constituencies?.first {
-                selectedName = first.constituencyName
-            }
-        }
     }
 }
 
-#Preview {
-    NavigationView {
-        constituencyView(pincode: "590001")
-    }
-}
+//#Preview {
+//    NavigationView {
+//        constituencyView(, ConstituencyInfo: <#ConstituencyDetails?#>)
+//    }
+//}
