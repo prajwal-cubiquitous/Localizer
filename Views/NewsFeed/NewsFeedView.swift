@@ -16,6 +16,7 @@ struct NewsFeedView: View {
     @StateObject private var viewModel = NewsFeedViewModel()
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
+    @State private var hasAppeared = false
 
     init(pincode: String) {
         self.pincode = pincode
@@ -28,7 +29,7 @@ struct NewsFeedView: View {
         NavigationStack {
             ZStack {
                 Group {
-                    if newsItems.isEmpty {
+                    if newsItems.isEmpty && !viewModel.isLoading {
                         // Empty State
                         VStack(spacing: 24) {
                             Image(systemName: "square.and.pencil")
@@ -51,22 +52,80 @@ struct NewsFeedView: View {
                         .padding(.horizontal, 20)
                         .padding(.vertical, 16)
                     } else {
-                        // News Feed Content
+                        // ✅ Instagram-style News Feed with Pagination
                         ScrollView {
                             LazyVStack(spacing: 0) {
-                                ForEach(newsItems) { item in
+                                // ✅ Initial loading indicator
+                                if viewModel.isLoading && newsItems.isEmpty {
+                                    VStack(spacing: 16) {
+                                        ProgressView()
+                                            .scaleEffect(1.2)
+                                        Text("Loading news...")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, minHeight: 200)
+                                    .padding()
+                                }
+                                
+                                // ✅ News items with optimized pagination detection
+                                ForEach(Array(newsItems.enumerated()), id: \.element.id) { index, item in
                                     NewsCell(localNews: item)
                                         .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
                                         .padding(.bottom, 8) // Space between news items
+                                        .onAppear {
+                                            // ✅ Optimized load more trigger - only check near end
+                                            if index >= newsItems.count - 3 {
+                                                Task {
+                                                    await viewModel.loadMoreIfNeeded(
+                                                        for: pincode,
+                                                        context: modelContext,
+                                                        currentItem: item,
+                                                        allItems: Array(newsItems)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        .id(item.id) // Ensure proper identity for LazyVStack
+                                }
+                                
+                                // ✅ Load more indicator (Instagram-style)
+                                if viewModel.isLoadingMore {
+                                    HStack(spacing: 12) {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                        Text("Loading more...")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, minHeight: 60)
+                                    .padding()
+                                    .transition(.opacity.combined(with: .scale))
+                                }
+                                
+                                // ✅ End of content indicator
+                                if !viewModel.hasMoreContent && !newsItems.isEmpty && !viewModel.isLoading {
+                                    VStack(spacing: 8) {
+                                        Divider()
+                                            .padding(.horizontal, 40)
+                                        Text("You're all caught up!")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                                    .padding()
+                                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                                 }
                             }
                             .padding(.top, 8) // Top spacing from navigation
                             .padding(.bottom, 80) // Bottom spacing for floating button
+                            .animation(.easeInOut(duration: 0.3), value: viewModel.isLoadingMore)
+                            .animation(.easeInOut(duration: 0.3), value: viewModel.hasMoreContent)
                         }
                         .scrollIndicators(.hidden) // Clean modern look
+                        .scrollBounceBehavior(.basedOnSize) // iOS 18 feature for better scroll behavior
                         .refreshable {
-                            // ✅ Clear vote state cache on refresh
-                            NewsCellViewModel.clearCache()
+                            // ✅ Pull-to-refresh functionality
                             await viewModel.refresh(for: pincode, context: modelContext)
                         }
                     }
@@ -116,8 +175,20 @@ struct NewsFeedView: View {
                 }
             }
         }
-        .task {
-                await viewModel.fetchAndCacheNews(for: pincode, context: modelContext)
+        .onAppear {
+            // ✅ Smart loading - only load if not initialized or pincode changed
+            Task {
+                await viewModel.initialLoad(for: pincode, context: modelContext)
+            }
+        }
+        .onChange(of: pincode) { oldValue, newValue in
+            // ✅ Load data when pincode changes
+            if oldValue != newValue {
+                hasAppeared = false
+                Task {
+                    await viewModel.initialLoad(for: newValue, context: modelContext)
+                }
+            }
         }
         .sheet(isPresented: $showCreatePostSheet) {
             PostView(pincode: pincode)

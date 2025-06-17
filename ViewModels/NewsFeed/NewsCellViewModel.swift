@@ -13,7 +13,7 @@ import FirebaseAuth
 @MainActor
 class NewsCellViewModel: ObservableObject{
     
-    @Published var voteState: VoteState = .none
+    @Published var voteState: VoteState = VoteState.none
     @Published var likesCount: Int = 0
     @Published var showingMenu: Bool = false
     // Animation states for button scaling
@@ -54,10 +54,12 @@ class NewsCellViewModel: ObservableObject{
     }
     
     // ✅ Static method to clear cache (call on refresh)
-    static func clearCache() {
-        voteStateCache.removeAll()
-        likesCountCache.removeAll()
-        savedStateCache.removeAll()
+    nonisolated static func clearCache() {
+        Task { @MainActor in
+            voteStateCache.removeAll()
+            likesCountCache.removeAll()
+            savedStateCache.removeAll()
+        }
     }
     
     // ✅ Optimized fetch - only fetch if not in cache
@@ -87,7 +89,7 @@ class NewsCellViewModel: ObservableObject{
                 let newVoteState: VoteState = switch voteType {
                 case 1: .upvoted
                 case -1: .downvoted
-                default: .none
+                default: VoteState.none
                 }
                 await MainActor.run {
                     self.voteState = newVoteState
@@ -95,8 +97,8 @@ class NewsCellViewModel: ObservableObject{
                 }
             } else {
                 await MainActor.run {
-                    self.voteState = .none
-                    Self.voteStateCache[postId] = .none
+                    self.voteState = VoteState.none
+                    Self.voteStateCache[postId] = VoteState.none
                 }
             }
             
@@ -105,8 +107,8 @@ class NewsCellViewModel: ObservableObject{
             
         } catch {
             await MainActor.run {
-                self.voteState = .none
-                Self.voteStateCache[postId] = .none
+                self.voteState = VoteState.none
+                Self.voteStateCache[postId] = VoteState.none
             }
         }
     }
@@ -180,9 +182,9 @@ class NewsCellViewModel: ObservableObject{
             }
             
         case .upvoted:
-            voteState = .none
+            voteState = VoteState.none
             likesCount -= 1
-            Self.voteStateCache[postId] = .none
+            Self.voteStateCache[postId] = VoteState.none
             Self.likesCountCache[postId] = likesCount
             
             do {
@@ -258,9 +260,9 @@ class NewsCellViewModel: ObservableObject{
             }
             
         case .downvoted:
-            voteState = .none
+            voteState = VoteState.none
             likesCount += 1
-            Self.voteStateCache[postId] = .none
+            Self.voteStateCache[postId] = VoteState.none
             Self.likesCountCache[postId] = likesCount
             
             do {

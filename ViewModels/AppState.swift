@@ -17,6 +17,10 @@ class AppState: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var userPincode: String = ""
     
+    // ✅ News feed state tracking
+    @Published var newsFeedInitialized: Set<String> = []
+    @Published var lastNewsFeedRefresh: [String: Date] = [:]
+    
     init(){
         self.userSession = Auth.auth().currentUser
     }
@@ -24,6 +28,27 @@ class AppState: ObservableObject {
     
     func updatePincode(_ pincode: String) {
         self.userPincode = pincode
+    }
+    
+    // ✅ News feed state management
+    func markNewsFeedInitialized(for pincode: String) {
+        newsFeedInitialized.insert(pincode)
+        lastNewsFeedRefresh[pincode] = Date()
+    }
+    
+    func isNewsFeedInitialized(for pincode: String) -> Bool {
+        return newsFeedInitialized.contains(pincode)
+    }
+    
+    func shouldRefreshNewsFeed(for pincode: String, cacheExpiryMinutes: Int = 30) -> Bool {
+        guard let lastRefresh = lastNewsFeedRefresh[pincode] else { return true }
+        let cacheExpired = Date().timeIntervalSince(lastRefresh) > TimeInterval(cacheExpiryMinutes * 60)
+        return cacheExpired
+    }
+    
+    func clearNewsFeedState() {
+        newsFeedInitialized.removeAll()
+        lastNewsFeedRefresh.removeAll()
     }
     
     func signIn(email: String, password: String, completion: @escaping (User.ID) -> Void) async throws {

@@ -68,7 +68,7 @@ class ActivityViewModel : ObservableObject{
                 return
             }
             
-            for newsId in savedNewsIds {
+            for newsId in savedNewsIds.reversed() {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
@@ -115,7 +115,7 @@ class ActivityViewModel : ObservableObject{
                 return
             }
             
-            for newsId in savedNewsIds {
+            for newsId in savedNewsIds.reversed() {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
@@ -162,7 +162,7 @@ class ActivityViewModel : ObservableObject{
                 return
             }
             
-            for newsId in savedNewsIds {
+            for newsId in savedNewsIds.reversed() {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
@@ -209,7 +209,7 @@ class ActivityViewModel : ObservableObject{
                 return
             }
             
-            for newsId in savedNewsIds {
+            for newsId in savedNewsIds.reversed() {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
