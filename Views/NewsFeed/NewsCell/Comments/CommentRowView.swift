@@ -16,23 +16,29 @@ struct CommentRowView: View {
     @State var replies: [Reply] = []
     @State var showReplies = false
     
+    // ✅ Add state for cached user data
+    @State private var cachedUser: CachedUser?
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main comment content
             HStack(alignment: .top, spacing: 12) {
-                if let user = UserCache.shared.cacheusers[comment.userId]{
-                    ProfilePictureView(userProfileUrl: user.profilePictureUrl, width: 30, height: 30)
+                // ✅ Use cached user data
+                if let cachedUser = cachedUser {
+                    ProfilePictureView(userProfileUrl: cachedUser.profilePictureUrl, width: 30, height: 30)
+                } else {
+                    // Placeholder while loading
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 30, height: 30)
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        if let user = UserCache.shared.cacheusers[comment.userId]{
-                            Text(user.username)
-                                .font(.system(size: 14, weight: .semibold))
-                        }else{
-                            Text("Unknown User")
-                                .font(.system(size: 14, weight: .semibold))
-                        }
+                        // ✅ Use cached user data
+                        Text(cachedUser?.username ?? "Loading...")
+                            .font(.system(size: 14, weight: .semibold))
+                        
                         Text(comment.timestamp, style: .relative)
                             .font(.caption)
                             .foregroundColor(.gray)
@@ -111,13 +117,19 @@ struct CommentRowView: View {
             }
         }
         .task {
+            // ✅ Load user data on appear
+            cachedUser = await UserCache.shared.getUser(userId: comment.userId)
+            
             do{
                 replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: comment.id.uuidString)
                 
+                // ✅ Use the new cacheUser method for replies
                 for reply in replies {
                     let FetchedUser = try await viewModel.fetchCurrentUser(reply.userId)
-                    
-                    UserCache.shared.cacheusers[reply.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
+                    UserCache.shared.cacheUser(
+                        userId: reply.userId, 
+                        cachedUser: CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
+                    )
                 }
             }catch{
                 // Silent error handling

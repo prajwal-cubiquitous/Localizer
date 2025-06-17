@@ -64,7 +64,7 @@ class ActivityViewModel : ObservableObject{
             let userDoc = try await userActivityDocRef.getDocument()
             
             guard let data = userDoc.data(),
-                  let savedNewsIds = data["likedNews"] as? [String] else {
+                  let savedNewsIds = data["LikedNews"] as? [String] else {
                 return
             }
             
@@ -158,7 +158,7 @@ class ActivityViewModel : ObservableObject{
             let userDoc = try await userActivityDocRef.getDocument()
             
             guard let data = userDoc.data(),
-                  let savedNewsIds = data["dislikedNews"] as? [String] else {
+                  let savedNewsIds = data["DisLikedNews"] as? [String] else {
                 return
             }
             

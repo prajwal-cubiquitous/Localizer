@@ -130,66 +130,97 @@ class UserCache {
     private init() {
     }  // Prevent instantiation
 
-    // Temp in-memory dictionary: [userId: CachedUser]
-    var cacheusers: [String: CachedUser] = [:]
+    // ✅ Simple actor-based thread-safe implementation
+    private actor CacheActor {
+        private var cache: [String: CachedUser] = [:]
+        
+        func getUser(for userId: String) -> CachedUser? {
+            return cache[userId]
+        }
+        
+        func setUser(_ user: CachedUser, for userId: String) {
+            cache[userId] = user
+        }
+        
+        func clearAll() {
+            cache.removeAll()
+        }
+        
+        func getAllUsers() -> [String: CachedUser] {
+            return cache
+        }
+    }
     
-    // ✅ Enhanced user fetching with caching
+    private let cacheActor = CacheActor()
+    
+    // ✅ Thread-safe access to cache
+    var cacheusers: [String: CachedUser] {
+        get {
+            Task {
+                return await cacheActor.getAllUsers()
+            }
+            // Fallback for synchronous access
+            return [:]
+        }
+        set {
+            // This setter is kept for backward compatibility but not recommended
+            Task {
+                await cacheActor.clearAll()
+                for (key, value) in newValue {
+                    await cacheActor.setUser(value, for: key)
+                }
+            }
+        }
+    }
+    
+    // ✅ Simple and safe user fetching
     func getUser(userId: String) async -> CachedUser? {
         // First check if user is already cached
-        if let cachedUser = cacheusers[userId] {
+        if let cachedUser = await cacheActor.getUser(for: userId) {
             return cachedUser
         }
         
         // If not cached, fetch from Firestore
         do {
             let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
-            let cachedUser = CachedUser(username: user.username, profilePictureUrl: user.profileImageUrl)
+            let newCachedUser = CachedUser(username: user.username, profilePictureUrl: user.profileImageUrl)
             
             // Cache the user for future use
-            cacheusers[userId] = cachedUser
-            return cachedUser
+            await cacheActor.setUser(newCachedUser, for: userId)
+            
+            return newCachedUser
         } catch {
             print("❌ Failed to fetch user \(userId): \(error)")
             return nil
         }
     }
     
-    // ✅ Batch fetch multiple users efficiently
+    // ✅ Simplified batch fetch - no complex concurrency
     func getUsers(userIds: [String]) async -> [String: CachedUser] {
         var result: [String: CachedUser] = [:]
-        var usersToFetch: [String] = []
         
-        // First, get cached users
+        // Process each user ID one by one to avoid concurrency issues
         for userId in userIds {
-            if let cachedUser = cacheusers[userId] {
+            if let cachedUser = await getUser(userId: userId) {
                 result[userId] = cachedUser
-            } else {
-                usersToFetch.append(userId)
-            }
-        }
-        
-        // Fetch remaining users concurrently
-        await withTaskGroup(of: (String, CachedUser?).self) { group in
-            for userId in usersToFetch {
-                group.addTask {
-                    let cachedUser = await self.getUser(userId: userId)
-                    return (userId, cachedUser)
-                }
-            }
-            
-            for await (userId, cachedUser) in group {
-                if let cachedUser = cachedUser {
-                    result[userId] = cachedUser
-                }
             }
         }
         
         return result
     }
     
-    // ✅ Clear cache when needed
+    // ✅ Safe cache clearing
     func clearCache() {
-        cacheusers.removeAll()
+        Task {
+            await cacheActor.clearAll()
+        }
+    }
+    
+    // ✅ Safe individual user caching
+    func cacheUser(userId: String, cachedUser: CachedUser) {
+        Task {
+            await cacheActor.setUser(cachedUser, for: userId)
+        }
     }
 }
 

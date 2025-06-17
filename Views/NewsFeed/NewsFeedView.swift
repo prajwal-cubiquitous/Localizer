@@ -65,6 +65,8 @@ struct NewsFeedView: View {
                         }
                         .scrollIndicators(.hidden) // Clean modern look
                         .refreshable {
+                            // ✅ Clear vote state cache on refresh
+                            NewsCellViewModel.clearCache()
                             await viewModel.refresh(for: pincode, context: modelContext)
                         }
                     }

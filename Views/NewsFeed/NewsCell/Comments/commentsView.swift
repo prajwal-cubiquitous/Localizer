@@ -44,15 +44,9 @@ struct CommentsView: View {
                             Text("Replying to")
                                 .font(.caption)
                                 .foregroundColor(.gray)
-                            if let user = UserCache.shared.cacheusers[targetComment.userId]{
-                                Text("@\(user.username)")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.gray)
-                            }else{
-                                Text("@Unknow")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.gray)
-                            }
+                            Text("@\(targetComment.username)")
+                                .font(.caption.bold())
+                                .foregroundColor(.gray)
                             Spacer()
                             Button {
                                 replyingToComment = nil

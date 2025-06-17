@@ -220,12 +220,12 @@ struct NewsCell: View {
                 .shadow(color: .black.opacity(0.05), radius: 1, x: 0, y: 1)
         )
         .padding(.horizontal, 16) // Outer margin from screen edges
-        .task {
+        .task{
+            await viewModel.fetchVotesStatusIfNeeded(postId: localNews.id)
+        }
+        .task{
             // ✅ Fetch user data from cache
             cachedUser = await UserCache.shared.getUser(userId: localNews.ownerUid)
-            
-            await viewModel.fetchVotesStatus(postId: localNews.id)
-            await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
         }
         .sheet(isPresented: $showingCommentsSheet) {
             CommentsView(localNews: localNews)
