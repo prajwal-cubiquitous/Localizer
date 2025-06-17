@@ -106,7 +106,7 @@ struct MainTabView: View {
     private var mainContentView: some View {
         TabView(selection: $selectedTab) {
             // News Feed Tab
-            NewsFeedView(pincode: pincode)
+            NewsFeedView(pincode: pincode,ConstituencyInfo: selectedConstituency)
                 .environmentObject(appState)
                 .tabItem {
                     Label {

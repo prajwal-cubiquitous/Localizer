@@ -10,6 +10,7 @@ import SwiftData
 
 struct NewsFeedView: View {
     let pincode: String
+    let ConstituencyInfo: ConstituencyDetails?
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var appState: AppState
     @Environment(\.modelContext) private var modelContext
@@ -18,8 +19,9 @@ struct NewsFeedView: View {
     @State private var showCreatePostSheet = false
     @State private var hasAppeared = false
 
-    init(pincode: String) {
+    init(pincode: String, ConstituencyInfo: ConstituencyDetails?) {
         self.pincode = pincode
+        self.ConstituencyInfo = ConstituencyInfo
         _newsItems = Query(filter: #Predicate<LocalNews> { news in
             news.postalCode == pincode
         }, sort: [SortDescriptor(\LocalNews.timestamp, order: .reverse)])
@@ -163,9 +165,9 @@ struct NewsFeedView: View {
                         } label: {
                             Image(systemName: "plus")
                                 .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(Color("primaryOpposite"))
                                 .frame(width: 56, height: 56)
-                                .background(Color.blue)
+                                .background(Color.primary)
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                         }
@@ -197,5 +199,5 @@ struct NewsFeedView: View {
 }
 
 #Preview {
-    NewsFeedView(pincode: "560043")
+    NewsFeedView(pincode: "560043", ConstituencyInfo: DummyConstituencyDetials.detials1)
 }

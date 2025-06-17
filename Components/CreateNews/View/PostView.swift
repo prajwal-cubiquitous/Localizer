@@ -21,12 +21,14 @@ struct PostViewWrapper: View {
 
 struct PostView: View {
     let pincode: String
+    let ConstituencyInfo: ConstituencyDetails?
     let onNavigationRequested: ((Bool) -> Void)?
     @Environment(\.presentationMode) private var presentationMode
     @StateObject var viewModel = PostViewModel()
     
-    init(pincode: String, onNavigationRequested: ((Bool) -> Void)? = nil) {
+    init(pincode: String,ConstituencyInfo: ConstituencyDetails? = nil , onNavigationRequested: ((Bool) -> Void)? = nil) {
         self.pincode = pincode
+        self.ConstituencyInfo = ConstituencyInfo
         self.onNavigationRequested = onNavigationRequested
     }
     

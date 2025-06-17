@@ -30,3 +30,9 @@ struct RawConstituency: Codable {
     let politicalParty: String
     let pincodeString: String
 }
+
+
+struct DummyConstituencyDetials{
+     static var detials1 = ConstituencyDetails(constituencyName: "Adilabad", currentMLAName: "Nandini", politicalParty: "BJP", associatedPincodes: ["500001", "500002"])
+    
+}
