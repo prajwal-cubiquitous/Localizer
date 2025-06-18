@@ -63,9 +63,7 @@ struct ActivityView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .task(id: selectedFilter) {
-            // ✅ Clear vote state cache when switching tabs for fresh data
-            NewsCellViewModel.clearCache()
-            
+            // ✅ Don't clear cache when switching tabs - preserve vote states
             guard !constituencyId.isEmpty else { return }
             
             switch selectedFilter {

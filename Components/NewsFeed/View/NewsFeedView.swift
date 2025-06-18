@@ -83,7 +83,7 @@ struct NewsFeedView: View {
                             }
                         }
                         .refreshable {
-                            await viewModel.refresh(for: constituencyId, context: modelContext)
+                            await refreshNewsFeed()
                         }
                     } else {
                         // ✅ News list (Instagram-style performance optimized)
@@ -130,8 +130,7 @@ struct NewsFeedView: View {
                         .scrollIndicators(.hidden) // Clean modern look
                         .scrollBounceBehavior(.basedOnSize) // iOS 18 feature for better scroll behavior
                         .refreshable {
-                            // ✅ Pull-to-refresh functionality
-                            await viewModel.refresh(for: constituencyId, context: modelContext)
+                            await refreshNewsFeed()
                         }
                     }
                 }
@@ -185,6 +184,8 @@ struct NewsFeedView: View {
             if !constituencyId.isEmpty {
                 Task {
                     await viewModel.initialLoad(for: constituencyId, context: modelContext)
+                    // ✅ Preload vote/like/saved states after initial load
+                    await preloadUserInteractionStates()
                 }
             }
         }
@@ -194,12 +195,34 @@ struct NewsFeedView: View {
                 hasAppeared = false
                 Task {
                     await viewModel.initialLoad(for: newValue, context: modelContext)
+                    // ✅ Preload vote/like/saved states after constituency change
+                    await preloadUserInteractionStates()
                 }
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
             if let constituency = ConstituencyInfo, let id = constituency.id {
                 PostView(ConstituencyId: id)
+            }
+        }
+    }
+    
+    // ✅ Function to refresh news feed and preload interaction states
+    private func refreshNewsFeed() async {
+        await viewModel.refresh(for: constituencyId, context: modelContext)
+        // ✅ Preload vote/like/saved states after refresh
+        await preloadUserInteractionStates()
+    }
+    
+    // ✅ Function to preload user interaction states (votes, likes, saved) for current news items
+    private func preloadUserInteractionStates() async {
+        guard !newsItems.isEmpty else { return }
+        
+        // Preload interaction states for all visible news items
+        for newsItem in newsItems {
+            Task {
+                let newsCellViewModel = NewsCellViewModel(localNews: newsItem)
+                await newsCellViewModel.fetchVotesStatusIfNeeded(postId: newsItem.id)
             }
         }
     }

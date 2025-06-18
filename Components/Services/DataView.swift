@@ -186,20 +186,42 @@ struct DataView: View {
     
     // MARK: - Location Display
     private var locationDisplayView: some View {
-        HStack {
-            Image(systemName: "location.fill")
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "location.fill")
+                    .foregroundStyle(.secondary)
+                
+                Text("Current Area: \(viewModel.postalCode)")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                
+                Spacer()
+            }
             
-            Text("Current Area: \(viewModel.postalCode)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(.secondary)
-            
-            Spacer()
+            // Show constituency information if available
+            if let constituency = viewModel.constituencyInfo {
+                HStack {
+                    Image(systemName: "building.columns.fill")
+                        .foregroundStyle(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Constituency: \(constituency.constituencyName)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.primary)
+                        
+                        Text("Showing services from \(constituency.associatedPincodes.count) areas")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.top, 4)
+            }
         }
         .padding(.horizontal, Constants.horizontalPadding)
-        .padding(.vertical, Constants.verticalSpacing / 2)
-        .background(Color(.systemBackground))
     }
     
     // MARK: - Content View
@@ -658,5 +680,5 @@ struct DetailRow: View {
 #Preview {
     NavigationView {
         DataView(pincode: "560043")
-}
+    }
 } 
