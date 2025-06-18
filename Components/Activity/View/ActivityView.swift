@@ -1,5 +1,5 @@
 //
-//  NewsFeedView.swift
+//  ActivityView.swift
 //  Localizer
 //
 //  Created by Prajwal S S Reddy on 6/9/25.
@@ -9,7 +9,8 @@ import SwiftUI
 struct ActivityView: View {
     @StateObject var viewModel = ActivityViewModel()
     @State private var selectedFilter: FilterType = .news
-    let pincode: String
+    let ConstituencyInfo: ConstituencyDetails?
+    
     enum FilterType: String, CaseIterable {
         case news = "News"
         case liked = "Liked"
@@ -28,100 +29,166 @@ struct ActivityView: View {
         }
     }
     
+    private var constituencyId: String {
+        ConstituencyInfo?.id ?? ""
+    }
+    
     var body: some View {
-        NavigationStack{
+        NavigationView {
             VStack(spacing: 0) {
-                // MARK: - Filter Buttons
-                HStack(spacing: 12) {
-                    ForEach(FilterType.allCases, id: \.self) { filter in
-                        Button(action: {
-                            self.selectedFilter = filter
-                            
-                        }) {
-                            VStack(spacing: 5) {
-                                Image(systemName: filter.iconName)
-                                    .font(.system(size: 22))
-                                Text(filter.rawValue)
-                                    .font(.caption)
-                                    .lineLimit(1)
-                            }
-                            .frame(width: 75, height: 75)
-                            .background(selectedFilter == filter ? Color.primary : Color.primary.opacity(0.1))
-                            .foregroundColor(selectedFilter == filter ? Color("primaryOpposite") : .primary)
-                            .cornerRadius(16)
+                // Filter tabs
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(FilterType.allCases, id: \.self) { filter in
+                            FilterTab(
+                                filter: filter,
+                                isSelected: selectedFilter == filter,
+                                action: { selectedFilter = filter }
+                            )
                         }
                     }
+                    .padding(.horizontal, 16)
                 }
-                .padding()
+                .padding(.vertical, 12)
+                .background(Color(UIColor.systemBackground))
                 
-                // MARK: - News List
-                List(viewModel.newsItems) { newsItem in
-                    NewsCell(localNews: newsItem)
-                        .listRowInsets(EdgeInsets()) // Remove default padding
-                        .listRowSeparator(.hidden) // Hide the default separator
-                        .padding(.vertical, 4)
+                // Content
+                if viewModel.newsItems.isEmpty {
+                    ActivityEmptyStateView(filter: selectedFilter)
+                } else {
+                    NewsListView(newsItems: viewModel.newsItems)
                 }
-                .listStyle(.plain)
-                .background(Color(UIColor.systemGray6))
             }
-            .navigationTitle("My Activity")
+            .navigationTitle("My Activities")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .task(id: selectedFilter){
+        .task(id: selectedFilter) {
             // ✅ Clear vote state cache when switching tabs for fresh data
             NewsCellViewModel.clearCache()
             
+            guard !constituencyId.isEmpty else { return }
+            
             switch selectedFilter {
             case .news:
-                Task{
-                    do{
-                        try await viewModel.fetchNews(postalCode: pincode)
-                    }catch{
+                Task {
+                    do {
+                        try await viewModel.fetchNews(constituencyId: constituencyId)
+                    } catch {
                         // Silent error handling
                     }
                 }
             case .liked:
-                Task{
-                    do{
-                        try await viewModel.fetchLikedNews(postalCode: pincode)
-                    }catch{
+                Task {
+                    do {
+                        try await viewModel.fetchLikedNews(constituencyId: constituencyId)
+                    } catch {
                         // Silent error handling
                     }
                 }
                 
             case .disliked:
-                Task{
-                    do{
-                        try await viewModel.fetchDisLikedNews(postalCode: pincode)
-                    }catch{
+                Task {
+                    do {
+                        try await viewModel.fetchDisLikedNews(constituencyId: constituencyId)
+                    } catch {
                         // Silent error handling
                     }
                 }
             case .commented:
-                Task{
-                    do{
-                        try await viewModel.commentedNews(postalCode: pincode)
-                    }catch{
+                Task {
+                    do {
+                        try await viewModel.commentedNews(constituencyId: constituencyId)
+                    } catch {
                         // Silent error handling
                     }
                 }
             case .saved:
-                Task{
-                    do{
-                        try await viewModel.fetchSavedNews(postalCode: pincode)
-                    }catch{
+                Task {
+                    do {
+                        try await viewModel.fetchSavedNews(constituencyId: constituencyId)
+                    } catch {
                         // Silent error handling
                     }
                 }
-                // Add more cases as needed
             }
         }
     }
 }
 
+// MARK: - Supporting Views
+struct FilterTab: View {
+    let filter: ActivityView.FilterType
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: filter.iconName)
+                    .font(.system(size: 14, weight: .medium))
+                
+                Text(filter.rawValue)
+                    .font(.system(size: 14, weight: .medium))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(isSelected ? Color.blue : Color.clear)
+            )
+            .foregroundColor(isSelected ? .white : .primary)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                    .opacity(isSelected ? 0 : 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct ActivityEmptyStateView: View {
+    let filter: ActivityView.FilterType
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: filter.iconName)
+                .font(.system(size: 60))
+                .foregroundColor(.gray)
+            
+            Text("No \(filter.rawValue.lowercased()) yet")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Text("Start engaging with news to see your activity here!")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct NewsListView: View {
+    let newsItems: [LocalNews]
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 8) {
+                ForEach(newsItems, id: \.id) { item in
+                    NewsCell(localNews: item)
+                        .padding(.horizontal, 0)
+                }
+            }
+            .padding(.top, 8)
+        }
+    }
+}
+
 // MARK: - SwiftUI Preview
-struct NewsFeedView1_Previews: PreviewProvider {
+struct ActivityView_Previews: PreviewProvider {
     static var previews: some View {
-        ActivityView(pincode: "560043")
+        ActivityView(ConstituencyInfo: DummyConstituencyDetials.detials1)
     }
 }

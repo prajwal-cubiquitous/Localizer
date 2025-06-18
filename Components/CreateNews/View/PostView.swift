@@ -20,227 +20,204 @@ import AVKit
 //}
 
 struct PostView: View {
-    let pincode: String
     let ConstituencyId: String
     let onNavigationRequested: ((Bool) -> Void)?
     @Environment(\.presentationMode) private var presentationMode
     @StateObject var viewModel = PostViewModel()
     
-    init(pincode: String, ConstituencyId: String, onNavigationRequested: ((Bool) -> Void)? = nil) {
-        self.pincode = pincode
+    init(ConstituencyId: String, onNavigationRequested: ((Bool) -> Void)? = nil) {
         self.ConstituencyId = ConstituencyId
         self.onNavigationRequested = onNavigationRequested
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(.primary)
-                }
+        NavigationView {
+            ZStack {
+                // Background
+                Color(UIColor.systemGroupedBackground)
+                    .ignoresSafeArea()
                 
-                Spacer()
-                
-                Text("Create Post")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.primary)
-                
-                Spacer()
-                
-                // Empty view for alignment
-                Image(systemName: "xmark")
-                    .font(.system(size: 18))
-                    .opacity(0)
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .background(Color(UIColor.systemBackground))
-            
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Content field
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("What's happening?")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        
-                        ZStack(alignment: .topLeading) {
-                            TextEditor(text: $viewModel.caption)
-                                .font(.system(size: 16))
-                                .padding(16)
-                                .frame(minHeight: 120)
-                                .scrollContentBackground(.hidden)
-                                .background(Color(UIColor.secondarySystemGroupedBackground))
-                                .cornerRadius(12)
+                VStack(spacing: 0) {
+                    // Header
+                    VStack(spacing: 16) {
+                        // Caption Input
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("What's happening?")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                
+                                Text("\(viewModel.caption.count)/500")
+                                    .font(.caption)
+                                    .foregroundColor(viewModel.caption.count > 450 ? .red : .secondary)
+                            }
                             
-                            if viewModel.caption.isEmpty {
-                                Text("Share your thoughts...")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 24)
-                                    .padding(.vertical, 24)
-                                    .allowsHitTesting(false)
+                            TextEditor(text: $viewModel.caption)
+                                .frame(minHeight: 120)
+                                .padding(12)
+                                .background(Color(UIColor.systemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                )
+                        }
+                        
+                        // Media Selection
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Add Media")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            PhotosPicker(
+                                selection: $viewModel.photosPicked,
+                                maxSelectionCount: 10,
+                                matching: .any(of: [.images, .videos])
+                            ) {
+                                HStack {
+                                    Image(systemName: "photo.on.rectangle.angled")
+                                        .font(.title2)
+                                        .foregroundColor(.blue)
+                                    
+                                    Text("Choose Photos & Videos")
+                                        .foregroundColor(.blue)
+                                        .fontWeight(.medium)
+                                    
+                                    Spacer()
+                                    
+                                    if viewModel.isProcessing {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    }
+                                }
+                                .padding(16)
+                                .background(Color(UIColor.systemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                )
+                            }
+                            .disabled(viewModel.isProcessing)
+                            
+                            // Media Preview
+                            if !viewModel.mediaItems.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    LazyHStack(spacing: 12) {
+                                        ForEach(Array(viewModel.mediaItems.enumerated()), id: \.offset) { index, item in
+                                            MediaPreviewCard(
+                                                item: item,
+                                                onRemove: { viewModel.removeMediaItem(at: index) },
+                                                onRetrim: { url in viewModel.startVideoRetrimming(for: url) }
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 4)
+                                }
+                                .frame(height: 120)
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(20)
                     
-                    // Media Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text("Media")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.primary)
-                            
-                            Spacer()
-                            
-                            if viewModel.isProcessing {
-                                HStack(spacing: 8) {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-                                        .scaleEffect(0.8)
-                                    Text("Processing...")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        
-                        // Media Grid
-                        if !viewModel.mediaItems.isEmpty {
-                            LazyVGrid(columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible())
-                            ], spacing: 12) {
-                                ForEach(Array(viewModel.mediaItems.enumerated()), id: \.offset) { index, item in
-                                    MediaPreviewCard(
-                                        item: item,
-                                        onRemove: {
-                                            viewModel.removeMediaItem(at: index)
-                                        },
-                                        onVideoTap: {
-                                            if let videoURL = item.videoURL {
-                                                viewModel.startVideoRetrimming(for: videoURL)
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                        
-                        // Add Media Button
-                        PhotosPicker(
-                            selection: $viewModel.photosPicked,
-                            maxSelectionCount: 10,
-                            matching: .any(of: [.images, .videos])
-                        ) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundStyle(.blue)
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Add Photos & Videos")
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundStyle(.blue)
-                                    
-                                    Text("Tap to select from gallery")
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(.secondary)
-                                }
-                                
+                    Spacer()
+                    
+                    // Post Button
+                    VStack(spacing: 16) {
+                        if viewModel.isSensitiveContent {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
+                                Text("Sensitive content detected")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
                                 Spacer()
                             }
-                            .padding(16)
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                            .padding(.horizontal, 20)
+                        }
+                        
+                        Button {
+                            Task {
+                                await viewModel.createPost(constituencyId: ConstituencyId)
+                            }
+                        } label: {
+                            HStack {
+                                if viewModel.isPosting {
+                                    ProgressView()
+                                        .scaleEffect(0.9)
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "paperplane.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                }
+                                
+                                Text(viewModel.isPosting ? "Posting..." : "Share Post")
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(
+                                viewModel.isFormValid && !viewModel.isPosting ? 
+                                Color.blue : Color.gray
                             )
                             .cornerRadius(12)
                         }
-                        .onChange(of: viewModel.photosPicked) { _, newValue in
-                            Task {
-                                await viewModel.processPickedPhotos(newValue)
-                                viewModel.photosPicked.removeAll()
-                            }
-                        }
+                        .disabled(!viewModel.isFormValid || viewModel.isPosting)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
                     }
-                    .padding(.horizontal, 20)
-                    
-                    Spacer(minLength: 100)
                 }
-                .padding(.vertical, 20)
             }
-            .background(Color(UIColor.systemGroupedBackground))
-            
-            // Post button
-            VStack {
-                Divider()
-                
-                Button(action: {
-                    Task {
-                        await viewModel.createPost(constituencyId: ConstituencyId)
+            .navigationTitle("Create Post")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        presentationMode.wrappedValue.dismiss()
                     }
-                }) {
-                    HStack {
-                        if viewModel.isPosting {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
-                        }
-                        
-                        Text(viewModel.isPosting ? "Posting..." : "Share Post")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: 25)
-                            .fill(viewModel.isFormValid ? Color.blue : Color.secondary)
-                    )
-                    .padding(.horizontal, 20)
+                    .disabled(viewModel.isPosting)
                 }
-                .disabled(!viewModel.isFormValid || viewModel.isPosting)
-                .padding(.vertical, 16)
             }
-            .background(Color(UIColor.systemBackground))
         }
-        .background(Color(UIColor.systemGroupedBackground))
+        .onChange(of: viewModel.photosPicked) { oldItems, newItems in
+            if !newItems.isEmpty {
+                Task {
+                    await viewModel.processPickedPhotos(newItems)
+                    await MainActor.run {
+                        viewModel.photosPicked.removeAll()
+                    }
+                }
+            }
+        }
         .sheet(isPresented: $viewModel.isShowingVideoTrimmer) {
             if let videoURL = viewModel.selectedVideoURL {
                 VideoTrimmerView(
                     viewModel: viewModel,
                     videoURL: videoURL,
                     initialStartTime: 0,
-                    initialEndTime: 30, // Default 30 seconds, will be adjusted based on actual video duration
+                    initialEndTime: 30,
                     onTrimComplete: { trimmedURL in
                         viewModel.addTrimmedVideo(trimmedURL)
                     }
                 )
             }
         }
-        .alert("Success!", isPresented: $viewModel.showSuccessAlert) {
+        .alert("Success", isPresented: $viewModel.showSuccessAlert) {
             Button("OK") {
                 presentationMode.wrappedValue.dismiss()
-                onNavigationRequested?(true)
             }
         } message: {
             Text("Your post has been shared successfully!")
         }
         .alert("Error", isPresented: $viewModel.showFailureAlert) {
-            Button("OK", role: .cancel) { }
+            Button("OK") { }
         } message: {
             Text(viewModel.errorMessage)
         }
         .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) { }
+            Button("OK") { }
         } message: {
             Text(viewModel.errorMessage)
         }
@@ -250,80 +227,84 @@ struct PostView: View {
 struct MediaPreviewCard: View {
     let item: MediaItem
     let onRemove: () -> Void
-    let onVideoTap: (() -> Void)?
-    
-    init(item: MediaItem, onRemove: @escaping () -> Void, onVideoTap: (() -> Void)? = nil) {
-        self.item = item
-        self.onRemove = onRemove
-        self.onVideoTap = onVideoTap
-    }
+    let onRetrim: (URL) -> Void
     
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
+            // Media Content
             switch item {
             case .image(let image):
                 Image(uiImage: image)
                     .resizable()
-                    .scaledToFill()
-                    .frame(height: 120)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 100, height: 100)
                     .clipped()
                     .cornerRadius(12)
                 
-            case .video(_, let thumbnail):
-                Button(action: {
-                    onVideoTap?()
-                }) {
-                    ZStack {
-                        if let thumbnail = thumbnail {
-                            Image(uiImage: thumbnail)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(height: 120)
-                                .clipped()
-                                .cornerRadius(12)
-                        } else {
-                            Rectangle()
-                                .fill(Color.secondary.opacity(0.3))
-                                .frame(height: 120)
-                                .cornerRadius(12)
-                        }
+            case .video(let url, let thumbnail):
+                ZStack {
+                    if let thumbnail = thumbnail {
+                        Image(uiImage: thumbnail)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .clipped()
+                            .cornerRadius(12)
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(12)
+                    }
+                    
+                    // Play button and video indicator
+                    VStack {
+                        Image(systemName: "play.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .background(Circle().fill(Color.black.opacity(0.6)).frame(width: 40, height: 40))
                         
-                        // Video overlay with better visibility
-                        ZStack {
-                            // Background blur for better contrast
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.black.opacity(0.6))
-                                .frame(width: 60, height: 40)
-                            
-                            VStack(spacing: 2) {
-                                Image(systemName: "play.fill")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundStyle(.white)
-                                
-                                Text("Tap to edit")
-                                    .font(.system(size: 8, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.9))
-                            }
+                        Spacer()
+                        
+                        HStack {
+                            Image(systemName: "video.fill")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                            Spacer()
                         }
+                        .padding(6)
+                        .background(Color.black.opacity(0.6))
+                    }
+                    .frame(width: 100, height: 100)
+                }
+                .contextMenu {
+                    Button("Re-trim Video") {
+                        onRetrim(url)
                     }
                 }
-                .buttonStyle(PlainButtonStyle())
             }
             
             // Remove button
-            Button(action: onRemove) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(.white)
-                    .background(Color.black.opacity(0.6))
-                    .clipShape(Circle())
-                    .padding(8)
+            VStack {
+                HStack {
+                    Spacer()
+                    Button {
+                        onRemove()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .background(Circle().fill(Color.red))
+                    }
+                }
+                Spacer()
             }
+            .padding(4)
         }
+        .frame(width: 100, height: 100)
     }
 }
 
 #Preview {
-    PostView(pincode: "560001", ConstituencyId: "DummyConstituencyDetials.detials1")
-        .preferredColorScheme(.light)
+    PostView(ConstituencyId: DummyConstituencyDetials.detials1.id ?? "test")
 }

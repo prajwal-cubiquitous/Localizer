@@ -31,75 +31,75 @@ final class NewsFeedViewModel: ObservableObject {
     private let maxCachedItems = 50 // Limit local storage for performance
     private let cacheExpiryMinutes = 30 // Cache validity duration
     private var lastDocument: DocumentSnapshot?
-    private var currentPincode: String = ""
+    private var currentConstituencyId: String = ""
     private var hasInitialLoad = false
     
     // MARK: ‑ API
-    /// Initial load - only called on app start or when pincode changes
-    func initialLoad(for pincode: String, context: ModelContext) async {
-        guard !pincode.isEmpty else { return }
+    /// Initial load - only called on app start or when constituencyId changes
+    func initialLoad(for constituencyId: String, context: ModelContext) async {
+        guard !constituencyId.isEmpty else { return }
         
         // ✅ Check AppState to avoid unnecessary loading
         let appState = AppState.shared
-        let shouldLoad = !appState.isNewsFeedInitialized(for: pincode) || 
-                        appState.shouldRefreshNewsFeed(for: pincode, cacheExpiryMinutes: cacheExpiryMinutes)
+        let shouldLoad = !appState.isNewsFeedInitialized(for: constituencyId) || 
+                        appState.shouldRefreshNewsFeed(for: constituencyId, cacheExpiryMinutes: cacheExpiryMinutes)
         
         if shouldLoad {
-            currentPincode = pincode
+            currentConstituencyId = constituencyId
             lastDocument = nil
             hasMoreContent = true
             hasInitialLoad = false
             
-            await loadFirstPage(for: pincode, context: context)
+            await loadFirstPage(for: constituencyId, context: context)
             
             // ✅ Mark as initialized in AppState
-            appState.markNewsFeedInitialized(for: pincode)
+            appState.markNewsFeedInitialized(for: constituencyId)
         }
         
         hasInitialLoad = true
     }
     
     /// Pull-to-refresh - clears cache and loads fresh data
-    func refresh(for pincode: String, context: ModelContext) async {
+    func refresh(for constituencyId: String, context: ModelContext) async {
         MediaHandler.clearTemporaryMedia()
         NewsCellViewModel.clearCache()
         
         // Reset pagination state
-        currentPincode = pincode
+        currentConstituencyId = constituencyId
         lastDocument = nil
         hasMoreContent = true
         hasInitialLoad = false
         
-        await loadFirstPage(for: pincode, context: context)
+        await loadFirstPage(for: constituencyId, context: context)
         
         // ✅ Update AppState refresh time
-        AppState.shared.markNewsFeedInitialized(for: pincode)
+        AppState.shared.markNewsFeedInitialized(for: constituencyId)
     }
     
     /// Load more content when scrolling near bottom (Instagram-style)
-    func loadMoreIfNeeded(for pincode: String, context: ModelContext, currentItem: LocalNews, allItems: [LocalNews]) async {
+    func loadMoreIfNeeded(for constituencyId: String, context: ModelContext, currentItem: LocalNews, allItems: [LocalNews]) async {
         // Only load more if we're near the end and have more content
         guard hasMoreContent,
               !isLoadingMore,
               hasInitialLoad,
-              pincode == currentPincode else { return }
+              constituencyId == currentConstituencyId else { return }
         
         // Check if current item is near the end (last 3 items)
         if let currentIndex = allItems.firstIndex(where: { $0.id == currentItem.id }),
            currentIndex >= allItems.count - 3 {
-            await loadNextPage(for: pincode, context: context)
+            await loadNextPage(for: constituencyId, context: context)
         }
     }
     
     // MARK: ‑ Private Methods
-    private func shouldLoadFreshData(for pincode: String) -> Bool {
+    private func shouldLoadFreshData(for constituencyId: String) -> Bool {
         // Load fresh data if:
-        // 1. Different pincode
+        // 1. Different constituencyId
         // 2. No previous fetch
         // 3. Cache expired
         // 4. No initial load yet
         
-        guard pincode == currentPincode,
+        guard constituencyId == currentConstituencyId,
               let lastFetch = lastFetchTime else {
             return true
         }
@@ -108,12 +108,12 @@ final class NewsFeedViewModel: ObservableObject {
         return cacheExpired || !hasInitialLoad
     }
     
-    private func loadFirstPage(for pincode: String, context: ModelContext) async {
+    private func loadFirstPage(for constituencyId: String, context: ModelContext) async {
         isLoading = true
         
         do {
             let (result, duration) = try await measureTime {
-                try await fetchFirstPageFromFirestore(pincode: pincode)
+                try await fetchFirstPageFromFirestore(constituencyId: constituencyId)
             }
             
             let (remoteNews, lastDoc) = result
@@ -121,7 +121,7 @@ final class NewsFeedViewModel: ObservableObject {
             hasMoreContent = remoteNews.count == pageSize
             
             // Clear old cache and insert new data
-            await replaceCache(with: remoteNews, pincode: pincode, context: context)
+            await replaceCache(with: remoteNews, constituencyId: constituencyId, context: context)
             lastFetchTime = Date()
             
             logPerformanceMetrics(operation: "First Page Load", itemCount: remoteNews.count, duration: duration)
@@ -133,14 +133,14 @@ final class NewsFeedViewModel: ObservableObject {
         isLoading = false
     }
     
-    private func loadNextPage(for pincode: String, context: ModelContext) async {
+    private func loadNextPage(for constituencyId: String, context: ModelContext) async {
         guard let lastDoc = lastDocument else { return }
         
         isLoadingMore = true
         
         do {
             let (result, duration) = try await measureTime {
-                try await fetchNextPageFromFirestore(pincode: pincode, startAfter: lastDoc)
+                try await fetchNextPageFromFirestore(constituencyId: constituencyId, startAfter: lastDoc)
             }
             
             let (remoteNews, lastDocument) = result
@@ -148,7 +148,7 @@ final class NewsFeedViewModel: ObservableObject {
             hasMoreContent = remoteNews.count == pageSize
             
             // Append to existing cache with size limit
-            await appendToCache(remoteNews, pincode: pincode, context: context)
+            await appendToCache(remoteNews, constituencyId: constituencyId, context: context)
             
             logPerformanceMetrics(operation: "Next Page Load", itemCount: remoteNews.count, duration: duration)
             
@@ -160,10 +160,10 @@ final class NewsFeedViewModel: ObservableObject {
     }
     
     // MARK: ‑ Firestore Queries
-    private func fetchFirstPageFromFirestore(pincode: String) async throws -> ([News], DocumentSnapshot?) {
+    private func fetchFirstPageFromFirestore(constituencyId: String) async throws -> ([News], DocumentSnapshot?) {
         let db = Firestore.firestore()
         let query = db.collection("news")
-            .whereField("postalCode", isEqualTo: pincode)
+            .whereField("cosntituencyId", isEqualTo: constituencyId)
             .order(by: "timestamp", descending: true)
             .limit(to: pageSize)
         
@@ -175,10 +175,10 @@ final class NewsFeedViewModel: ObservableObject {
         return (news, snapshot.documents.last)
     }
     
-    private func fetchNextPageFromFirestore(pincode: String, startAfter: DocumentSnapshot) async throws -> ([News], DocumentSnapshot?) {
+    private func fetchNextPageFromFirestore(constituencyId: String, startAfter: DocumentSnapshot) async throws -> ([News], DocumentSnapshot?) {
         let db = Firestore.firestore()
         let query = db.collection("news")
-            .whereField("postalCode", isEqualTo: pincode)
+            .whereField("cosntituencyId", isEqualTo: constituencyId)
             .order(by: "timestamp", descending: true)
             .start(afterDocument: startAfter)
             .limit(to: pageSize)
@@ -192,11 +192,11 @@ final class NewsFeedViewModel: ObservableObject {
     }
     
     // MARK: ‑ SwiftData Caching with Size Limits
-    private func replaceCache(with items: [News], pincode: String, context: ModelContext) async {
+    private func replaceCache(with items: [News], constituencyId: String, context: ModelContext) async {
         do {
-            // 1. Delete existing cached items for this pincode
+            // 1. Delete existing cached items for this constituencyId
             let fetchDescriptor = FetchDescriptor<LocalNews>(
-                predicate: #Predicate { $0.postalCode == pincode }
+                predicate: #Predicate { $0.constituencyId == constituencyId }
             )
             let existing = try context.fetch(fetchDescriptor)
             for obj in existing {
@@ -213,14 +213,14 @@ final class NewsFeedViewModel: ObservableObject {
             }
             
             try context.save()
-            print("✅ Cached \(items.count) news items for pincode: \(pincode)")
+            print("✅ Cached \(items.count) news items for constituencyId: \(constituencyId)")
             
         } catch {
             print("❌ Failed to replace cache: \(error)")
         }
     }
     
-    private func appendToCache(_ items: [News], pincode: String, context: ModelContext) async {
+    private func appendToCache(_ items: [News], constituencyId: String, context: ModelContext) async {
         do {
             // 1. Cache users for new items
             await cacheUsersForNews(items)
@@ -232,20 +232,20 @@ final class NewsFeedViewModel: ObservableObject {
             }
             
             // 3. Enforce cache size limit
-            await enforceCacheSizeLimit(for: pincode, context: context)
+            await enforceCacheSizeLimit(for: constituencyId, context: context)
             
             try context.save()
-            print("✅ Appended \(items.count) news items for pincode: \(pincode)")
+            print("✅ Appended \(items.count) news items for constituencyId: \(constituencyId)")
             
         } catch {
             print("❌ Failed to append to cache: \(error)")
         }
     }
     
-    private func enforceCacheSizeLimit(for pincode: String, context: ModelContext) async {
+    private func enforceCacheSizeLimit(for constituencyId: String, context: ModelContext) async {
         do {
             let fetchDescriptor = FetchDescriptor<LocalNews>(
-                predicate: #Predicate { $0.postalCode == pincode },
+                predicate: #Predicate { $0.constituencyId == constituencyId },
                 sortBy: [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
             )
             
@@ -278,7 +278,7 @@ final class NewsFeedViewModel: ObservableObject {
             timestamp: news.timestamp.dateValue(),
             likesCount: news.likesCount,
             commentsCount: news.commentsCount,
-            postalCode: news.cosntituencyId,
+            constituencyId: news.cosntituencyId,
             newsImageURLs: news.newsImageURLs,
             user: nil // ✅ No LocalUser relationship for optimal performance
         )
@@ -286,21 +286,20 @@ final class NewsFeedViewModel: ObservableObject {
     
     // MARK: ‑ Legacy Support (deprecated)
     @available(*, deprecated, message: "Use initialLoad instead")
-    func fetchAndCacheNews(for pincode: String, context: ModelContext) async {
-        await initialLoad(for: pincode, context: context)
+    func fetchAndCacheNews(for constituencyId: String, context: ModelContext) async {
+        await initialLoad(for: constituencyId, context: context)
     }
     
     // MARK: ‑ Performance Monitoring
-    private func logPerformanceMetrics(operation: String, itemCount: Int, duration: TimeInterval) {
-        #if DEBUG
-        print("📊 \(operation): \(itemCount) items in \(String(format: "%.2f", duration))s")
-        #endif
-    }
-    
-    private func measureTime<T>(_ operation: () async throws -> T) async rethrows -> (result: T, duration: TimeInterval) {
+    private func measureTime<T>(operation: () async throws -> T) async rethrows -> (T, TimeInterval) {
         let startTime = CFAbsoluteTimeGetCurrent()
         let result = try await operation()
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
-        return (result, duration)
+        let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+        return (result, timeElapsed)
+    }
+    
+    private func logPerformanceMetrics(operation: String, itemCount: Int, duration: TimeInterval) {
+        let durationMs = duration * 1000
+        print("📊 \(operation): \(itemCount) items in \(String(format: "%.1f", durationMs))ms")
     }
 }

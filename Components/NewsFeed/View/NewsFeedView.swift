@@ -9,7 +9,6 @@ import SwiftUI
 import SwiftData
 
 struct NewsFeedView: View {
-    let pincode: String
     let ConstituencyInfo: ConstituencyDetails?
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var appState: AppState
@@ -19,58 +18,68 @@ struct NewsFeedView: View {
     @State private var showCreatePostSheet = false
     @State private var hasAppeared = false
 
-    init(pincode: String, ConstituencyInfo: ConstituencyDetails?) {
-        self.pincode = pincode
+    init(ConstituencyInfo: ConstituencyDetails?) {
         self.ConstituencyInfo = ConstituencyInfo
+        // Use constituencyId for filtering local news instead of pincode
+        let constituencyId = ConstituencyInfo?.id ?? ""
         _newsItems = Query(filter: #Predicate<LocalNews> { news in
-            news.postalCode == pincode
+            news.constituencyId == constituencyId
         }, sort: [SortDescriptor(\LocalNews.timestamp, order: .reverse)])
     }
     
+    private var constituencyId: String {
+        ConstituencyInfo?.id ?? ""
+    }
+    
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ZStack {
+                // Background Color
+                (colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground))
+                    .ignoresSafeArea(.all)
+                
                 Group {
-                    if newsItems.isEmpty && !viewModel.isLoading {
-                        // Empty State
-                        VStack(spacing: 24) {
-                            Image(systemName: "square.and.pencil")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 80, height: 80)
-                                .foregroundStyle(.secondary)
+                    if viewModel.isLoading && newsItems.isEmpty {
+                        // ✅ Skeleton loading state (Instagram-style)
+                        VStack(spacing: 16) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                SkeletonNewsCell()
+                                    .padding(.horizontal, 12)
+                            }
+                            Spacer()
+                        }
+                        .padding(.top, 20)
+                    } else if newsItems.isEmpty && !viewModel.isLoading {
+                        // ✅ Empty state
+                        VStack(spacing: 20) {
+                            Image(systemName: "newspaper")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
                             
-                            Text("Be the first to post!")
+                            Text("No news yet")
                                 .font(.title2)
                                 .fontWeight(.semibold)
-                                .multilineTextAlignment(.center)
+                                .foregroundColor(.primary)
                             
-                            Text("Tap the + button to share your thoughts")
-                                .font(.subheadline)
+                            Text("Be the first to share news in your area!")
+                                .font(.body)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                            
+                            Button("Create Post") {
+                                showCreatePostSheet = true
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(Color.blue)
+                            .cornerRadius(8)
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
                     } else {
-                        // ✅ Instagram-style News Feed with Pagination
+                        // ✅ News list (Instagram-style performance optimized)
                         ScrollView {
                             LazyVStack(spacing: 0) {
-                                // ✅ Initial loading indicator
-                                if viewModel.isLoading && newsItems.isEmpty {
-                                    VStack(spacing: 16) {
-                                        ProgressView()
-                                            .scaleEffect(1.2)
-                                        Text("Loading news...")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .frame(maxWidth: .infinity, minHeight: 200)
-                                    .padding()
-                                }
-                                
-                                // ✅ News items with optimized pagination detection
                                 ForEach(Array(newsItems.enumerated()), id: \.element.id) { index, item in
                                     NewsCell(localNews: item)
                                         .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
@@ -80,7 +89,7 @@ struct NewsFeedView: View {
                                             if index >= newsItems.count - 3 {
                                                 Task {
                                                     await viewModel.loadMoreIfNeeded(
-                                                        for: pincode,
+                                                        for: constituencyId,
                                                         context: modelContext,
                                                         currentItem: item,
                                                         allItems: Array(newsItems)
@@ -93,42 +102,27 @@ struct NewsFeedView: View {
                                 
                                 // ✅ Load more indicator (Instagram-style)
                                 if viewModel.isLoadingMore {
-                                    HStack(spacing: 12) {
+                                    HStack {
                                         ProgressView()
                                             .scaleEffect(0.8)
                                         Text("Loading more...")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
-                                    .frame(maxWidth: .infinity, minHeight: 60)
-                                    .padding()
-                                    .transition(.opacity.combined(with: .scale))
-                                }
-                                
-                                // ✅ End of content indicator
-                                if !viewModel.hasMoreContent && !newsItems.isEmpty && !viewModel.isLoading {
-                                    VStack(spacing: 8) {
-                                        Divider()
-                                            .padding(.horizontal, 40)
-                                        Text("You're all caught up!")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .frame(maxWidth: .infinity, minHeight: 50)
-                                    .padding()
-                                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                                    .padding(.vertical, 12)
+                                } else if !viewModel.hasMoreContent && newsItems.count > 5 {
+                                    Text("You're all caught up!")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .padding(.vertical, 12)
                                 }
                             }
-                            .padding(.top, 8) // Top spacing from navigation
-                            .padding(.bottom, 80) // Bottom spacing for floating button
-                            .animation(.easeInOut(duration: 0.3), value: viewModel.isLoadingMore)
-                            .animation(.easeInOut(duration: 0.3), value: viewModel.hasMoreContent)
                         }
                         .scrollIndicators(.hidden) // Clean modern look
                         .scrollBounceBehavior(.basedOnSize) // iOS 18 feature for better scroll behavior
                         .refreshable {
                             // ✅ Pull-to-refresh functionality
-                            await viewModel.refresh(for: pincode, context: modelContext)
+                            await viewModel.refresh(for: constituencyId, context: modelContext)
                         }
                     }
                 }
@@ -178,14 +172,16 @@ struct NewsFeedView: View {
             }
         }
         .onAppear {
-            // ✅ Smart loading - only load if not initialized or pincode changed
-            Task {
-                await viewModel.initialLoad(for: pincode, context: modelContext)
+            // ✅ Smart loading - only load if not initialized or constituencyId changed
+            if !constituencyId.isEmpty {
+                Task {
+                    await viewModel.initialLoad(for: constituencyId, context: modelContext)
+                }
             }
         }
-        .onChange(of: pincode) { oldValue, newValue in
-            // ✅ Load data when pincode changes
-            if oldValue != newValue {
+        .onChange(of: constituencyId) { oldValue, newValue in
+            // ✅ Load data when constituencyId changes
+            if oldValue != newValue && !newValue.isEmpty {
                 hasAppeared = false
                 Task {
                     await viewModel.initialLoad(for: newValue, context: modelContext)
@@ -194,12 +190,80 @@ struct NewsFeedView: View {
         }
         .sheet(isPresented: $showCreatePostSheet) {
             if let constituency = ConstituencyInfo, let id = constituency.id {
-                PostView(pincode: pincode, ConstituencyId: id)
+                PostView(ConstituencyId: id)
             }
         }
     }
 }
 
+// MARK: - Skeleton Loading View
+struct SkeletonNewsCell: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header skeleton
+            HStack {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 40, height: 40)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 120, height: 12)
+                        .cornerRadius(6)
+                    
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 80, height: 10)
+                        .cornerRadius(5)
+                }
+                
+                Spacer()
+            }
+            
+            // Content skeleton
+            VStack(alignment: .leading, spacing: 6) {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 12)
+                    .cornerRadius(6)
+                
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 200, height: 12)
+                    .cornerRadius(6)
+            }
+            
+            // Image skeleton
+            Rectangle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(height: 200)
+                .cornerRadius(12)
+            
+            // Action buttons skeleton
+            HStack {
+                ForEach(0..<3, id: \.self) { _ in
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 60, height: 30)
+                        .cornerRadius(15)
+                }
+                Spacer()
+            }
+        }
+        .padding(16)
+        .background(Color(UIColor.systemBackground))
+        .cornerRadius(16)
+        .opacity(isAnimating ? 0.5 : 1.0)
+        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isAnimating)
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
 #Preview {
-    NewsFeedView(pincode: "560043", ConstituencyInfo: DummyConstituencyDetials.detials1)
+    NewsFeedView(ConstituencyInfo: DummyConstituencyDetials.detials1)
 }

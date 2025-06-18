@@ -14,14 +14,14 @@ class ActivityViewModel : ObservableObject{
     
     @Published var newsItems: [LocalNews] = []
     
-    func fetchNews(postalCode: String) async throws {
+    func fetchNews(constituencyId: String) async throws {
         self.newsItems = []
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
         
         let snapshot = try await db.collection("news")
             .whereField("ownerUid", isEqualTo: uid)
-            .whereField("postalCode", isEqualTo: postalCode)
+            .whereField("cosntituencyId", isEqualTo: constituencyId)
             .order(by: "timestamp", descending: true)
             .getDocuments()
         
@@ -41,7 +41,7 @@ class ActivityViewModel : ObservableObject{
                 timestamp: item.timestamp.dateValue(),
                 likesCount: item.likesCount,
                 commentsCount: item.commentsCount,
-                postalCode: item.cosntituencyId,
+                constituencyId: item.cosntituencyId,
                 newsImageURLs: item.newsImageURLs,
                 user: nil // ✅ No LocalUser relationship
             )
@@ -51,7 +51,7 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func fetchLikedNews(postalCode: String) async throws{
+    func fetchLikedNews(constituencyId: String) async throws{
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -72,7 +72,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -84,7 +84,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.cosntituencyId,
+                        constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )
@@ -98,7 +98,7 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func fetchSavedNews(postalCode: String) async throws{
+    func fetchSavedNews(constituencyId: String) async throws{
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -119,7 +119,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -131,7 +131,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.cosntituencyId,
+                        constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )
@@ -145,7 +145,7 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func fetchDisLikedNews(postalCode: String) async throws{
+    func fetchDisLikedNews(constituencyId: String) async throws{
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -166,7 +166,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -178,7 +178,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.cosntituencyId,
+                        constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )
@@ -192,7 +192,7 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func commentedNews(postalCode: String) async throws{
+    func commentedNews(constituencyId: String) async throws{
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -205,7 +205,7 @@ class ActivityViewModel : ObservableObject{
             let userDoc = try await userActivityDocRef.getDocument()
             
             guard let data = userDoc.data(),
-                  let savedNewsIds = data["CommentedNews"] as? [String] else {
+                  let savedNewsIds = data["commentedNews"] as? [String] else {
                 return
             }
             
@@ -213,7 +213,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -225,7 +225,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.cosntituencyId,
+                        constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )

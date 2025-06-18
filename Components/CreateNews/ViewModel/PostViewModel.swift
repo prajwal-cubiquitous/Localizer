@@ -76,12 +76,11 @@ class PostViewModel: ObservableObject {
         
         do {
             if !mediaItems.isEmpty {
-                // For now, just create text post even if media is present
-                // Uncomment the line below when Firebase Storage is enabled
-                 try await uploadMultipleImages(caption: caption)
-//                try await uploadNews(caption: caption)
+                // Upload media and create post with media
+                try await uploadMultipleImages(caption: caption, constituencyId: constituencyId)
             } else {
-                try await uploadNews(caption: caption, cosntituencyId : constituencyId)
+                // Create text-only post
+                try await uploadNews(caption: caption, cosntituencyId: constituencyId)
             }
             
             await MainActor.run {
@@ -101,7 +100,7 @@ class PostViewModel: ObservableObject {
     }
     
     @MainActor
-    func uploadMultipleImages(caption: String) async throws {
+    func uploadMultipleImages(caption: String, constituencyId: String) async throws {
         urls.removeAll()
         
         // MARK: - COMMENTED OUT - Firebase Storage Upload
@@ -130,11 +129,7 @@ class PostViewModel: ObservableObject {
             }
         }
         
-        
-        try await uploadNewsimages(caption: caption, imageURLS: urls)
-        
-        // For now, just create text post without media URLs
-//        try await uploadNews(caption: caption)
+        try await uploadNewsimages(caption: caption, imageURLS: urls, constituencyId: constituencyId)
     }
     
     func uploadNews(caption: String, cosntituencyId : String) async throws {
@@ -153,35 +148,21 @@ class PostViewModel: ObservableObject {
         try await incrementPostCount(for: uid)
     }
     
-    func uploadNewsimages(caption: String, imageURLS: [String]?) async throws {
+    func uploadNewsimages(caption: String, imageURLS: [String]?, constituencyId: String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        
-        // Get current location
-        let currentPincode = await getCurrentPincode()
         
         let news = News(ownerUid: uid,
                         caption: caption,
                         timestamp: Timestamp(),
                         likesCount: 0,
                         commentsCount: 0,
-                        cosntituencyId: currentPincode,
+                        cosntituencyId: constituencyId,
                         newsImageURLs: imageURLS)
-        
         
         try await NewsService.uploadNews(news)
         
-        
         // Increment post count
         try await incrementPostCount(for: uid)
-    }
-    
-    private func getCurrentPincode() async -> String {
-        return await withCheckedContinuation { continuation in
-            locationManager.getCurrentPincode { pincode in
-                continuation.resume(returning: pincode ?? "000000")
-            }
-        }
     }
     
     // MARK: - Media Processing

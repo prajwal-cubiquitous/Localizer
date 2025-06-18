@@ -34,7 +34,7 @@ final class LocalNews: @unchecked Sendable {
     var timestamp: Date
     var likesCount: Int
     var commentsCount: Int
-    var postalCode: String
+    var constituencyId: String
     
     // Store image URLs as JSON string to avoid CoreData array compatibility issues
     private var newsImageURLsData: String?
@@ -64,7 +64,7 @@ final class LocalNews: @unchecked Sendable {
         timestamp: Date,
         likesCount: Int,
         commentsCount: Int,
-        postalCode: String,
+        constituencyId: String,
         newsImageURLs: [String]?,
         user: LocalUser?
     ) {
@@ -74,7 +74,7 @@ final class LocalNews: @unchecked Sendable {
         self.timestamp = timestamp
         self.likesCount = likesCount
         self.commentsCount = commentsCount
-        self.postalCode = postalCode
+        self.constituencyId = constituencyId
         self.user = user
         
         // Set the image URLs using the computed property
@@ -95,7 +95,7 @@ extension LocalNews {
             timestamp: news.timestamp.dateValue(),
             likesCount: news.likesCount,
             commentsCount: news.commentsCount,
-            postalCode: news.cosntituencyId,
+            constituencyId: news.cosntituencyId,
             newsImageURLs: news.newsImageURLs, // ✅ Use original URLs first
             user: user
         )
@@ -140,7 +140,7 @@ extension LocalNews {
             timestamp: Timestamp(date: self.timestamp),
             likesCount: self.likesCount,
             commentsCount: self.commentsCount,
-            cosntituencyId: self.postalCode,
+            cosntituencyId: self.constituencyId,
             user: self.user?.toUser(),
             newsImageURLs: self.newsImageURLs
         )
@@ -150,9 +150,9 @@ extension LocalNews {
 
 struct DummyLocalNews{
     // ✅ Fixed: Each news item now has a unique ID
-    static var News1 = LocalNews(id: "news_1_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is commented news", timestamp: Date.now, likesCount: 20, commentsCount: 10, postalCode: "560043", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f"], user: DummylocalUser.user1)
+    static var News1 = LocalNews(id: "news_1_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is commented news", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f"], user: DummylocalUser.user1)
     
-    static var News2 = LocalNews(id: "news_2_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "this is liked news", timestamp: Date.now, likesCount: 20, commentsCount: 10, postalCode: "560043", newsImageURLs: ["https://media.licdn.com/dms/image/v2/D5603AQGTVPt9xIZ9YA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1711892894038?e=2147483647&v=beta&t=GF7yHb1bFs0wKm4NNo1fPa7skJNXDrBT-dUdeqy8Pfs"], user: DummylocalUser.user1)
+    static var News2 = LocalNews(id: "news_2_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "this is liked news", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", newsImageURLs: ["https://media.licdn.com/dms/image/v2/D5603AQGTVPt9xIZ9YA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1711892894038?e=2147483647&v=beta&t=GF7yHb1bFs0wKm4NNo1fPa7skJNXDrBT-dUdeqy8Pfs"], user: DummylocalUser.user1)
     
-    static var News3 = LocalNews(id: "news_3_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is SavedNews", timestamp: Date.now, likesCount: 20, commentsCount: 10, postalCode: "560043", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d"], user: DummylocalUser.user1)
+    static var News3 = LocalNews(id: "news_3_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is SavedNews", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d"], user: DummylocalUser.user1)
 }
