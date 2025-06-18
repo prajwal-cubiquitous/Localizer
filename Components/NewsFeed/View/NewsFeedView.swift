@@ -17,7 +17,7 @@ struct NewsFeedView: View {
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
     @State private var hasAppeared = false
-
+    
     init(ConstituencyInfo: ConstituencyDetails?) {
         self.ConstituencyInfo = ConstituencyInfo
         // Use constituencyId for filtering local news instead of pincode
@@ -51,30 +51,39 @@ struct NewsFeedView: View {
                         .padding(.top, 20)
                     } else if newsItems.isEmpty && !viewModel.isLoading {
                         // ✅ Empty state
-                        VStack(spacing: 20) {
-                            Image(systemName: "newspaper")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray)
-                            
-                            Text("No news yet")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
-                            
-                            Text("Be the first to share news in your area!")
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                            
-                            Button("Create Post") {
-                                showCreatePostSheet = true
+                        ScrollView {
+                                VStack {
+                                    VStack(spacing: 20) {
+                                        Spacer()
+                                        Image(systemName: "newspaper")
+                                            .font(.system(size: 60))
+                                            .foregroundColor(.gray)
+                                        
+                                        Text("No news yet")
+                                            .font(.title2)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.primary)
+                                        
+                                        Text("Be the first to share news in your area!")
+                                            .font(.body)
+                                            .foregroundColor(.secondary)
+                                            .multilineTextAlignment(.center)
+                                            .padding(.horizontal, 40)
+                                        
+                                        Button("Create Post") {
+                                            showCreatePostSheet = true
+                                        }
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 24)
+                                        .padding(.vertical, 12)
+                                        .background(Color.blue)
+                                        .cornerRadius(8)
+                                    }
+                                    .frame(maxWidth: .infinity)
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(Color.blue)
-                            .cornerRadius(8)
+                        }
+                        .refreshable {
+                            await viewModel.refresh(for: constituencyId, context: modelContext)
                         }
                     } else {
                         // ✅ News list (Instagram-style performance optimized)
