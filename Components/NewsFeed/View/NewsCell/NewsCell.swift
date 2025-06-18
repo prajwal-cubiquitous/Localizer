@@ -14,19 +14,14 @@ import ObjectiveC
 import Network
 import Kingfisher
 import FirebaseStorage
-import SwiftData
 
 struct NewsCell: View {
-    let localNews: LocalNews
-    @ObservedObject var viewModel: NewsCellViewModel
     @State private var showingCommentsSheet = false
-    
-    // ✅ State for cached user data
-    @State private var cachedUser: CachedUser?
+    @StateObject private var viewModel = NewsCellViewModel()
+    let localNews: LocalNews
     
     init(localNews: LocalNews) {
         self.localNews = localNews
-        self.viewModel = NewsCellViewModel(localNews: localNews)
     }
     
     // MARK: - Computed Properties
@@ -58,16 +53,11 @@ struct NewsCell: View {
         VStack(alignment: .leading, spacing: 16) {
             // User Info Header
             HStack(spacing: 12) {
-                // ✅ Profile Image from cached user
-                ProfilePictureView(
-                    userProfileUrl: cachedUser?.profilePictureUrl,
-                    width: 44, 
-                    height: 44
-                )
+                // Profile Image
+                ProfilePictureView(userProfileUrl: localNews.user?.profileImageUrl, width: 44, height: 44)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    // ✅ Name from cached user
-                    Text(cachedUser?.username ?? "Unknown User")
+                    Text(localNews.user?.name ?? "Unknown User")
                         .font(.headline)
                         .foregroundColor(.primary)
                         .lineLimit(1)
@@ -220,12 +210,9 @@ struct NewsCell: View {
                 .shadow(color: .black.opacity(0.05), radius: 1, x: 0, y: 1)
         )
         .padding(.horizontal, 16) // Outer margin from screen edges
-        .task{
-            await viewModel.fetchVotesStatusIfNeeded(postId: localNews.id)
-        }
-        .task{
-            // ✅ Fetch user data from cache
-            cachedUser = await UserCache.shared.getUser(userId: localNews.ownerUid)
+        .task {
+            await viewModel.fetchVotesStatus(postId: localNews.id)
+            await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
         }
         .sheet(isPresented: $showingCommentsSheet) {
             CommentsView(localNews: localNews)

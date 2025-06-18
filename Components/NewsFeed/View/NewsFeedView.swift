@@ -7,8 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import FirebaseFirestore
-import FirebaseAuth
 
 struct NewsFeedView: View {
     let ConstituencyInfo: ConstituencyDetails?
@@ -18,7 +16,7 @@ struct NewsFeedView: View {
     @StateObject private var viewModel = NewsFeedViewModel()
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
-    @State private var hasAppeared = false
+    @State private var hasFetched = false
     
     init(ConstituencyInfo: ConstituencyDetails?) {
         self.ConstituencyInfo = ConstituencyInfo
@@ -34,348 +32,89 @@ struct NewsFeedView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Background Color
-                (colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground))
-                    .ignoresSafeArea(.all)
-                
-                Group {
-                    if viewModel.isLoading && newsItems.isEmpty {
-                        // ✅ Skeleton loading state (Instagram-style)
-                        VStack(spacing: 16) {
-                            ForEach(0..<3, id: \.self) { _ in
-                                SkeletonNewsCell()
-                                    .padding(.horizontal, 12)
-                            }
-                            Spacer()
-                        }
-                        .padding(.top, 20)
-                    } else if newsItems.isEmpty && !viewModel.isLoading {
-                        // ✅ Empty state
-                        ScrollView {
-                                VStack {
-                                    VStack(spacing: 20) {
-                                        Spacer()
-                                        Image(systemName: "newspaper")
-                                            .font(.system(size: 60))
-                                            .foregroundColor(.gray)
-                                        
-                                        Text("No news yet")
-                                            .font(.title2)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
-                                        
-                                        Text("Be the first to share news in your area!")
-                                            .font(.body)
-                                            .foregroundColor(.secondary)
-                                            .multilineTextAlignment(.center)
-                                            .padding(.horizontal, 40)
-                                        
-                                        Button("Create Post") {
-                                            showCreatePostSheet = true
-                                        }
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 24)
-                                        .padding(.vertical, 12)
-                                        .background(Color.blue)
-                                        .cornerRadius(8)
-                                    }
-                                    .frame(maxWidth: .infinity)
-                            }
-                        }
-                        .refreshable {
-                            await refreshNewsFeed()
-                        }
-                    } else {
-                        // ✅ News list (Instagram-style performance optimized)
-                        ScrollView {
-                            LazyVStack(spacing: 0) {
-                                ForEach(Array(newsItems.enumerated()), id: \.element.id) { index, item in
-                                    NewsCell(localNews: item)
-                                        .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
-                                        .padding(.bottom, 8) // Space between news items
-                                        .onAppear {
-                                            // ✅ Optimized load more trigger - only check near end
-                                            if index >= newsItems.count - 3 {
-                                                Task {
-                                                    await viewModel.loadMoreIfNeeded(
-                                                        for: constituencyId,
-                                                        context: modelContext,
-                                                        currentItem: item,
-                                                        allItems: Array(newsItems)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        .id(item.id) // Ensure proper identity for LazyVStack
-                                }
-                                
-                                // ✅ Load more indicator (Instagram-style)
-                                if viewModel.isLoadingMore {
-                                    HStack {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
-                                        Text("Loading more...")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .padding(.vertical, 12)
-                                } else if !viewModel.hasMoreContent && newsItems.count > 5 {
-                                    Text("You're all caught up!")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .padding(.vertical, 12)
-                                }
-                            }
-                        }
-                        .scrollIndicators(.hidden) // Clean modern look
-                        .scrollBounceBehavior(.basedOnSize) // iOS 18 feature for better scroll behavior
-                        .refreshable {
-                            await refreshNewsFeed()
-                        }
-                    }
-                }
-                .navigationTitle("News Feed")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button {
-                            // Menu action
-                        } label: {
-                            Image(systemName: "line.3.horizontal")
-                                .foregroundStyle(colorScheme == .dark ? .white : .black)
-                        }
-                    }
-                    
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            // Search action
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundStyle(colorScheme == .dark ? .white : .black)
-                        }
-                    }
-                }
-                .background(colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground))
-                
-                // Floating Action Button (like WhatsApp)
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
+        NavigationStack {
+            Group {
+                if newsItems.isEmpty {
+                    // Empty State
+                    VStack(spacing: 24) {
+                        Image(systemName: "square.and.pencil")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .foregroundStyle(.secondary)
+                        
+                        Text("Be the first to post!")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .multilineTextAlignment(.center)
+                        
                         Button {
                             showCreatePostSheet = true
                         } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(Color("primaryOpposite"))
-                                .frame(width: 56, height: 56)
-                                .background(Color.primary)
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                            Text("Create Post")
+                                .font(.headline)
+                                .padding(.horizontal, 32)
+                                .padding(.vertical, 12)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .clipShape(Capsule())
                         }
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 20)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                } else {
+                    // News Feed Content
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(newsItems) { item in
+                                NewsCell(localNews: item)
+                                    .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
+                                    .padding(.bottom, 8) // Space between news items
+                            }
+                        }
+                        .padding(.top, 8) // Top spacing from navigation
+                        .padding(.bottom, 20) // Bottom spacing for safe area
+                    }
+                    .scrollIndicators(.hidden) // Clean modern look
+                    .refreshable {
+                        await viewModel.refresh(for: constituencyId, context: modelContext)
                     }
                 }
             }
-        }
-        .onAppear {
-            // ✅ Smart loading - only load if not initialized or constituencyId changed
-            if !constituencyId.isEmpty {
-                Task {
-                    await viewModel.initialLoad(for: constituencyId, context: modelContext)
-                    // ✅ Preload vote/like/saved states after initial load
-                    await preloadUserInteractionStates()
+            .navigationTitle("News Feed")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        // Menu action
+                    } label: {
+                        Image(systemName: "line.3.horizontal")
+                            .foregroundStyle(colorScheme == .dark ? .white : .black)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        // Search action
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(colorScheme == .dark ? .white : .black)
+                    }
                 }
             }
+            .background(colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground))
         }
-        .onChange(of: constituencyId) { oldValue, newValue in
-            // ✅ Load data when constituencyId changes
-            if oldValue != newValue && !newValue.isEmpty {
-                hasAppeared = false
-                Task {
-                    await viewModel.initialLoad(for: newValue, context: modelContext)
-                    // ✅ Preload vote/like/saved states after constituency change
-                    await preloadUserInteractionStates()
-                }
+        .task {
+            if !hasFetched {
+                hasFetched = true
+                await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext)
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
             if let constituency = ConstituencyInfo, let id = constituency.id {
                 PostView(ConstituencyId: id)
             }
-        }
-    }
-    
-    // ✅ Function to refresh news feed and preload interaction states
-    private func refreshNewsFeed() async {
-        await viewModel.refresh(for: constituencyId, context: modelContext)
-        // ✅ Preload vote/like/saved states after refresh
-        await preloadUserInteractionStates()
-    }
-    
-    // ✅ Function to preload user interaction states (votes, likes, saved) for current news items
-    private func preloadUserInteractionStates() async {
-        guard !newsItems.isEmpty else { return }
-        guard let currentUserId = Auth.auth().currentUser?.uid else { return }
-        
-        // Preload interaction states for all visible news items using static cache methods
-        await withTaskGroup(of: Void.self) { group in
-            for newsItem in newsItems {
-                group.addTask {
-                    await self.preloadInteractionState(for: newsItem, userId: currentUserId)
-                }
-            }
-        }
-        
-        print("✅ Preloaded interaction states for \(newsItems.count) news items")
-    }
-    
-    // ✅ Preload interaction state for a specific news item
-    private func preloadInteractionState(for newsItem: LocalNews, userId: String) async {
-        let postId = newsItem.id
-        
-        // Skip if already cached
-        let isCached = await MainActor.run {
-            NewsCellViewModel.isCached(postId: postId)
-        }
-        
-        if isCached {
-            return
-        }
-        
-        do {
-            let db = Firestore.firestore()
-            
-            // Fetch vote state and likes count in parallel
-            async let voteDoc = db.collection("news")
-                .document(postId)
-                .collection("votes")
-                .document(userId)
-                .getDocument()
-            
-            async let newsDoc = db.collection("news")
-                .document(postId)
-                .getDocument()
-            
-            async let savedDoc = db.collection("users")
-                .document(userId)
-                .collection("savedNews")
-                .document(postId)
-                .getDocument()
-            
-            // Process vote state
-            let voteSnapshot = try await voteDoc
-            let voteState: VoteState
-            if let data = voteSnapshot.data(), let voteType = data["voteType"] as? Int {
-                voteState = switch voteType {
-                case 1: .upvoted
-                case -1: .downvoted
-                default: .none
-                }
-            } else {
-                voteState = .none
-            }
-            
-            // Process likes count
-            let newsSnapshot = try await newsDoc
-            let likesCount: Int
-            if let data = newsSnapshot.data(), let count = data["likesCount"] as? Int {
-                likesCount = count
-            } else {
-                likesCount = newsItem.likesCount // fallback to local count
-            }
-            
-            // Process saved state
-            let savedSnapshot = try await savedDoc
-            let isSaved = savedSnapshot.exists
-            
-            // Cache all the states
-            await NewsCellViewModel.cacheInteractionState(
-                postId: postId,
-                voteState: voteState,
-                likesCount: likesCount,
-                isSaved: isSaved
-            )
-            
-        } catch {
-            // Cache default states on error
-            await NewsCellViewModel.cacheInteractionState(
-                postId: postId,
-                voteState: .none,
-                likesCount: newsItem.likesCount,
-                isSaved: false
-            )
-        }
-    }
-}
-
-// MARK: - Skeleton Loading View
-struct SkeletonNewsCell: View {
-    @State private var isAnimating = false
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header skeleton
-            HStack {
-                Circle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 40, height: 40)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(width: 120, height: 12)
-                        .cornerRadius(6)
-                    
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(width: 80, height: 10)
-                        .cornerRadius(5)
-                }
-                
-                Spacer()
-            }
-            
-            // Content skeleton
-            VStack(alignment: .leading, spacing: 6) {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(height: 12)
-                    .cornerRadius(6)
-                
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 200, height: 12)
-                    .cornerRadius(6)
-            }
-            
-            // Image skeleton
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(height: 200)
-                .cornerRadius(12)
-            
-            // Action buttons skeleton
-            HStack {
-                ForEach(0..<3, id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(width: 60, height: 30)
-                        .cornerRadius(15)
-                }
-                Spacer()
-            }
-        }
-        .padding(16)
-        .background(Color(UIColor.systemBackground))
-        .cornerRadius(16)
-        .opacity(isAnimating ? 0.5 : 1.0)
-        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isAnimating)
-        .onAppear {
-            isAnimating = true
         }
     }
 }

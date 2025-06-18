@@ -44,9 +44,15 @@ struct CommentsView: View {
                             Text("Replying to")
                                 .font(.caption)
                                 .foregroundColor(.gray)
-                            Text("@\(targetComment.username)")
-                                .font(.caption.bold())
-                                .foregroundColor(.gray)
+                            if let user = UserCache.shared.cacheusers[targetComment.userId]{
+                                Text("@\(user.username)")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.gray)
+                            }else{
+                                Text("@Unknow")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.gray)
+                            }
                             Spacer()
                             Button {
                                 replyingToComment = nil
@@ -64,7 +70,7 @@ struct CommentsView: View {
                     HStack(spacing: 12) {
                         ProfilePictureView(userProfileUrl: currentUser?.profileImageUrl, width: 40, height: 40)
                         
-                        TextField(replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToComment!.username)...", text: $newCommentText, axis: .vertical)
+                        TextField(replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToComment?.username ?? "unknown")...", text: $newCommentText, axis: .vertical)
                             .textFieldStyle(.plain)
                             .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
                             .background(Color(UIColor.systemGray6))

@@ -309,10 +309,6 @@ extension AuthViewModel {
             // ✅ Clear news feed state from AppState
             AppState.shared.clearNewsFeedState()
             print("✅ Cleared NewsFeed state")
-            
-            // ✅ Clear vote state cache
-            NewsCellViewModel.clearCache()
-            print("✅ Cleared vote state cache")
 
             // Optional: Clear temporary media
             MediaHandler.clearTemporaryMedia()

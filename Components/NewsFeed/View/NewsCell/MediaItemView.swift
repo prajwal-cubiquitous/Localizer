@@ -22,7 +22,7 @@ struct MediaItemView: View {
         let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm"]
         let hasVideoExtension = videoExtensions.contains { ext in
             // Check for the extension either at the end of URL or before query parameters
-            lowercaseURL.contains(".\(ext)") || lowercaseURL.contains(".\(ext)?")
+            lowercaseURL.contains(".\(ext)") || lowercaseURL.range(of: "\\.\\(ext)[?&#]", options: .regularExpression) != nil
         }
         
         // Check for video folder paths
@@ -35,79 +35,75 @@ struct MediaItemView: View {
         if isVideo {
             DownloadableVideoPlayer(videoURL: urlString)
                 .frame(height: height)
+                .clipped()
         } else {
-            // ✅ Image with better error handling
             KFImage(URL(string: urlString))
-                .onFailure { _ in
-                    // Silent error handling - no debug prints
-                }
                 .placeholder {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(height: height)
-                        .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.gray.opacity(0.3))
+                        .frame(maxWidth: .infinity, maxHeight: height)
+                        .overlay {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        )
+                                .progressViewStyle(.circular)
+                                .tint(.blue)
+                        }
+                }
+                .onFailure { error in
+                    print("Image loading failed for \(urlString): \(error)")
                 }
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(height: height)
+                .frame(maxWidth: .infinity, maxHeight: height)
                 .clipped()
         }
     }
 }
 
-// MARK: - Downloadable Video Player
+// MARK: - Enhanced Video Player with Download Support
 struct DownloadableVideoPlayer: View {
     let videoURL: String
+    
     @State private var player: AVPlayer?
-    @State private var isLoading = true
-    @State private var hasError = false
-    @State private var localVideoURL: URL?
+    @State private var downloadState: DownloadState = .idle
     @State private var cancellables = Set<AnyCancellable>()
     
-    // ✅ Extract file extension from URL
-    private func extractFileExtension(from urlString: String) -> String {
-        // Try to get extension from URL path
-        if let url = URL(string: urlString) {
-            let pathExtension = url.pathExtension.lowercased()
-            if !pathExtension.isEmpty {
-                return pathExtension
-            }
-        }
-        
-        // Fallback: look for common video extensions in the URL string
-        let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm"]
-        for ext in videoExtensions {
-            if urlString.lowercased().contains(".\(ext)") {
-                return ext
-            }
-        }
-        
-        return "mov" // Default fallback
+    enum DownloadState {
+        case idle
+        case downloading
+        case ready
+        case failed
     }
     
     var body: some View {
         ZStack {
-            if let player = player, !hasError {
+            if let player = player {
                 VideoPlayer(player: player)
                     .onAppear {
                         player.isMuted = true
                     }
-            } else if hasError {
-                // ✅ Fallback to image if video fails
-                KFImage(URL(string: videoURL))
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .clipped()
             } else {
-                // Loading state
-                RoundedRectangle(cornerRadius: 8)
+                // Show loading or error state
+                Rectangle()
                     .fill(Color.gray.opacity(0.3))
                     .overlay(
-                        ProgressView("Loading video...")
-                            .progressViewStyle(CircularProgressViewStyle())
+                        Group {
+                            switch downloadState {
+                            case .idle, .downloading:
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            case .failed:
+                                VStack {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .foregroundColor(.white)
+                                        .font(.title2)
+                                    Text("Video Error")
+                                        .foregroundColor(.white)
+                                        .font(.caption)
+                                }
+                            case .ready:
+                                EmptyView()
+                            }
+                        }
                     )
             }
         }
@@ -115,38 +111,59 @@ struct DownloadableVideoPlayer: View {
             downloadAndSetupVideo()
         }
         .onDisappear {
-            player?.pause()
-            player = nil
-            cancellables.removeAll()
+            cleanup()
         }
     }
     
     private func downloadAndSetupVideo() {
         guard let url = URL(string: videoURL) else {
-            hasError = true
-            isLoading = false
+            print("❌ Invalid video URL: \(videoURL)")
+            downloadState = .failed
             return
         }
         
+        downloadState = .downloading
+        
         Task {
             do {
-                // ✅ Preserve file extension when downloading
+                // ✅ Extract file extension from original URL to preserve media format
                 let fileExtension = extractFileExtension(from: videoURL)
-                let filename = "\(url.lastPathComponent.components(separatedBy: "?").first ?? UUID().uuidString).\(fileExtension)"
+                let fileName = "\(UUID().uuidString).\(fileExtension)"
                 
-                let localURL = try await MediaHandler.downloadMedia(from: url, fileName: filename)
+                let localURL = try await MediaHandler.downloadMedia(from: url, fileName: fileName)
                 
                 await MainActor.run {
-                    self.localVideoURL = localURL
                     setupPlayer(with: localURL)
+                    downloadState = .ready
                 }
             } catch {
+                print("❌ Video download failed: \(error)")
                 await MainActor.run {
-                    self.hasError = true
-                    self.isLoading = false
+                    downloadState = .failed
                 }
             }
         }
+    }
+    
+    private func extractFileExtension(from urlString: String) -> String {
+        // Extract extension from URL
+        if let url = URL(string: urlString) {
+            let pathExtension = url.pathExtension
+            if !pathExtension.isEmpty {
+                return pathExtension
+            }
+        }
+        
+        // Fallback: look for common video extensions in the URL
+        let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm"]
+        for ext in videoExtensions {
+            if urlString.lowercased().contains(".\(ext)") {
+                return ext
+            }
+        }
+        
+        // Default fallback for video URLs without clear extension
+        return "mov"
     }
     
     private func setupPlayer(with videoURL: URL) {
@@ -164,15 +181,14 @@ struct DownloadableVideoPlayer: View {
             .sink { status in
                 switch status {
                 case .readyToPlay:
-                    // Player is ready
-                    isLoading = false
-                    hasError = false
+                    // Player is ready, no action needed
+                    break
                 case .failed:
-                    hasError = true
-                    isLoading = false
-                    if playerItem.error != nil {
-                        // Silent error handling - no debug prints
+                    print("❌ Video player item failed: \(videoURL)")
+                    if let error = playerItem.error {
+                        print("❌ Player error: \(error)")
                     }
+                    self.downloadState = .failed
                 case .unknown:
                     break
                 @unknown default:
@@ -182,36 +198,27 @@ struct DownloadableVideoPlayer: View {
             .store(in: &cancellables)
         
         // Observe playback errors
-        newPlayer.publisher(for: \.reasonForWaitingToPlay)
-            .receive(on: DispatchQueue.main)
-            .sink { reason in
-                if let reason = reason, reason == .evaluatingBufferingRate {
-                    // Handle buffering if needed
-                }
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: playerItem,
+            queue: .main
+        ) { notification in
+            print("❌ Video playback failed to end: \(videoURL)")
+            if let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error {
+                print("❌ Playback error: \(error)")
             }
-            .store(in: &cancellables)
-        
-        // Set up notification for playback end
-        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime, object: playerItem)
-            .receive(on: DispatchQueue.main)
-            .sink { _ in
-                // Restart video when it ends
-                newPlayer.seek(to: .zero)
-                newPlayer.play()
-            }
-            .store(in: &cancellables)
-        
-        // Handle playback errors
-        NotificationCenter.default.publisher(for: .AVPlayerItemFailedToPlayToEndTime, object: playerItem)
-            .receive(on: DispatchQueue.main)
-            .sink { notification in
-                if notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] != nil {
-                    // Silent error handling - no debug prints
-                }
-                hasError = true
-            }
-            .store(in: &cancellables)
+            self.downloadState = .failed
+        }
         
         self.player = newPlayer
+    }
+    
+    private func cleanup() {
+        player?.pause()
+        player = nil
+        cancellables.removeAll()
+        
+        // Remove notification observers
+        NotificationCenter.default.removeObserver(self)
     }
 }

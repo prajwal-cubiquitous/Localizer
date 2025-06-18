@@ -10,15 +10,11 @@ import SwiftUI
 struct ReplyRowView: View {
     let reply: Reply
     
-    // ✅ Add state for cached user data
-    @State private var cachedUser: CachedUser?
-    
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            // ✅ Use cached user data or show placeholder
-            if let cachedUser = cachedUser {
-                ProfilePictureView(userProfileUrl: cachedUser.profilePictureUrl, width: 30, height: 30)
-            } else {
+            if let user = UserCache.shared.cacheusers[reply.userId]{
+                ProfilePictureView(userProfileUrl: user.profilePictureUrl, width: 30, height: 30)
+            }else{
                 Image(systemName:"person.crop.circle.badge.questionmark")
                     .resizable()
                     .scaledToFit()
@@ -31,10 +27,13 @@ struct ReplyRowView: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    // ✅ Use cached user data
-                    Text(cachedUser?.username ?? "Unknown User")
-                        .font(.system(size: 13, weight: .semibold))
-                    
+                    if let user = UserCache.shared.cacheusers[reply.userId]{
+                        Text(user.username)
+                            .font(.system(size: 13, weight: .semibold))
+                    }else{
+                        Text("Unkown User")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
                     Text(reply.timestamp, style: .relative)
                         .font(.caption2)
                         .foregroundColor(.gray)
@@ -48,9 +47,5 @@ struct ReplyRowView: View {
         }
         .padding(.leading, 40) // Indent replies
         .padding(.vertical, 4)
-        .task {
-            // ✅ Load user data on appear
-            cachedUser = await UserCache.shared.getUser(userId: reply.userId)
-        }
     }
 }

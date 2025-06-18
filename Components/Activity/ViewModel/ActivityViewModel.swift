@@ -30,10 +30,11 @@ class ActivityViewModel : ObservableObject{
         }
         
         for item in newsItemsFromFirebase {
-            // ✅ For current user's own posts, also use UserCache for consistency
-            _ = await UserCache.shared.getUser(userId: item.ownerUid)
+            // ✅ Fetch user data and create LocalUser
+            let newsUser = try await fetchCurrentUser(item.ownerUid)
+            let newsUserLocal = LocalUser.from(user: newsUser)
             
-            // ✅ Create LocalNews without LocalUser relationship
+            // ✅ Create LocalNews with proper user relationship
             let localNews = LocalNews(
                 id: item.id,
                 ownerUid: item.ownerUid,
@@ -43,7 +44,7 @@ class ActivityViewModel : ObservableObject{
                 commentsCount: item.commentsCount,
                 constituencyId: item.cosntituencyId,
                 newsImageURLs: item.newsImageURLs,
-                user: nil // ✅ No LocalUser relationship
+                user: newsUserLocal // ✅ Proper LocalUser relationship
             )
             
             self.newsItems.append(localNews)
@@ -73,10 +74,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Cache user data instead of creating LocalUser
-                    _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
+                    // ✅ Fetch user data and create LocalUser
+                    let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    let newsUserLocal = LocalUser.from(user: newsUser)
                     
-                    // ✅ Create LocalNews without LocalUser relationship
+                    // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
                         id: SavedNewsFromFirestore.id,
                         ownerUid: SavedNewsFromFirestore.ownerUid,
@@ -86,7 +88,7 @@ class ActivityViewModel : ObservableObject{
                         commentsCount: SavedNewsFromFirestore.commentsCount,
                         constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
-                        user: nil // ✅ No LocalUser relationship
+                        user: newsUserLocal // ✅ Proper LocalUser relationship
                     )
                     
                     self.newsItems.append(localNews)
@@ -120,10 +122,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Cache user data instead of creating LocalUser
-                    _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
+                    // ✅ Fetch user data and create LocalUser
+                    let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    let newsUserLocal = LocalUser.from(user: newsUser)
                     
-                    // ✅ Create LocalNews without LocalUser relationship
+                    // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
                         id: SavedNewsFromFirestore.id,
                         ownerUid: SavedNewsFromFirestore.ownerUid,
@@ -133,7 +136,7 @@ class ActivityViewModel : ObservableObject{
                         commentsCount: SavedNewsFromFirestore.commentsCount,
                         constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
-                        user: nil // ✅ No LocalUser relationship
+                        user: newsUserLocal // ✅ Proper LocalUser relationship
                     )
                     
                     self.newsItems.append(localNews)
@@ -167,10 +170,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Cache user data instead of creating LocalUser
-                    _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
+                    // ✅ Fetch user data and create LocalUser
+                    let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    let newsUserLocal = LocalUser.from(user: newsUser)
                     
-                    // ✅ Create LocalNews without LocalUser relationship
+                    // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
                         id: SavedNewsFromFirestore.id,
                         ownerUid: SavedNewsFromFirestore.ownerUid,
@@ -180,7 +184,7 @@ class ActivityViewModel : ObservableObject{
                         commentsCount: SavedNewsFromFirestore.commentsCount,
                         constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
-                        user: nil // ✅ No LocalUser relationship
+                        user: newsUserLocal // ✅ Proper LocalUser relationship
                     )
                     
                     self.newsItems.append(localNews)
@@ -214,10 +218,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Cache user data instead of creating LocalUser
-                    _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
+                    // ✅ Fetch user data and create LocalUser
+                    let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
+                    let newsUserLocal = LocalUser.from(user: newsUser)
                     
-                    // ✅ Create LocalNews without LocalUser relationship
+                    // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
                         id: SavedNewsFromFirestore.id,
                         ownerUid: SavedNewsFromFirestore.ownerUid,
@@ -227,7 +232,7 @@ class ActivityViewModel : ObservableObject{
                         commentsCount: SavedNewsFromFirestore.commentsCount,
                         constituencyId: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
-                        user: nil // ✅ No LocalUser relationship
+                        user: newsUserLocal // ✅ Proper LocalUser relationship
                     )
                     
                     self.newsItems.append(localNews)
@@ -236,5 +241,15 @@ class ActivityViewModel : ObservableObject{
         } catch {
             print("❌ Failed to fetch commented news: \(error)")
         }
+    }
+    
+    // ✅ Helper method to fetch user data from Firestore
+    private func fetchCurrentUser(_ uid: String) async throws -> User {
+        let docRef = Firestore.firestore().collection("users").document(uid)
+        let snapshot = try await docRef.getDocument()
+        guard let user = try? snapshot.data(as: User.self) else {
+            throw NSError(domain: "ActivityViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode user"])
+        }
+        return user
     }
 }
