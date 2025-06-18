@@ -27,6 +27,9 @@ class NewsCellViewModel: ObservableObject{
     private static var savedStateCache: [String: Bool] = [:]
     private var isVoteOperationInProgress = false
     
+    // ✅ Track ongoing fetch operations to prevent duplicates
+    private static var ongoingFetches: Set<String> = []
+    
     private let db = Firestore.firestore()
     private let postId: String
     
@@ -59,15 +62,56 @@ class NewsCellViewModel: ObservableObject{
             voteStateCache.removeAll()
             likesCountCache.removeAll()
             savedStateCache.removeAll()
+            ongoingFetches.removeAll()
         }
     }
     
-    // ✅ Optimized fetch - only fetch if not in cache
+    // ✅ Check if interaction state is cached for a post
+    @MainActor
+    static func isCached(postId: String) -> Bool {
+        return voteStateCache[postId] != nil && 
+               savedStateCache[postId] != nil && 
+               likesCountCache[postId] != nil
+    }
+    
+    // ✅ Cache all interaction states at once
+    @MainActor
+    static func cacheInteractionState(
+        postId: String, 
+        voteState: VoteState, 
+        likesCount: Int, 
+        isSaved: Bool
+    ) {
+        voteStateCache[postId] = voteState
+        likesCountCache[postId] = likesCount
+        savedStateCache[postId] = isSaved
+    }
+    
+    // ✅ Optimized fetch - only fetch if not in cache and not already fetching
     func fetchVotesStatusIfNeeded(postId: String) async {
+        // Prevent concurrent fetches for the same post
+        guard !Self.ongoingFetches.contains(postId) else { return }
+        
         // Only fetch if not in cache
         if Self.voteStateCache[postId] != nil && Self.savedStateCache[postId] != nil {
+            // Update local state from cache
+            await MainActor.run {
+                if let cachedVoteState = Self.voteStateCache[postId] {
+                    self.voteState = cachedVoteState
+                }
+                if let cachedSavedState = Self.savedStateCache[postId] {
+                    self.savedByCurrentUser = cachedSavedState
+                }
+                if let cachedLikesCount = Self.likesCountCache[postId] {
+                    self.likesCount = cachedLikesCount
+                }
+            }
             return
         }
+        
+        // Mark as fetching
+        Self.ongoingFetches.insert(postId)
+        defer { Self.ongoingFetches.remove(postId) }
         
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let docRef = db.collection("news").document(postId)
@@ -134,9 +178,8 @@ class NewsCellViewModel: ObservableObject{
                 "likesCount": FieldValue.increment(Int64(amount))
             ])
         
-        // ✅ Update cache
-        let newCount = max(0, likesCount + amount)
-        Self.likesCountCache[postId] = newCount
+        // ✅ Don't update cache here - let the optimistic update in vote handlers manage it
+        // The cache is already updated in the vote handlers before this call
     }
     
     func handleUpvote(postId: String) async {

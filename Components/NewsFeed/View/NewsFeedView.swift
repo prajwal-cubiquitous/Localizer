@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SwiftData
+import FirebaseFirestore
+import FirebaseAuth
 
 struct NewsFeedView: View {
     let ConstituencyInfo: ConstituencyDetails?
@@ -217,13 +219,95 @@ struct NewsFeedView: View {
     // ✅ Function to preload user interaction states (votes, likes, saved) for current news items
     private func preloadUserInteractionStates() async {
         guard !newsItems.isEmpty else { return }
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return }
         
-        // Preload interaction states for all visible news items
-        for newsItem in newsItems {
-            Task {
-                let newsCellViewModel = NewsCellViewModel(localNews: newsItem)
-                await newsCellViewModel.fetchVotesStatusIfNeeded(postId: newsItem.id)
+        // Preload interaction states for all visible news items using static cache methods
+        await withTaskGroup(of: Void.self) { group in
+            for newsItem in newsItems {
+                group.addTask {
+                    await self.preloadInteractionState(for: newsItem, userId: currentUserId)
+                }
             }
+        }
+        
+        print("✅ Preloaded interaction states for \(newsItems.count) news items")
+    }
+    
+    // ✅ Preload interaction state for a specific news item
+    private func preloadInteractionState(for newsItem: LocalNews, userId: String) async {
+        let postId = newsItem.id
+        
+        // Skip if already cached
+        let isCached = await MainActor.run {
+            NewsCellViewModel.isCached(postId: postId)
+        }
+        
+        if isCached {
+            return
+        }
+        
+        do {
+            let db = Firestore.firestore()
+            
+            // Fetch vote state and likes count in parallel
+            async let voteDoc = db.collection("news")
+                .document(postId)
+                .collection("votes")
+                .document(userId)
+                .getDocument()
+            
+            async let newsDoc = db.collection("news")
+                .document(postId)
+                .getDocument()
+            
+            async let savedDoc = db.collection("users")
+                .document(userId)
+                .collection("savedNews")
+                .document(postId)
+                .getDocument()
+            
+            // Process vote state
+            let voteSnapshot = try await voteDoc
+            let voteState: VoteState
+            if let data = voteSnapshot.data(), let voteType = data["voteType"] as? Int {
+                voteState = switch voteType {
+                case 1: .upvoted
+                case -1: .downvoted
+                default: .none
+                }
+            } else {
+                voteState = .none
+            }
+            
+            // Process likes count
+            let newsSnapshot = try await newsDoc
+            let likesCount: Int
+            if let data = newsSnapshot.data(), let count = data["likesCount"] as? Int {
+                likesCount = count
+            } else {
+                likesCount = newsItem.likesCount // fallback to local count
+            }
+            
+            // Process saved state
+            let savedSnapshot = try await savedDoc
+            let isSaved = savedSnapshot.exists
+            
+            // Cache all the states
+            await NewsCellViewModel.cacheInteractionState(
+                postId: postId,
+                voteState: voteState,
+                likesCount: likesCount,
+                isSaved: isSaved
+            )
+            
+        } catch {
+            // Cache default states on error
+            await NewsCellViewModel.cacheInteractionState(
+                postId: postId,
+                voteState: .none,
+                likesCount: newsItem.likesCount,
+                isSaved: false
+            )
         }
     }
 }
