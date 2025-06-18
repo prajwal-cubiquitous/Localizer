@@ -12,11 +12,15 @@ struct DataView: View {
     
     let tabs = ["Schools", "Hospitals", "Police Stations"]
     let tabImages = ["graduationcap.fill", "cross.case.fill", "shield.fill"]
-    
+    @State private var hasLoaded = false
     @State private var selectedTab = 0
     @State private var showingInfoSheet = false
     @State private var selectedInfoItem: InfoItem?
     @Namespace private var animationNamespace
+    
+    // Store the pincodes for display
+    private let pincodes: [String]
+    private let ConstituencyName: String
     
     // MARK: - Info Item Model
     struct InfoItem {
@@ -58,8 +62,10 @@ struct DataView: View {
         static let cardSpacing: CGFloat = 16
     }
     
-    init(pincode : String){
-        _viewModel = StateObject(wrappedValue: DataViewModel(postalCode: pincode))
+    init(pincodes: [String], ConstituencyName : String) {
+        _viewModel = StateObject(wrappedValue: DataViewModel(postalCodes: pincodes))
+        self.pincodes = pincodes
+        self.ConstituencyName = ConstituencyName
     }
     
     var body: some View {
@@ -147,8 +153,8 @@ struct DataView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
         }
         .background(Color(.systemGroupedBackground))
-        .onAppear {
-            viewModel.fetchData(for: viewModel.postalCode)
+        .onChange(of: pincodes)  {
+            viewModel.fetchData(for: viewModel.postalCodes)
         }
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.large)
@@ -191,30 +197,30 @@ struct DataView: View {
                 Image(systemName: "location.fill")
                     .foregroundStyle(.secondary)
                 
-                Text("Current Area: \(viewModel.postalCode)")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
+                if pincodes.count == 1 {
+                    Text("Current Area: \(pincodes.first ?? "")")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Constituency Areas: \(pincodes.count) areas")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                }
                 
                 Spacer()
             }
             
-            // Show constituency information if available
-            if let constituency = viewModel.constituencyInfo {
+            // Show area details if multiple pincodes
+            if pincodes.count > 1 {
                 HStack {
                     Image(systemName: "building.columns.fill")
                         .foregroundStyle(.blue)
                     
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Constituency: \(constituency.constituencyName)")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.primary)
-                        
-                        Text("Showing services from \(constituency.associatedPincodes.count) areas")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("Showing services from all \(ConstituencyName) areas")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     
                     Spacer()
                 }
@@ -236,7 +242,7 @@ struct DataView: View {
                 EmptyStateView(
                     icon: emptyIcon,
                     message: emptyMessage,
-                    description: "Try refreshing or check back later"
+                    description: "Try refreshing or check back later", viewModel: viewModel
                 )
             } else {
                 ScrollView {
@@ -247,6 +253,9 @@ struct DataView: View {
                     }
                     .padding(.horizontal, Constants.horizontalPadding)
                     .padding(.vertical, Constants.verticalSpacing)
+                }
+                .refreshable{
+                    viewModel.fetchData(for: viewModel.postalCodes)
                 }
             }
         }
@@ -429,6 +438,7 @@ struct EmptyStateView: View {
     let icon: String
     let message: String
     let description: String
+    @ObservedObject var viewModel: DataViewModel
     
     var body: some View {
         VStack(spacing: 16) {
@@ -446,6 +456,17 @@ struct EmptyStateView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                Button{
+                    viewModel.fetchData(for: viewModel.postalCodes)
+                }label: {
+                    Text("Try Again")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(Color("primaryOpposite"))
+                        .frame(width: 120, height: 32)
+                        .background(Color.primary)
+                        .clipShape(Capsule())
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -679,6 +700,6 @@ struct DetailRow: View {
 
 #Preview {
     NavigationView {
-        DataView(pincode: "560043")
+        DataView(pincodes: [/*"560043", "560044"*/], ConstituencyName: "Shivaji Nagar")
     }
 } 

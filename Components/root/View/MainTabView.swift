@@ -119,7 +119,7 @@ struct MainTabView: View {
                 .tag(0)
             
             // Services Tab
-            DataView(pincode: pincode)
+            DataView(pincodes: selectedConstituency?.associatedPincodes ?? [pincode], ConstituencyName: selectedConstituency?.constituencyName ?? "")
                 .environmentObject(appState)
                 .tabItem {
                     Label {
