@@ -41,7 +41,7 @@ class ActivityViewModel : ObservableObject{
                 timestamp: item.timestamp.dateValue(),
                 likesCount: item.likesCount,
                 commentsCount: item.commentsCount,
-                postalCode: item.postalCode,
+                postalCode: item.cosntituencyId,
                 newsImageURLs: item.newsImageURLs,
                 user: nil // ✅ No LocalUser relationship
             )
@@ -72,7 +72,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.postalCode == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == postalCode {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -84,7 +84,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.postalCode,
+                        postalCode: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )
@@ -119,7 +119,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.postalCode == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == postalCode {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -131,7 +131,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.postalCode,
+                        postalCode: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )
@@ -166,7 +166,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.postalCode == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == postalCode {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -178,7 +178,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.postalCode,
+                        postalCode: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )
@@ -213,7 +213,7 @@ class ActivityViewModel : ObservableObject{
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.postalCode == postalCode {
+                if SavedNewsFromFirestore.cosntituencyId == postalCode {
                     // ✅ Cache user data instead of creating LocalUser
                     _ = await UserCache.shared.getUser(userId: SavedNewsFromFirestore.ownerUid)
                     
@@ -225,7 +225,7 @@ class ActivityViewModel : ObservableObject{
                         timestamp: SavedNewsFromFirestore.timestamp.dateValue(),
                         likesCount: SavedNewsFromFirestore.likesCount,
                         commentsCount: SavedNewsFromFirestore.commentsCount,
-                        postalCode: SavedNewsFromFirestore.postalCode,
+                        postalCode: SavedNewsFromFirestore.cosntituencyId,
                         newsImageURLs: SavedNewsFromFirestore.newsImageURLs,
                         user: nil // ✅ No LocalUser relationship
                     )

@@ -9,7 +9,7 @@ import Foundation
 import FirebaseFirestore
 
 struct ConstituencyDetails: Codable, Identifiable {
-    @DocumentID var id: String?  // Firestore doc ID
+    var id: String?  // Firestore doc ID
 
     var constituencyName: String
     var currentMLAName: String

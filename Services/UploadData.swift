@@ -74,49 +74,45 @@ struct UploadData {
     }
     
     static func uploadConstituencyJSON() {
-            guard let url = Bundle.main.url(forResource: "Constituency_detials", withExtension: "json"),
-                  let data = try? Data(contentsOf: url) else {
-                print("❌ JSON file not found or unreadable.")
-                return
-            }
-
-            do {
-                // Decode raw JSON
-                let rawArray = try JSONDecoder().decode([RawConstituency].self, from: data)
-
-                // Transform to Firestore-ready model
-                let mapped = rawArray.map { raw in
-                    ConstituencyDetails(
-                        id: nil,
-                        constituencyName: raw.constituencyName,
-                        currentMLAName: raw.currentMLAName,
-                        politicalParty: raw.politicalParty,
-                        associatedPincodes: raw.pincodeString
-                            .split(separator: ",")
-                            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                    )
-                }
-
-                let db = Firestore.firestore()
-                let collectionRef = db.collection("constituencies")
-
-                // Upload each document with auto-generated ID
-                for item in mapped {
-                    do {
-                        try collectionRef.addDocument(from: item)
-                    } catch {
-                        print("❌ Failed to upload item: \(error)")
-                    }
-                }
-
-                print("✅ Uploaded \(mapped.count) constituencies to Firestore.")
-            } catch {
-                print("❌ Error decoding JSON: \(error)")
-            }
+        guard let url = Bundle.main.url(forResource: "Constituency_detials", withExtension: "json"),
+              let data = try? Data(contentsOf: url) else {
+            print("❌ JSON file not found or unreadable.")
+            return
         }
+        do {
+            let db = Firestore.firestore()
+            let rawArray = try JSONDecoder().decode([RawConstituency].self, from: data)
+            let collectionRef = db.collection("constituencies")
+            
+            for raw in rawArray {
+                let uuid = UUID().uuidString  // Generate UUID
+                
+                let item = ConstituencyDetails(
+                    id: uuid,
+                    constituencyName: raw.constituencyName,
+                    currentMLAName: raw.currentMLAName,
+                    politicalParty: raw.politicalParty,
+                    associatedPincodes: raw.pincodeString
+                        .split(separator: ",")
+                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                )
+                
+                let docRef = collectionRef.document(uuid) // Use UUID as doc ID
+                
+                do {
+                    try docRef.setData(from: item)
+                } catch {
+                    print("❌ Failed to upload item with UUID: \(error)")
+                }
+            }
+            
+            print("✅ Uploaded \(rawArray.count) constituencies to Firestore using UUIDs.")
+        } catch {
+            print("❌ Error decoding JSON: \(error)")
+        }
+    }
 }
 
-import FirebaseFirestore
 
 func deleteCollectionIfExists(db : Firestore ,collectionName: String, completion: @escaping (Error?) -> Void) {
     let collectionRef = db.collection(collectionName)

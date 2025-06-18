@@ -9,26 +9,26 @@ import SwiftUI
 import PhotosUI
 import AVKit
 
-struct PostViewWrapper: View {
-    let pincode: String
-    let onNavigationRequested: (Bool) -> Void
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        PostView(pincode: pincode, onNavigationRequested: onNavigationRequested)
-    }
-}
+//struct PostViewWrapper: View {
+//    let pincode: String
+//    let onNavigationRequested: (Bool) -> Void
+//    @Environment(\.dismiss) private var dismiss
+//
+//    var body: some View {
+//        PostView(pincode: pincode,  onNavigationRequested: onNavigationRequested)
+//    }
+//}
 
 struct PostView: View {
     let pincode: String
-    let ConstituencyInfo: ConstituencyDetails?
+    let ConstituencyId: String
     let onNavigationRequested: ((Bool) -> Void)?
     @Environment(\.presentationMode) private var presentationMode
     @StateObject var viewModel = PostViewModel()
     
-    init(pincode: String,ConstituencyInfo: ConstituencyDetails? = nil , onNavigationRequested: ((Bool) -> Void)? = nil) {
+    init(pincode: String, ConstituencyId: String, onNavigationRequested: ((Bool) -> Void)? = nil) {
         self.pincode = pincode
-        self.ConstituencyInfo = ConstituencyInfo
+        self.ConstituencyId = ConstituencyId
         self.onNavigationRequested = onNavigationRequested
     }
     
@@ -185,7 +185,7 @@ struct PostView: View {
                 
                 Button(action: {
                     Task {
-                        await viewModel.createPost()
+                        await viewModel.createPost(constituencyId: ConstituencyId)
                     }
                 }) {
                     HStack {
@@ -324,13 +324,6 @@ struct MediaPreviewCard: View {
 }
 
 #Preview {
-    PostView(pincode: "560001")
+    PostView(pincode: "560001", ConstituencyId: "DummyConstituencyDetials.detials1")
         .preferredColorScheme(.light)
-}
-
-struct PostViewDarkPreview: PreviewProvider {
-    static var previews: some View {
-        PostView(pincode: "560001")
-            .preferredColorScheme(.dark)
-    }
 }

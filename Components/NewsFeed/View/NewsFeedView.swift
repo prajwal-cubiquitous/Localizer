@@ -193,7 +193,9 @@ struct NewsFeedView: View {
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
-            PostView(pincode: pincode)
+            if let constituency = ConstituencyInfo, let id = constituency.id {
+                PostView(pincode: pincode, ConstituencyId: id)
+            }
         }
     }
 }

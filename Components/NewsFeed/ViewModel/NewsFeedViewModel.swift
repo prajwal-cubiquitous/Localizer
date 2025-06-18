@@ -278,7 +278,7 @@ final class NewsFeedViewModel: ObservableObject {
             timestamp: news.timestamp.dateValue(),
             likesCount: news.likesCount,
             commentsCount: news.commentsCount,
-            postalCode: news.postalCode,
+            postalCode: news.cosntituencyId,
             newsImageURLs: news.newsImageURLs,
             user: nil // ✅ No LocalUser relationship for optimal performance
         )

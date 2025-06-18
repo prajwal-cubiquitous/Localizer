@@ -21,7 +21,7 @@ struct News: Identifiable, Codable, Sendable {
     let timestamp: Timestamp
     var likesCount: Int
     var commentsCount: Int
-    let postalCode: String
+    let cosntituencyId: String
     var user: User?
     var newsImageURLs: [String]?
 }
@@ -95,7 +95,7 @@ extension LocalNews {
             timestamp: news.timestamp.dateValue(),
             likesCount: news.likesCount,
             commentsCount: news.commentsCount,
-            postalCode: news.postalCode,
+            postalCode: news.cosntituencyId,
             newsImageURLs: news.newsImageURLs, // ✅ Use original URLs first
             user: user
         )
@@ -140,7 +140,7 @@ extension LocalNews {
             timestamp: Timestamp(date: self.timestamp),
             likesCount: self.likesCount,
             commentsCount: self.commentsCount,
-            postalCode: self.postalCode,
+            cosntituencyId: self.postalCode,
             user: self.user?.toUser(),
             newsImageURLs: self.newsImageURLs
         )

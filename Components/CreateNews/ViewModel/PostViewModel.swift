@@ -69,7 +69,7 @@ class PostViewModel: ObservableObject {
     
     // MARK: - Post Creation
     
-    func createPost() async {
+    func createPost(constituencyId: String) async {
         await MainActor.run {
             isPosting = true
         }
@@ -81,7 +81,7 @@ class PostViewModel: ObservableObject {
                  try await uploadMultipleImages(caption: caption)
 //                try await uploadNews(caption: caption)
             } else {
-                try await uploadNews(caption: caption)
+                try await uploadNews(caption: caption, cosntituencyId : constituencyId)
             }
             
             await MainActor.run {
@@ -137,19 +137,15 @@ class PostViewModel: ObservableObject {
 //        try await uploadNews(caption: caption)
     }
     
-    func uploadNews(caption: String) async throws {
+    func uploadNews(caption: String, cosntituencyId : String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        
-        // Get current location
-        let currentPincode = await getCurrentPincode()
         
         let news = News(ownerUid: uid,
                         caption: caption,
                         timestamp: Timestamp(),
                         likesCount: 0,
                         commentsCount: 0,
-                        postalCode: currentPincode)
+                        cosntituencyId: cosntituencyId)
         
         try await NewsService.uploadNews(news)
         
@@ -169,7 +165,7 @@ class PostViewModel: ObservableObject {
                         timestamp: Timestamp(),
                         likesCount: 0,
                         commentsCount: 0,
-                        postalCode: currentPincode,
+                        cosntituencyId: currentPincode,
                         newsImageURLs: imageURLS)
         
         
