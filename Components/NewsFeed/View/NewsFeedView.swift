@@ -33,52 +33,78 @@ struct NewsFeedView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                if newsItems.isEmpty {
-                    // Empty State
-                    VStack(spacing: 24) {
-                        Image(systemName: "square.and.pencil")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .foregroundStyle(.secondary)
-                        
-                        Text("Be the first to post!")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .multilineTextAlignment(.center)
-                        
-                        Button {
-                            showCreatePostSheet = true
-                        } label: {
-                            Text("Create Post")
-                                .font(.headline)
-                                .padding(.horizontal, 32)
-                                .padding(.vertical, 12)
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .clipShape(Capsule())
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
-                } else {
-                    // News Feed Content
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(newsItems) { item in
-                                NewsCell(localNews: item)
-                                    .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
-                                    .padding(.bottom, 8) // Space between news items
+            ZStack {
+                Group {
+                    if newsItems.isEmpty {
+                        // Empty State
+                        VStack(spacing: 24) {
+                            Image(systemName: "square.and.pencil")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 80, height: 80)
+                                .foregroundStyle(.secondary)
+                            
+                            Text("Be the first to post!")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .multilineTextAlignment(.center)
+                            
+                            Button {
+                                showCreatePostSheet = true
+                            } label: {
+                                Text("Create Post")
+                                    .font(.headline)
+                                    .padding(.horizontal, 32)
+                                    .padding(.vertical, 12)
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .clipShape(Capsule())
                             }
                         }
-                        .padding(.top, 8) // Top spacing from navigation
-                        .padding(.bottom, 20) // Bottom spacing for safe area
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                    } else {
+                        // News Feed Content
+                        ScrollView {
+                            LazyVStack(spacing: 0) {
+                                ForEach(newsItems) { item in
+                                    NewsCell(localNews: item)
+                                        .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
+                                        .padding(.bottom, 8) // Space between news items
+                                }
+                            }
+                            .padding(.top, 8) // Top spacing from navigation
+                            .padding(.bottom, 20) // Bottom spacing for safe area
+                        }
+                        .scrollIndicators(.hidden) // Clean modern look
+                        .refreshable {
+                            await viewModel.refresh(for: constituencyId, context: modelContext)
+                        }
                     }
-                    .scrollIndicators(.hidden) // Clean modern look
-                    .refreshable {
-                        await viewModel.refresh(for: constituencyId, context: modelContext)
+                }
+                
+                // Floating Action Button (Plus Button)
+                if !newsItems.isEmpty {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button {
+                                showCreatePostSheet = true
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(width: 56, height: 56)
+                                    .background(Color.blue)
+                                    .clipShape(Circle())
+                                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                            }
+                            .padding(.trailing, 20)
+                            .padding(.bottom, 20)
+                        }
                     }
                 }
             }

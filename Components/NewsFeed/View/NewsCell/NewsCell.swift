@@ -17,6 +17,7 @@ import FirebaseStorage
 
 struct NewsCell: View {
     @State private var showingCommentsSheet = false
+    @State private var showingFullScreenMedia = false
     @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
     
@@ -33,6 +34,11 @@ struct NewsCell: View {
             return nil
         }
         return URL(string: profileImageUrl)
+    }
+    
+    private var hasMedia: Bool {
+        guard let imageUrls = localNews.newsImageURLs else { return false }
+        return !imageUrls.isEmpty
     }
     
     // Responsive padding based on device size
@@ -85,16 +91,19 @@ struct NewsCell: View {
                         Label(viewModel.savedByCurrentUser ? "Unsave Post" : "Save Post", systemImage: viewModel.savedByCurrentUser ? "bookmark.slash" :"bookmark")
                     }
                     
+                    // Show maximize option only when media is available
+                    if hasMedia {
+                        Button {
+                            showingFullScreenMedia = true
+                        } label: {
+                            Label("Maximize", systemImage: "arrow.up.left.and.arrow.down.right")
+                        }
+                    }
+                    
                     Button {
                         // Don't recommend action
                     } label: {
                         Label("Don't Recommend", systemImage: "hand.thumbsdown")
-                    }
-                    
-                    Button {
-                        // Maximize action
-                    } label: {
-                        Label("Maximize", systemImage: "arrow.up.left.and.arrow.down.right")
                     }
                     
                     Button(role: .destructive) {
@@ -125,6 +134,9 @@ struct NewsCell: View {
             if let imageUrls = localNews.newsImageURLs, !imageUrls.isEmpty {
                 MediaGalleryView(mediaURLs: imageUrls)
                     .padding(.vertical, 4)
+                    .onTapGesture {
+                        showingFullScreenMedia = true
+                    }
             }
             
             // Interaction Buttons
@@ -218,6 +230,11 @@ struct NewsCell: View {
             CommentsView(localNews: localNews)
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
+        .fullScreenCover(isPresented: $showingFullScreenMedia) {
+            if let imageUrls = localNews.newsImageURLs, !imageUrls.isEmpty {
+                FullScreenMediaViewer(mediaURLs: imageUrls)
+            }
+        }
     }
     
     // MARK: - Voting Functions
@@ -227,6 +244,206 @@ struct NewsCell: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: localNews.timestamp, relativeTo: Date())
+    }
+}
+
+// MARK: - Full Screen Media Viewer
+struct FullScreenMediaViewer: View {
+    let mediaURLs: [String]
+    @Environment(\.dismiss) private var dismiss
+    @State private var currentIndex = 0
+    @State private var dragOffset = CGSize.zero
+    @State private var isDragging = false
+    
+    private var isVideo: Bool {
+        guard currentIndex < mediaURLs.count else { return false }
+        let urlString = mediaURLs[currentIndex].lowercased()
+        let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm"]
+        return videoExtensions.contains { ext in
+            urlString.contains(".\(ext)") || urlString.range(of: "\\.\\(ext)[?&#]", options: .regularExpression) != nil
+        } || urlString.contains("news_videos")
+    }
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            VStack {
+                // Header with close button and counter
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                    }
+                    
+                    Spacer()
+                    
+                    if mediaURLs.count > 1 {
+                        Text("\(currentIndex + 1) of \(mediaURLs.count)")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Capsule())
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                
+                Spacer()
+                
+                // Media Content
+                TabView(selection: $currentIndex) {
+                    ForEach(Array(mediaURLs.enumerated()), id: \.offset) { index, urlString in
+                        FullScreenMediaItem(urlString: urlString)
+                            .tag(index)
+                    }
+                }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            if abs(value.translation.height) > abs(value.translation.width) {
+                                dragOffset = value.translation
+                                isDragging = true
+                            }
+                        }
+                        .onEnded { value in
+                            if abs(value.translation.height) > 100 {
+                                dismiss()
+                            } else {
+                                withAnimation(.spring()) {
+                                    dragOffset = .zero
+                                    isDragging = false
+                                }
+                            }
+                        }
+                )
+                .offset(y: dragOffset.height)
+                .scaleEffect(isDragging ? 0.9 : 1.0)
+                .animation(.spring(), value: isDragging)
+                
+                Spacer()
+                
+                // Page indicators for multiple media
+                if mediaURLs.count > 1 {
+                    HStack(spacing: 8) {
+                        ForEach(0..<mediaURLs.count, id: \.self) { index in
+                            Circle()
+                                .fill(index == currentIndex ? Color.white : Color.white.opacity(0.5))
+                                .frame(width: 10, height: 10)
+                        }
+                    }
+                    .padding(.bottom, 30)
+                }
+            }
+        }
+        .statusBarHidden()
+    }
+}
+
+// MARK: - Full Screen Media Item
+struct FullScreenMediaItem: View {
+    let urlString: String
+    @State private var player: AVPlayer?
+    @State private var isVideoReady = false
+    
+    private var isVideo: Bool {
+        let lowercaseURL = urlString.lowercased()
+        let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm"]
+        return videoExtensions.contains { ext in
+            lowercaseURL.contains(".\(ext)") || lowercaseURL.range(of: "\\.\\(ext)[?&#]", options: .regularExpression) != nil
+        } || lowercaseURL.contains("news_videos")
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            if isVideo {
+                ZStack {
+                    if let player = player, isVideoReady {
+                        VideoPlayer(player: player)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .clipped()
+                    } else {
+                        // Loading state for video
+                        Rectangle()
+                            .fill(Color.clear)
+                            .overlay(
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(1.5)
+                            )
+                    }
+                }
+                .onAppear {
+                    setupVideoPlayer()
+                }
+                .onDisappear {
+                    player?.pause()
+                }
+            } else {
+                // Image
+                AsyncImage(url: URL(string: urlString)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } placeholder: {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+        }
+    }
+    
+    private func setupVideoPlayer() {
+        guard let url = URL(string: urlString) else { return }
+        
+        Task {
+            do {
+                // Download video if needed
+                let fileExtension = extractFileExtension(from: urlString)
+                let fileName = "\(UUID().uuidString).\(fileExtension)"
+                let localURL = try await MediaHandler.downloadMedia(from: url, fileName: fileName)
+                
+                await MainActor.run {
+                    let asset = AVURLAsset(url: localURL)
+                    let playerItem = AVPlayerItem(asset: asset)
+                    player = AVPlayer(playerItem: playerItem)
+                    player?.isMuted = false // Allow sound in full screen
+                    isVideoReady = true
+                }
+            } catch {
+                print("❌ Failed to setup video player: \(error)")
+            }
+        }
+    }
+    
+    private func extractFileExtension(from urlString: String) -> String {
+        if let url = URL(string: urlString) {
+            let pathExtension = url.pathExtension
+            if !pathExtension.isEmpty {
+                return pathExtension
+            }
+        }
+        
+        let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm"]
+        for ext in videoExtensions {
+            if urlString.lowercased().contains(".\(ext)") {
+                return ext
+            }
+        }
+        
+        return "mov"
     }
 }
 
