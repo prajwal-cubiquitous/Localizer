@@ -348,22 +348,32 @@ struct MediaPreviewCard: View {
                         .clipped()
                         .cornerRadius(12)
                     
-                    // Edit overlay
+                    // Remove button (top-right)
                     VStack {
                         HStack {
                             Spacer()
                             Button {
-                                onEdit(image)
+                                onRemove()
                             } label: {
-                                Image(systemName: "pencil.circle.fill")
+                                Image(systemName: "xmark.circle.fill")
                                     .font(.title3)
                                     .foregroundColor(.white)
-                                    .background(Circle().fill(Color.blue))
+                                    .background(Circle().fill(Color.red))
                             }
                         }
                         Spacer()
                     }
                     .padding(6)
+                    
+                    // Edit button (center)
+                    Button {
+                        onEdit(image)
+                    } label: {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .background(Circle().fill(Color.blue))
+                    }
                 }
                 .contextMenu {
                     Button("Edit Image") {
@@ -435,12 +445,13 @@ struct MediaPreviewCard: View {
     }
 }
 
-// MARK: - Simple Image Editor
+// MARK: - Advanced Image Editor
 struct ImageEditorView: View {
     let image: UIImage
     let onSave: (UIImage) -> Void
     let onCancel: () -> Void
     
+    @State private var currentImage: UIImage
     @State private var scale: CGFloat = 1.0
     @State private var offset = CGSize.zero
     @State private var brightness: Double = 0
@@ -448,183 +459,143 @@ struct ImageEditorView: View {
     @State private var saturation: Double = 1
     @State private var lastScaleValue: CGFloat = 1.0
     @State private var lastOffset = CGSize.zero
+    @State private var rotation: Double = 0
+    @State private var selectedAspectRatio: AspectRatio = .original
+    @State private var cropRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+    @State private var isCropMode = false
+    @State private var selectedTab = 0
+    
+    enum AspectRatio: String, CaseIterable {
+        case original = "Original"
+        case square = "1:1"
+        case portrait = "4:5"
+        case landscape = "16:9"
+        case story = "9:16"
+        
+        var ratio: CGFloat? {
+            switch self {
+            case .original: return nil
+            case .square: return 1.0
+            case .portrait: return 4.0/5.0
+            case .landscape: return 16.0/9.0
+            case .story: return 9.0/16.0
+            }
+        }
+    }
+    
+    init(image: UIImage, onSave: @escaping (UIImage) -> Void, onCancel: @escaping () -> Void) {
+        self.image = image
+        self.onSave = onSave
+        self.onCancel = onCancel
+        self._currentImage = State(initialValue: image)
+    }
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Image preview section
-                    VStack(spacing: 16) {
-                        Text("Preview")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
+            VStack(spacing: 0) {
+                // Image preview section
+                GeometryReader { geometry in
+                    ZStack {
+                        Color.black.opacity(0.9)
                         
-                        GeometryReader { geometry in
-                            Image(uiImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .scaleEffect(scale)
-                                .offset(offset)
-                                .brightness(brightness)
-                                .contrast(contrast)
-                                .saturation(saturation)
-                                .clipped()
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                .background(Color.black.opacity(0.1))
-                                .gesture(
-                                    SimultaneousGesture(
-                                        MagnificationGesture()
-                                            .onChanged { value in
-                                                let delta = value / lastScaleValue
-                                                lastScaleValue = value
-                                                scale = max(0.5, min(3.0, scale * delta))
-                                            }
-                                            .onEnded { _ in
-                                                lastScaleValue = 1.0
-                                            },
-                                        DragGesture()
-                                            .onChanged { value in
-                                                offset = CGSize(
-                                                    width: lastOffset.width + value.translation.width,
-                                                    height: lastOffset.height + value.translation.height
-                                                )
-                                            }
-                                            .onEnded { _ in
-                                                lastOffset = offset
-                                            }
-                                    )
+                        Image(uiImage: currentImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .scaleEffect(scale)
+                            .offset(offset)
+                            .rotationEffect(.degrees(rotation))
+                            .brightness(brightness)
+                            .contrast(contrast)
+                            .saturation(saturation)
+                            .clipped()
+                            .overlay(
+                                // Crop overlay
+                                isCropMode ? 
+                                CropOverlayView(
+                                    aspectRatio: selectedAspectRatio.ratio,
+                                    imageSize: currentImage.size,
+                                    containerSize: geometry.size
+                                ) : nil
+                            )
+                            .gesture(
+                                SimultaneousGesture(
+                                    MagnificationGesture()
+                                        .onChanged { value in
+                                            let delta = value / lastScaleValue
+                                            lastScaleValue = value
+                                            scale = max(0.5, min(3.0, scale * delta))
+                                        }
+                                        .onEnded { _ in
+                                            lastScaleValue = 1.0
+                                        },
+                                    DragGesture()
+                                        .onChanged { value in
+                                            offset = CGSize(
+                                                width: lastOffset.width + value.translation.width,
+                                                height: lastOffset.height + value.translation.height
+                                            )
+                                        }
+                                        .onEnded { _ in
+                                            lastOffset = offset
+                                        }
                                 )
-                        }
-                        .frame(height: 250)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
-                        .padding(.horizontal, 20)
+                            )
                     }
-                    
-                    // Reset button
-                    HStack {
-                        Spacer()
-                        Button("Reset") {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                scale = 1.0
-                                offset = .zero
-                                brightness = 0
-                                contrast = 1
-                                saturation = 1
-                                lastOffset = .zero
-                                lastScaleValue = 1.0
+                }
+                .frame(height: 400)
+                
+                // Tab selection
+                Picker("Edit Mode", selection: $selectedTab) {
+                    Text("Adjust").tag(0)
+                    Text("Crop").tag(1)
+                    Text("Rotate").tag(2)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .onChange(of: selectedTab) { newValue in
+                    isCropMode = (newValue == 1)
+                }
+                
+                // Controls based on selected tab
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if selectedTab == 0 {
+                            // Adjustment controls
+                            adjustmentControls
+                        } else if selectedTab == 1 {
+                            // Crop controls
+                            cropControls
+                        } else {
+                            // Rotation controls
+                            rotationControls
+                        }
+                        
+                        // Reset button
+                        HStack {
+                            Button("Reset All") {
+                                resetAll()
                             }
-                        }
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                        .padding(.trailing, 20)
-                    }
-                    
-                    // Editing controls
-                    VStack(spacing: 24) {
-                        Text("Adjustments")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(.red)
                             .padding(.horizontal, 20)
-                        
-                        VStack(spacing: 20) {
-                            // Brightness
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Image(systemName: "sun.max")
-                                        .foregroundColor(.orange)
-                                        .frame(width: 20)
-                                    Text("Brightness")
-                                        .font(.subheadline)
-                                    Spacer()
-                                    Text("\(Int(brightness * 100))")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .frame(width: 30)
-                                }
-                                Slider(value: $brightness, in: -0.5...0.5)
-                                    .accentColor(.orange)
-                            }
+                            .padding(.vertical, 10)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(8)
                             
-                            // Contrast
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Image(systemName: "circle.lefthalf.filled")
-                                        .foregroundColor(.purple)
-                                        .frame(width: 20)
-                                    Text("Contrast")
-                                        .font(.subheadline)
-                                    Spacer()
-                                    Text("\(Int(contrast * 100))")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .frame(width: 30)
-                                }
-                                Slider(value: $contrast, in: 0.5...2.0)
-                                    .accentColor(.purple)
-                            }
+                            Spacer()
                             
-                            // Saturation
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Image(systemName: "paintbrush.fill")
-                                        .foregroundColor(.pink)
-                                        .frame(width: 20)
-                                    Text("Saturation")
-                                        .font(.subheadline)
-                                    Spacer()
-                                    Text("\(Int(saturation * 100))")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .frame(width: 30)
-                                }
-                                Slider(value: $saturation, in: 0...2.0)
-                                    .accentColor(.pink)
+                            Button("Reset Current") {
+                                resetCurrent()
                             }
-                            
-                            // Scale
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Image(systemName: "magnifyingglass")
-                                        .foregroundColor(.blue)
-                                        .frame(width: 20)
-                                    Text("Zoom")
-                                        .font(.subheadline)
-                                    Spacer()
-                                    Text("\(Int(scale * 100))%")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .frame(width: 30)
-                                }
-                                Slider(value: $scale, in: 0.5...3.0)
-                                    .accentColor(.blue)
-                            }
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
                         }
                         .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
-                        .background(Color(UIColor.systemGroupedBackground))
-                        .cornerRadius(12)
-                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
                     }
-                    
-                    // Instructions
-                    VStack(spacing: 8) {
-                        Text("Instructions")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("• Pinch to zoom in/out")
-                            Text("• Drag to move the image")
-                            Text("• Use sliders to adjust colors")
-                        }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("Edit Image")
@@ -639,7 +610,7 @@ struct ImageEditorView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        let editedImage = applyFilters(to: image)
+                        let editedImage = applyAllEdits()
                         onSave(editedImage)
                     }
                     .foregroundColor(.blue)
@@ -650,13 +621,338 @@ struct ImageEditorView: View {
         }
     }
     
-    private func applyFilters(to image: UIImage) -> UIImage {
+    // MARK: - Adjustment Controls
+    private var adjustmentControls: some View {
+        VStack(spacing: 20) {
+            Text("Color Adjustments")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+            
+            VStack(spacing: 16) {
+                // Brightness
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "sun.max")
+                            .foregroundColor(.orange)
+                            .frame(width: 20)
+                        Text("Brightness")
+                            .font(.subheadline)
+                        Spacer()
+                        Text("\(Int(brightness * 100))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 40)
+                    }
+                    Slider(value: $brightness, in: -0.5...0.5)
+                        .accentColor(.orange)
+                }
+                
+                // Contrast
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "circle.lefthalf.filled")
+                            .foregroundColor(.purple)
+                            .frame(width: 20)
+                        Text("Contrast")
+                            .font(.subheadline)
+                        Spacer()
+                        Text("\(Int(contrast * 100))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 40)
+                    }
+                    Slider(value: $contrast, in: 0.5...2.0)
+                        .accentColor(.purple)
+                }
+                
+                // Saturation
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "paintbrush.fill")
+                            .foregroundColor(.pink)
+                            .frame(width: 20)
+                        Text("Saturation")
+                            .font(.subheadline)
+                        Spacer()
+                        Text("\(Int(saturation * 100))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 40)
+                    }
+                    Slider(value: $saturation, in: 0...2.0)
+                        .accentColor(.pink)
+                }
+                
+                // Scale
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.blue)
+                            .frame(width: 20)
+                        Text("Zoom")
+                            .font(.subheadline)
+                        Spacer()
+                        Text("\(Int(scale * 100))%")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 40)
+                    }
+                    Slider(value: $scale, in: 0.5...3.0)
+                        .accentColor(.blue)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(Color(UIColor.systemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    // MARK: - Crop Controls
+    private var cropControls: some View {
+        VStack(spacing: 20) {
+            Text("Aspect Ratio")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+            
+            VStack(spacing: 16) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
+                    ForEach(AspectRatio.allCases, id: \.self) { ratio in
+                        Button {
+                            selectedAspectRatio = ratio
+                        } label: {
+                            VStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(selectedAspectRatio == ratio ? Color.blue : Color.gray.opacity(0.3))
+                                    .frame(width: 50, height: ratio == .landscape ? 28 : ratio == .story ? 90 : ratio == .portrait ? 62 : 50)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.primary.opacity(0.2), lineWidth: 1)
+                                    )
+                                
+                                Text(ratio.rawValue)
+                                    .font(.caption)
+                                    .foregroundColor(selectedAspectRatio == ratio ? .blue : .primary)
+                            }
+                        }
+                    }
+                }
+                
+                Button("Apply Crop") {
+                    applyCrop()
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 30)
+                .padding(.vertical, 12)
+                .background(Color.blue)
+                .cornerRadius(8)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(Color(UIColor.systemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    // MARK: - Rotation Controls
+    private var rotationControls: some View {
+        VStack(spacing: 20) {
+            Text("Rotation")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+            
+            VStack(spacing: 16) {
+                // Rotation slider
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "rotate.right")
+                            .foregroundColor(.green)
+                            .frame(width: 20)
+                        Text("Angle")
+                            .font(.subheadline)
+                        Spacer()
+                        Text("\(Int(rotation))°")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 40)
+                    }
+                    Slider(value: $rotation, in: -180...180)
+                        .accentColor(.green)
+                }
+                
+                // Quick rotation buttons
+                HStack(spacing: 20) {
+                    Button("↺ 90°") {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            rotation -= 90
+                            if rotation < -180 { rotation += 360 }
+                        }
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                    
+                    Button("↻ 90°") {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            rotation += 90
+                            if rotation > 180 { rotation -= 360 }
+                        }
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                    
+                    Button("180°") {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            rotation += 180
+                            if rotation > 180 { rotation -= 360 }
+                        }
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(Color(UIColor.systemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    // MARK: - Helper Functions
+    private func resetAll() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            scale = 1.0
+            offset = .zero
+            brightness = 0
+            contrast = 1
+            saturation = 1
+            rotation = 0
+            selectedAspectRatio = .original
+            lastOffset = .zero
+            lastScaleValue = 1.0
+            currentImage = image
+        }
+    }
+    
+    private func resetCurrent() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            switch selectedTab {
+            case 0: // Adjustments
+                brightness = 0
+                contrast = 1
+                saturation = 1
+                scale = 1.0
+                offset = .zero
+                lastOffset = .zero
+                lastScaleValue = 1.0
+            case 1: // Crop
+                selectedAspectRatio = .original
+            case 2: // Rotation
+                rotation = 0
+            default:
+                break
+            }
+        }
+    }
+    
+    private func applyCrop() {
+        // Apply the current crop settings to the image
+        if let croppedImage = cropImage(currentImage, aspectRatio: selectedAspectRatio.ratio) {
+            currentImage = croppedImage
+            // Reset transform values after crop
+            scale = 1.0
+            offset = .zero
+            lastOffset = .zero
+            lastScaleValue = 1.0
+        }
+    }
+    
+    private func cropImage(_ image: UIImage, aspectRatio: CGFloat?) -> UIImage? {
+        guard let aspectRatio = aspectRatio else { return image }
+        
+        let imageSize = image.size
+        let imageAspectRatio = imageSize.width / imageSize.height
+        
+        var cropSize: CGSize
+        
+        if imageAspectRatio > aspectRatio {
+            // Image is wider than target ratio
+            cropSize = CGSize(width: imageSize.height * aspectRatio, height: imageSize.height)
+        } else {
+            // Image is taller than target ratio
+            cropSize = CGSize(width: imageSize.width, height: imageSize.width / aspectRatio)
+        }
+        
+        let cropRect = CGRect(
+            x: (imageSize.width - cropSize.width) / 2,
+            y: (imageSize.height - cropSize.height) / 2,
+            width: cropSize.width,
+            height: cropSize.height
+        )
+        
+        guard let cgImage = image.cgImage?.cropping(to: cropRect) else { return nil }
+        return UIImage(cgImage: cgImage)
+    }
+    
+    private func applyAllEdits() -> UIImage {
+        var editedImage = currentImage
+        
+        // Apply rotation
+        if rotation != 0 {
+            editedImage = rotateImage(editedImage, degrees: rotation) ?? editedImage
+        }
+        
+        // Apply color adjustments
+        editedImage = applyColorFilters(to: editedImage)
+        
+        return editedImage
+    }
+    
+    private func rotateImage(_ image: UIImage, degrees: Double) -> UIImage? {
+        let radians = degrees * .pi / 180
+        
+        var newSize = CGRect(origin: CGPoint.zero, size: image.size)
+            .applying(CGAffineTransform(rotationAngle: CGFloat(radians)))
+            .size
+        
+        newSize.width = floor(newSize.width)
+        newSize.height = floor(newSize.height)
+        
+        UIGraphicsBeginImageContextWithOptions(newSize, false, image.scale)
+        let context = UIGraphicsGetCurrentContext()!
+        
+        context.translateBy(x: newSize.width/2, y: newSize.height/2)
+        context.rotate(by: CGFloat(radians))
+        
+        image.draw(in: CGRect(x: -image.size.width/2, y: -image.size.height/2, width: image.size.width, height: image.size.height))
+        
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage
+    }
+    
+    private func applyColorFilters(to image: UIImage) -> UIImage {
         guard let ciImage = CIImage(image: image) else { return image }
         
         let context = CIContext()
         var filteredImage = ciImage
         
-        // Apply all filters in one go for better performance
+        // Apply color adjustments
         let colorFilter = CIFilter(name: "CIColorControls")!
         colorFilter.setValue(filteredImage, forKey: kCIInputImageKey)
         colorFilter.setValue(brightness, forKey: kCIInputBrightnessKey)
@@ -669,6 +965,53 @@ struct ImageEditorView: View {
         }
         
         return image
+    }
+}
+
+// MARK: - Crop Overlay View
+struct CropOverlayView: View {
+    let aspectRatio: CGFloat?
+    let imageSize: CGSize
+    let containerSize: CGSize
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Dark overlay
+                Color.black.opacity(0.5)
+                
+                // Clear crop area
+                if let aspectRatio = aspectRatio {
+                    let cropSize = calculateCropSize(containerSize: geometry.size, aspectRatio: aspectRatio)
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(width: cropSize.width, height: cropSize.height)
+                        .overlay(
+                            Rectangle()
+                                .stroke(Color.white, lineWidth: 2)
+                                .background(Color.clear)
+                        )
+                        .blendMode(.destinationOut)
+                }
+            }
+            .compositingGroup()
+        }
+    }
+    
+    private func calculateCropSize(containerSize: CGSize, aspectRatio: CGFloat) -> CGSize {
+        let containerAspectRatio = containerSize.width / containerSize.height
+        
+        if containerAspectRatio > aspectRatio {
+            // Container is wider than crop ratio
+            let height = containerSize.height * 0.8
+            let width = height * aspectRatio
+            return CGSize(width: width, height: height)
+        } else {
+            // Container is taller than crop ratio
+            let width = containerSize.width * 0.8
+            let height = width / aspectRatio
+            return CGSize(width: width, height: height)
+        }
     }
 }
 
