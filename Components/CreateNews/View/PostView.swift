@@ -340,17 +340,36 @@ struct MediaPreviewCard: View {
             // Media Content
             switch item {
             case .image(let image):
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 100, height: 100)
-                    .clipped()
-                    .cornerRadius(12)
-                    .contextMenu {
-                        Button("Edit Image") {
-                            onEdit(image)
+                ZStack {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 100, height: 100)
+                        .clipped()
+                        .cornerRadius(12)
+                    
+                    // Edit overlay
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button {
+                                onEdit(image)
+                            } label: {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.white)
+                                    .background(Circle().fill(Color.blue))
+                            }
                         }
+                        Spacer()
                     }
+                    .padding(6)
+                }
+                .contextMenu {
+                    Button("Edit Image") {
+                        onEdit(image)
+                    }
+                }
                 
             case .video(let url, let thumbnail):
                 ZStack {
@@ -422,102 +441,191 @@ struct ImageEditorView: View {
     let onSave: (UIImage) -> Void
     let onCancel: () -> Void
     
-    @State private var cropRect = CGRect(x: 0, y: 0, width: 1, height: 1)
     @State private var scale: CGFloat = 1.0
     @State private var offset = CGSize.zero
     @State private var brightness: Double = 0
     @State private var contrast: Double = 1
     @State private var saturation: Double = 1
+    @State private var lastScaleValue: CGFloat = 1.0
+    @State private var lastOffset = CGSize.zero
     
     var body: some View {
         NavigationView {
-            VStack {
-                // Image preview
-                GeometryReader { geometry in
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .scaleEffect(scale)
-                        .offset(offset)
-                        .brightness(brightness)
-                        .contrast(contrast)
-                        .saturation(saturation)
-                        .clipped()
-                        .gesture(
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    scale = max(0.5, min(3.0, value))
-                                }
-                        )
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    offset = value.translation
-                                }
-                        )
-                }
-                .frame(height: 300)
-                .background(Color.black)
-                .cornerRadius(12)
-                
-                // Editing controls
+            ScrollView {
                 VStack(spacing: 20) {
-                    // Brightness
-                    VStack {
-                        HStack {
-                            Text("Brightness")
-                                .font(.caption)
-                            Spacer()
-                            Text("\(Int(brightness * 100))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                    // Image preview section
+                    VStack(spacing: 16) {
+                        Text("Preview")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 20)
+                        
+                        GeometryReader { geometry in
+                            Image(uiImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .scaleEffect(scale)
+                                .offset(offset)
+                                .brightness(brightness)
+                                .contrast(contrast)
+                                .saturation(saturation)
+                                .clipped()
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .background(Color.black.opacity(0.1))
+                                .gesture(
+                                    SimultaneousGesture(
+                                        MagnificationGesture()
+                                            .onChanged { value in
+                                                let delta = value / lastScaleValue
+                                                lastScaleValue = value
+                                                scale = max(0.5, min(3.0, scale * delta))
+                                            }
+                                            .onEnded { _ in
+                                                lastScaleValue = 1.0
+                                            },
+                                        DragGesture()
+                                            .onChanged { value in
+                                                offset = CGSize(
+                                                    width: lastOffset.width + value.translation.width,
+                                                    height: lastOffset.height + value.translation.height
+                                                )
+                                            }
+                                            .onEnded { _ in
+                                                lastOffset = offset
+                                            }
+                                    )
+                                )
                         }
-                        Slider(value: $brightness, in: -0.5...0.5)
+                        .frame(height: 250)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal, 20)
                     }
                     
-                    // Contrast
-                    VStack {
-                        HStack {
-                            Text("Contrast")
-                                .font(.caption)
-                            Spacer()
-                            Text("\(Int(contrast * 100))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                    // Reset button
+                    HStack {
+                        Spacer()
+                        Button("Reset") {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                scale = 1.0
+                                offset = .zero
+                                brightness = 0
+                                contrast = 1
+                                saturation = 1
+                                lastOffset = .zero
+                                lastScaleValue = 1.0
+                            }
                         }
-                        Slider(value: $contrast, in: 0.5...2.0)
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .padding(.trailing, 20)
                     }
                     
-                    // Saturation
-                    VStack {
-                        HStack {
-                            Text("Saturation")
-                                .font(.caption)
-                            Spacer()
-                            Text("\(Int(saturation * 100))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                    // Editing controls
+                    VStack(spacing: 24) {
+                        Text("Adjustments")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 20)
+                        
+                        VStack(spacing: 20) {
+                            // Brightness
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Image(systemName: "sun.max")
+                                        .foregroundColor(.orange)
+                                        .frame(width: 20)
+                                    Text("Brightness")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(brightness * 100))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 30)
+                                }
+                                Slider(value: $brightness, in: -0.5...0.5)
+                                    .accentColor(.orange)
+                            }
+                            
+                            // Contrast
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Image(systemName: "circle.lefthalf.filled")
+                                        .foregroundColor(.purple)
+                                        .frame(width: 20)
+                                    Text("Contrast")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(contrast * 100))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 30)
+                                }
+                                Slider(value: $contrast, in: 0.5...2.0)
+                                    .accentColor(.purple)
+                            }
+                            
+                            // Saturation
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Image(systemName: "paintbrush.fill")
+                                        .foregroundColor(.pink)
+                                        .frame(width: 20)
+                                    Text("Saturation")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(saturation * 100))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 30)
+                                }
+                                Slider(value: $saturation, in: 0...2.0)
+                                    .accentColor(.pink)
+                            }
+                            
+                            // Scale
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Image(systemName: "magnifyingglass")
+                                        .foregroundColor(.blue)
+                                        .frame(width: 20)
+                                    Text("Zoom")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(scale * 100))%")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 30)
+                                }
+                                Slider(value: $scale, in: 0.5...3.0)
+                                    .accentColor(.blue)
+                            }
                         }
-                        Slider(value: $saturation, in: 0...2.0)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                        .background(Color(UIColor.systemGroupedBackground))
+                        .cornerRadius(12)
+                        .padding(.horizontal, 20)
                     }
                     
-                    // Scale
-                    VStack {
-                        HStack {
-                            Text("Zoom")
-                                .font(.caption)
-                            Spacer()
-                            Text("\(Int(scale * 100))%")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                    // Instructions
+                    VStack(spacing: 8) {
+                        Text("Instructions")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("• Pinch to zoom in/out")
+                            Text("• Drag to move the image")
+                            Text("• Use sliders to adjust colors")
                         }
-                        Slider(value: $scale, in: 0.5...3.0)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                
-                Spacer()
             }
             .navigationTitle("Edit Image")
             .navigationBarTitleDisplayMode(.inline)
@@ -526,6 +634,7 @@ struct ImageEditorView: View {
                     Button("Cancel") {
                         onCancel()
                     }
+                    .foregroundColor(.red)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -533,8 +642,11 @@ struct ImageEditorView: View {
                         let editedImage = applyFilters(to: image)
                         onSave(editedImage)
                     }
+                    .foregroundColor(.blue)
+                    .fontWeight(.semibold)
                 }
             }
+            .background(Color(UIColor.systemBackground))
         }
     }
     
@@ -544,19 +656,10 @@ struct ImageEditorView: View {
         let context = CIContext()
         var filteredImage = ciImage
         
-        // Apply brightness
-        if brightness != 0 {
-            let brightnessFilter = CIFilter(name: "CIColorControls")!
-            brightnessFilter.setValue(filteredImage, forKey: kCIInputImageKey)
-            brightnessFilter.setValue(brightness, forKey: kCIInputBrightnessKey)
-            if let output = brightnessFilter.outputImage {
-                filteredImage = output
-            }
-        }
-        
-        // Apply contrast and saturation
+        // Apply all filters in one go for better performance
         let colorFilter = CIFilter(name: "CIColorControls")!
         colorFilter.setValue(filteredImage, forKey: kCIInputImageKey)
+        colorFilter.setValue(brightness, forKey: kCIInputBrightnessKey)
         colorFilter.setValue(contrast, forKey: kCIInputContrastKey)
         colorFilter.setValue(saturation, forKey: kCIInputSaturationKey)
         
