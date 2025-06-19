@@ -336,7 +336,7 @@ struct TabButtonforDataView: View {
                 Text(title)
                     .font(.system(size: 16, weight: .medium))
             }
-            .foregroundStyle(isSelected ? Color("primaryOpposite") : .primary)
+            .foregroundStyle(isSelected ? Color(Constants.primaryOppositeColor) : .primary)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .background {
@@ -417,7 +417,7 @@ struct ModernDataCard: View {
                     }
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundStyle(Color("primaryOpposite"))
+                    .foregroundStyle(Color(Constants.primaryOppositeColor))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(.primary)
@@ -461,7 +461,7 @@ struct EmptyStateView: View {
                 }label: {
                     Text("Try Again")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(Color("primaryOpposite"))
+                        .foregroundColor(Color(Constants.primaryOppositeColor))
                         .frame(width: 120, height: 32)
                         .background(Color.primary)
                         .clipShape(Capsule())

@@ -57,7 +57,7 @@ final class NewsFeedViewModel: ObservableObject {
         let snapshot = try await query.getDocuments()
         return snapshot.documents.compactMap { doc in
             try? doc.data(as: News.self)
-        }
+        } 
     }
     
     // MARK: ‑ SwiftData caching

@@ -29,6 +29,7 @@ struct PostView: View {
     @State private var showingImageEditor = false
     @State private var imageToEdit: UIImage?
     @State private var editingImageIndex: Int?
+    @State private var keyboardHeight: CGFloat = 0
     
     init(ConstituencyId: String, onNavigationRequested: ((Bool) -> Void)? = nil) {
         self.ConstituencyId = ConstituencyId
@@ -78,125 +79,127 @@ struct PostView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Header
-                    VStack(spacing: 16) {
-                        // Caption Input
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("What's happening?")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                
-                                Text("\(viewModel.caption.count)/500")
-                                    .font(.caption)
-                                    .foregroundColor(viewModel.caption.count > 450 ? .red : .secondary)
-                            }
-                            
-                            TextEditor(text: $viewModel.caption)
-                                .frame(minHeight: 120)
-                                .padding(12)
-                                .background(Color(UIColor.systemBackground))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                        }
-                        
-                        // Media Selection
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Add Media")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                                
-                                // Media count indicator
-                                if !viewModel.mediaItems.isEmpty {
-                                    Text("\(viewModel.mediaItems.count)/\(videoCount > 0 ? 5 : 5)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.gray.opacity(0.2))
-                                        .clipShape(Capsule())
-                                }
-                            }
-                            
-                            PhotosPicker(
-                                selection: $viewModel.photosPicked,
-                                maxSelectionCount: canAddMoreMedia ? (videoCount > 0 ? 4 - imageCount : 5 - viewModel.mediaItems.count) : 0,
-                                matching: videoCount > 0 ? .images : .any(of: [.images, .videos])
-                            ) {
+                    // Scrollable Content
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // Caption Input
+                            VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Image(systemName: "photo.on.rectangle.angled")
-                                        .font(.title2)
-                                        .foregroundColor(canAddMoreMedia ? .blue : .gray)
+                                    Text("What's happening?")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
                                     
-                                    Text(mediaSelectionText)
-                                        .foregroundColor(canAddMoreMedia ? .blue : .gray)
-                                        .fontWeight(.medium)
+                                    Text("\(viewModel.caption.count)/500")
+                                        .font(.caption)
+                                        .foregroundColor(viewModel.caption.count > 450 ? .red : .secondary)
+                                }
+                                
+                                TextEditor(text: $viewModel.caption)
+                                    .frame(minHeight: 120)
+                                    .padding(12)
+                                    .background(Color(UIColor.systemBackground))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                            }
+                            
+                            // Media Selection
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text("Add Media")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
                                     
                                     Spacer()
                                     
-                                    if viewModel.isProcessing {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
+                                    // Media count indicator
+                                    if !viewModel.mediaItems.isEmpty {
+                                        Text("\(viewModel.mediaItems.count)/\(videoCount > 0 ? 5 : 5)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.gray.opacity(0.2))
+                                            .clipShape(Capsule())
                                     }
                                 }
-                                .padding(16)
-                                .background(Color(UIColor.systemBackground))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke((canAddMoreMedia ? Color.blue : Color.gray).opacity(0.3), lineWidth: 1)
-                                )
-                            }
-                            .disabled(viewModel.isProcessing || !canAddMoreMedia)
-                            
-                            // Media limit info
-                            if !canAddMoreMedia {
-                                HStack {
-                                    Image(systemName: "info.circle")
-                                        .foregroundColor(.orange)
-                                    Text("Media limit reached. Remove items to add more.")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
-                                }
-                                .padding(.horizontal, 4)
-                            }
-                            
-                            // Media Preview
-                            if !viewModel.mediaItems.isEmpty {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    LazyHStack(spacing: 12) {
-                                        ForEach(Array(viewModel.mediaItems.enumerated()), id: \.offset) { index, item in
-                                            MediaPreviewCard(
-                                                item: item,
-                                                onRemove: { viewModel.removeMediaItem(at: index) },
-                                                onRetrim: { url in viewModel.startVideoRetrimming(for: url) },
-                                                onEdit: { image in
-                                                    imageToEdit = image
-                                                    editingImageIndex = index
-                                                    showingImageEditor = true
-                                                }
-                                            )
+                                
+                                PhotosPicker(
+                                    selection: $viewModel.photosPicked,
+                                    maxSelectionCount: canAddMoreMedia ? (videoCount > 0 ? 4 - imageCount : 5 - viewModel.mediaItems.count) : 0,
+                                    matching: videoCount > 0 ? .images : .any(of: [.images, .videos])
+                                ) {
+                                    HStack {
+                                        Image(systemName: "photo.on.rectangle.angled")
+                                            .font(.title2)
+                                            .foregroundColor(canAddMoreMedia ? .blue : .gray)
+                                        
+                                        Text(mediaSelectionText)
+                                            .foregroundColor(canAddMoreMedia ? .blue : .gray)
+                                            .fontWeight(.medium)
+                                        
+                                        Spacer()
+                                        
+                                        if viewModel.isProcessing {
+                                            ProgressView()
+                                                .scaleEffect(0.8)
                                         }
+                                    }
+                                    .padding(16)
+                                    .background(Color(UIColor.systemBackground))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke((canAddMoreMedia ? Color.blue : Color.gray).opacity(0.3), lineWidth: 1)
+                                    )
+                                }
+                                .disabled(viewModel.isProcessing || !canAddMoreMedia)
+                                
+                                // Media limit info
+                                if !canAddMoreMedia {
+                                    HStack {
+                                        Image(systemName: "info.circle")
+                                            .foregroundColor(.orange)
+                                        Text("Media limit reached. Remove items to add more.")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
                                     }
                                     .padding(.horizontal, 4)
                                 }
-                                .frame(height: 120)
+                                
+                                // Media Preview
+                                if !viewModel.mediaItems.isEmpty {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        LazyHStack(spacing: 12) {
+                                            ForEach(Array(viewModel.mediaItems.enumerated()), id: \.offset) { index, item in
+                                                MediaPreviewCard(
+                                                    item: item,
+                                                    onRemove: { viewModel.removeMediaItem(at: index) },
+                                                    onRetrim: { url in viewModel.startVideoRetrimming(for: url) },
+                                                    onEdit: { image in
+                                                        imageToEdit = image
+                                                        editingImageIndex = index
+                                                        showingImageEditor = true
+                                                    }
+                                                )
+                                            }
+                                        }
+                                        .padding(.horizontal, 4)
+                                    }
+                                    .frame(height: 120)
+                                }
                             }
                         }
+                        .padding(20)
+                        .padding(.bottom, keyboardHeight > 0 ? 100 : 20) // Extra padding when keyboard is visible
                     }
-                    .padding(20)
                     
-                    Spacer()
-                    
-                    // Post Button
-                    VStack(spacing: 16) {
+                    // Fixed Post Button Container
+                    VStack(spacing: 0) {
+                        // Sensitive content warning
                         if viewModel.isSensitiveContent {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
@@ -207,8 +210,11 @@ struct PostView: View {
                                 Spacer()
                             }
                             .padding(.horizontal, 20)
+                            .padding(.vertical, 8)
+                            .background(Color(UIColor.systemBackground))
                         }
                         
+                        // Post Button
                         Button {
                             Task {
                                 await viewModel.createPost(constituencyId: ConstituencyId)
@@ -237,11 +243,15 @@ struct PostView: View {
                             .cornerRadius(12)
                         }
                         .disabled(!viewModel.isFormValid || viewModel.isPosting)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 20)
+                                                .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                        .padding(.bottom, keyboardHeight > 0 ? keyboardHeight - 34 : 0) // 34 is safe area bottom
+                        .background(Color(UIColor.systemBackground))
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: -2)
                     }
                 }
             }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .navigationTitle("Create Post")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -251,6 +261,18 @@ struct PostView: View {
                     }
                     .disabled(viewModel.isPosting)
                 }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+            if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.keyboardHeight = keyboardFrame.height
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.keyboardHeight = 0
             }
         }
         .onChange(of: viewModel.photosPicked) { oldItems, newItems in
