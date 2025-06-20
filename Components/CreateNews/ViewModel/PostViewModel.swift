@@ -42,11 +42,6 @@ enum MediaItem: Identifiable, Equatable {
     }
 }
 
-struct MediaProcessingResult {
-    let canAdd: Bool
-    let message: String
-}
-
 class PostViewModel: ObservableObject {
     private let locationManager = LocationManager.shared
     
@@ -107,6 +102,9 @@ class PostViewModel: ObservableObject {
     @MainActor
     func uploadMultipleImages(caption: String, constituencyId: String) async throws {
         urls.removeAll()
+        
+        // MARK: - COMMENTED OUT - Firebase Storage Upload
+        // Uncomment when Firebase Storage is enabled
         
         // Upload images
         for image in images {
@@ -169,15 +167,11 @@ class PostViewModel: ObservableObject {
     
     // MARK: - Media Processing
     
-    func processPickedPhotos(_ photos: [PhotosPickerItem], currentVideoCount: Int, currentImageCount: Int) async -> MediaProcessingResult {
+    func processPickedPhotos(_ photos: [PhotosPickerItem]) async {
         
         await MainActor.run {
             isProcessing = true
         }
-        
-        var newVideoCount = currentVideoCount
-        var newImageCount = currentImageCount
-        var rejectedItems: [String] = []
         
         for photo in photos {
             do {
@@ -185,18 +179,6 @@ class PostViewModel: ObservableObject {
                     let isVideo = contentType.conforms(to: .movie)
                     
                     if isVideo {
-                        // Check video limit: only 1 video allowed
-                        if newVideoCount >= 1 {
-                            rejectedItems.append("video (limit: 1)")
-                            continue
-                        }
-                        
-                        // Check total limit with video: max 5 items (1 video + 4 images)
-                        if newVideoCount + newImageCount >= 5 {
-                            rejectedItems.append("video (total limit: 5)")
-                            continue
-                        }
-                        
                         if let videoData = try await photo.loadTransferable(type: Data.self) {
                             let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
                             try videoData.write(to: tempURL)
@@ -205,30 +187,20 @@ class PostViewModel: ObservableObject {
                             
                             await MainActor.run {
                                 selectedVideoURL = tempURL
-                                videoBeingRetrimmed = nil
+                                videoBeingRetrimmed = nil // This is a new video, not a re-trim
                                 isShowingVideoTrimmer = true
                             }
-                            newVideoCount += 1
                         }
                     } else {
-                        // Check image limits
-                        let hasVideo = newVideoCount > 0
-                        let maxImages = hasVideo ? 4 : 5
-                        
-                        if newImageCount >= maxImages {
-                            rejectedItems.append("image (limit: \(maxImages))")
-                            continue
-                        }
-                        
                         if let imageData = try await photo.loadTransferable(type: Data.self),
                            let uiImage = UIImage(data: imageData) {
                             await MainActor.run {
                                 mediaItems.append(.image(uiImage))
                                 images.append(uiImage)
                             }
-                            newImageCount += 1
                         }
                     }
+                } else {
                 }
             } catch {
                 await MainActor.run {
@@ -242,13 +214,6 @@ class PostViewModel: ObservableObject {
             isProcessing = false
         }
         
-        // Return result
-        if rejectedItems.isEmpty {
-            return MediaProcessingResult(canAdd: true, message: "")
-        } else {
-            let message = "Some items couldn't be added:\n• \(rejectedItems.joined(separator: "\n• "))\n\nLimits: 1 video + 4 photos OR 5 photos maximum"
-            return MediaProcessingResult(canAdd: false, message: message)
-        }
     }
     
     func addTrimmedVideo(_ trimmedURL: URL) {
@@ -324,20 +289,6 @@ class PostViewModel: ObservableObject {
                 }
             }
             mediaItems.remove(at: index)
-        }
-    }
-    
-    func replaceImage(at index: Int, with newImage: UIImage) {
-        guard index < mediaItems.count else { return }
-        
-        if case .image(let oldImage) = mediaItems[index] {
-            // Update mediaItems array
-            mediaItems[index] = .image(newImage)
-            
-            // Update images array
-            if let imageIndex = images.firstIndex(of: oldImage) {
-                images[imageIndex] = newImage
-            }
         }
     }
     
@@ -453,31 +404,44 @@ class PostViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Video Trimming
     
-    func trimVideo(from inputURL: URL, startTime: Double, endTime: Double) async throws -> URL {
-        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "_trimmed.mov")
-        
-        let asset = AVURLAsset(url: inputURL)
+    func trimVideo(from url: URL, startTime: Double, endTime: Double) async throws -> URL {
+        let asset = AVURLAsset(url: url)
         let composition = AVMutableComposition()
         
-        guard let videoTrack = try await asset.loadTracks(withMediaType: .video).first else {
-            throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "No video track found"])
+        // Use new iOS 16+ APIs
+        let videoTracks = try await asset.loadTracks(withMediaType: .video)
+        let audioTracks = try await asset.loadTracks(withMediaType: .audio)
+        
+        // Ensure we have at least a video track
+        guard let videoTrack = videoTracks.first else {
+            throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "No video track found in the video file"])
         }
         
-        let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
-        
-        let startTimeCM = CMTime(seconds: startTime, preferredTimescale: 600)
-        let endTimeCM = CMTime(seconds: endTime, preferredTimescale: 600)
-        let timeRange = CMTimeRange(start: startTimeCM, end: endTimeCM)
-        
-        try compositionVideoTrack?.insertTimeRange(timeRange, of: videoTrack, at: .zero)
-        
-        // Add audio track if available
-        if let audioTrack = try await asset.loadTracks(withMediaType: .audio).first {
-            let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
-            try compositionAudioTrack?.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+        // Create video composition track
+        guard let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+            throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create video composition track"])
         }
+        
+        let start = CMTime(seconds: startTime, preferredTimescale: 600)
+        let end = CMTime(seconds: endTime, preferredTimescale: 600)
+        let timeRange = CMTimeRange(start: start, end: end)
+        
+        // Insert video track
+        try compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+        
+        // Handle audio track only if it exists
+        if let audioTrack = audioTracks.first,
+           let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
+            do {
+                try compositionAudioTrack.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+            } catch {
+                // Continue without audio if audio insertion fails
+            }
+        } else {
+        }
+        
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
         
         guard let exportSession = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
             throw NSError(domain: "VideoTrimming", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create export session"])
@@ -504,7 +468,8 @@ class PostViewModel: ObservableObject {
         if let context = AuthViewModel.shared.modelContext {
             do {
                 let fetch = FetchDescriptor<LocalUser>(
-                    predicate: #Predicate { $0.id == uid }
+                    predicate: #Predicate { $0.id == uid },
+//                    fetchLimit: 1
                 )
                 if let localUser = try context.fetch(fetch).first {
                     localUser.postCount += 1
