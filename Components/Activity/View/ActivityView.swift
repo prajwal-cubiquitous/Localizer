@@ -60,7 +60,7 @@ struct ActivityView: View {
                 if viewModel.newsItems.isEmpty {
                     ActivityEmptyStateView(filter: selectedFilter)
                 } else {
-                    LocalNewsActivityListView(newsItems: viewModel.newsItems, selectedFilter: selectedFilter)
+                    LocalNewsActivityListView(newsItems: viewModel.newsItems, selectedFilter: selectedFilter, userItems: viewModel.UserItems)
                 }
             }
             .navigationTitle("My Activities")
@@ -89,7 +89,7 @@ struct ActivityView: View {
             case .NoNews:
                 try await viewModel.fetchDontRecommendNews(constituencyId: constituencyId)
             case .NoUser:
-                try await viewModel.fetchDontRecommendNews(constituencyId: constituencyId)
+                try await viewModel.fetchDontRecommendUsers()
             }
         } catch {
             // Silent error handling
@@ -155,16 +155,37 @@ struct ActivityEmptyStateView: View {
 struct LocalNewsActivityListView: View {
     let newsItems: [LocalNews]
     var selectedFilter: ActivityView.FilterType
+    let userItems: [User]
+    
+    // Create unique items to prevent duplicate IDs
+    private var uniqueNewsItems: [LocalNews] {
+        var seen = Set<String>()
+        return newsItems.filter { item in
+            if seen.contains(item.id) {
+                return false
+            } else {
+                seen.insert(item.id)
+                return true
+            }
+        }
+    }
+    
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 8) {
-                ForEach(newsItems, id: \.id) { item in
-                    
-                    if selectedFilter == .NoNews{
-                        NewsCell(localNews: item, recommendText : "Recommend")
-                    }else{
-                        NewsCell(localNews: item)
-                            .padding(.horizontal, 0)
+                if selectedFilter != .NoUser{
+                    ForEach(Array(uniqueNewsItems.enumerated()), id: \.offset) { index, item in
+                        if selectedFilter == .NoNews {
+                            NewsCell(localNews: item, recommendText: "Recommend")
+                                .padding(.horizontal, 0)
+                        }else {
+                            NewsCell(localNews: item)
+                                .padding(.horizontal, 0)
+                        }
+                    }
+                }else{
+                    List(userItems, id: \.name) { user in
+                        Usercell(user: user)
                     }
                 }
             }
