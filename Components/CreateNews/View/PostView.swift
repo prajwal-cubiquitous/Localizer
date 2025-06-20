@@ -575,7 +575,7 @@ struct ImageEditorView: View {
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
-                .onChange(of: selectedTab) { newValue in
+                .onChange(of: selectedTab) { _, newValue in
                     isCropMode = (newValue == 1)
                 }
                 
@@ -972,7 +972,7 @@ struct ImageEditorView: View {
         guard let ciImage = CIImage(image: image) else { return image }
         
         let context = CIContext()
-        var filteredImage = ciImage
+        let filteredImage = ciImage
         
         // Apply color adjustments
         let colorFilter = CIFilter(name: "CIColorControls")!

@@ -167,6 +167,103 @@ class PostViewModel: ObservableObject {
     
     // MARK: - Media Processing
     
+    struct MediaProcessingResult {
+        let canAdd: Bool
+        let message: String
+    }
+
+    func processPickedPhotos(_ photos: [PhotosPickerItem], currentVideoCount: Int, currentImageCount: Int) async -> MediaProcessingResult {
+        
+        let maxImages = 5
+        let maxImagesWithVideo = 4
+        let maxVideos = 1
+        
+        // Check if we can add more media
+        let hasVideo = currentVideoCount > 0
+        let availableImageSlots = hasVideo ? maxImagesWithVideo - currentImageCount : maxImages - currentImageCount
+        let _ = hasVideo ? 0 : maxVideos - currentVideoCount // availableVideoSlots not used but kept for clarity
+        
+        var videoCount = 0
+        var imageCount = 0
+        
+        // Count new items
+        for photo in photos {
+            if let contentType = photo.supportedContentTypes.first {
+                let isVideo = contentType.conforms(to: .movie)
+                if isVideo {
+                    videoCount += 1
+                } else {
+                    imageCount += 1
+                }
+            }
+        }
+        
+        // Check limits
+        if hasVideo && videoCount > 0 {
+            return MediaProcessingResult(canAdd: false, message: "Cannot add videos when you already have a video. Maximum 1 video per post.")
+        }
+        
+        if videoCount > maxVideos {
+            return MediaProcessingResult(canAdd: false, message: "Maximum 1 video allowed per post.")
+        }
+        
+        if hasVideo && imageCount > availableImageSlots {
+            return MediaProcessingResult(canAdd: false, message: "Maximum 4 images allowed with video.")
+        }
+        
+        if !hasVideo && (imageCount > availableImageSlots || (videoCount > 0 && currentImageCount + imageCount > maxImagesWithVideo)) {
+            return MediaProcessingResult(canAdd: false, message: "Maximum 5 images or 1 video + 4 images allowed per post.")
+        }
+        
+        // Process the photos
+        await MainActor.run {
+            isProcessing = true
+        }
+        
+        for photo in photos {
+            do {
+                if let contentType = photo.supportedContentTypes.first {
+                    let isVideo = contentType.conforms(to: .movie)
+                    
+                    if isVideo {
+                        if let videoData = try await photo.loadTransferable(type: Data.self) {
+                            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
+                            try videoData.write(to: tempURL)
+                            
+                            let _ = try await getVideoDuration(from: tempURL)
+                            
+                            await MainActor.run {
+                                selectedVideoURL = tempURL
+                                videoBeingRetrimmed = nil // This is a new video, not a re-trim
+                                isShowingVideoTrimmer = true
+                            }
+                        }
+                    } else {
+                        if let imageData = try await photo.loadTransferable(type: Data.self),
+                           let uiImage = UIImage(data: imageData) {
+                            await MainActor.run {
+                                mediaItems.append(.image(uiImage))
+                                images.append(uiImage)
+                            }
+                        }
+                    }
+                } else {
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to process media: \(error.localizedDescription)"
+                    showError = true
+                }
+            }
+        }
+        
+        await MainActor.run {
+            isProcessing = false
+        }
+        
+        return MediaProcessingResult(canAdd: true, message: "")
+    }
+
     func processPickedPhotos(_ photos: [PhotosPickerItem]) async {
         
         await MainActor.run {
@@ -214,6 +311,20 @@ class PostViewModel: ObservableObject {
             isProcessing = false
         }
         
+    }
+    
+    func replaceImage(at index: Int, with newImage: UIImage) {
+        guard index < mediaItems.count else { return }
+        
+        if case .image(let oldImage) = mediaItems[index] {
+            // Update the media item
+            mediaItems[index] = .image(newImage)
+            
+            // Update the images array
+            if let imageIndex = images.firstIndex(of: oldImage) {
+                images[imageIndex] = newImage
+            }
+        }
     }
     
     func addTrimmedVideo(_ trimmedURL: URL) {
