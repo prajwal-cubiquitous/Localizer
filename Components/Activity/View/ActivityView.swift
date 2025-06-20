@@ -60,77 +60,39 @@ struct ActivityView: View {
                 if viewModel.newsItems.isEmpty {
                     ActivityEmptyStateView(filter: selectedFilter)
                 } else {
-                    NewsListView(newsItems: viewModel.newsItems)
+                    LocalNewsActivityListView(newsItems: viewModel.newsItems, selectedFilter: selectedFilter)
                 }
             }
             .navigationTitle("My Activities")
             .navigationBarTitleDisplayMode(.inline)
         }
         .task(id: selectedFilter) {
-            // ✅ Don't clear cache when switching tabs - preserve vote states
-            guard !constituencyId.isEmpty else { return }
-            
+            await fetchDataForFilter()
+        }
+    }
+    
+    private func fetchDataForFilter() async {
+        guard !constituencyId.isEmpty else { return }
+        
+        do {
             switch selectedFilter {
             case .news:
-                Task {
-                    do {
-                        try await viewModel.fetchNews(constituencyId: constituencyId)
-                    } catch {
-                        // Silent error handling
-                    }
-                }
+                try await viewModel.fetchNews(constituencyId: constituencyId)
             case .liked:
-                Task {
-                    do {
-                        try await viewModel.fetchLikedNews(constituencyId: constituencyId)
-                    } catch {
-                        // Silent error handling
-                    }
-                }
-                
+                try await viewModel.fetchLikedNews(constituencyId: constituencyId)
             case .disliked:
-                Task {
-                    do {
-                        try await viewModel.fetchDisLikedNews(constituencyId: constituencyId)
-                    } catch {
-                        // Silent error handling
-                    }
-                }
+                try await viewModel.fetchDisLikedNews(constituencyId: constituencyId)
             case .commented:
-                Task {
-                    do {
-                        try await viewModel.commentedNews(constituencyId: constituencyId)
-                    } catch {
-                        // Silent error handling
-                    }
-                }
+                try await viewModel.commentedNews(constituencyId: constituencyId)
             case .saved:
-                Task {
-                    do {
-                        try await viewModel.fetchSavedNews(constituencyId: constituencyId)
-                    } catch {
-                        // Silent error handling
-                    }
-                }
+                try await viewModel.fetchSavedNews(constituencyId: constituencyId)
             case .NoNews:
-                Task {
-                    do {
-                        try await viewModel.fetchSavedNews(constituencyId: constituencyId)
-                    } catch {
-                        // Silent error handling
-                    }
-                }
-
+                try await viewModel.fetchDontRecommendNews(constituencyId: constituencyId)
             case .NoUser:
-                Task {
-                    do {
-                        try await viewModel.fetchSavedNews(constituencyId: constituencyId)
-                    } catch {
-                        // Silent error handling
-                    }
-                }
-
+                try await viewModel.fetchDontRecommendNews(constituencyId: constituencyId)
             }
+        } catch {
+            // Silent error handling
         }
     }
 }
@@ -190,15 +152,20 @@ struct ActivityEmptyStateView: View {
     }
 }
 
-struct NewsListView: View {
+struct LocalNewsActivityListView: View {
     let newsItems: [LocalNews]
-    
+    var selectedFilter: ActivityView.FilterType
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 8) {
                 ForEach(newsItems, id: \.id) { item in
-                    NewsCell(localNews: item)
-                        .padding(.horizontal, 0)
+                    
+                    if selectedFilter == .NoNews{
+                        NewsCell(localNews: item, recommendText : "Recommend")
+                    }else{
+                        NewsCell(localNews: item)
+                            .padding(.horizontal, 0)
+                    }
                 }
             }
             .padding(.top, 8)

@@ -436,6 +436,35 @@ class NewsCellViewModel: ObservableObject{
             throw error
         }
     }
+    
+    func removeNOTRecommendNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        // Fixed: Use consistent collection name "users" (lowercase)
+        let docRef = db
+            .collection("users")  // Changed from "Users" to "users"
+            .document(userId)
+            .collection("userNewsActivity")
+            .document(userId)
+
+        do {
+            // First check if actually saved
+            let document = try await docRef.getDocument()
+            
+            if let data = document.data(),
+               let savedNews = data["DontRecommendNews"] as? [String],
+               !savedNews.contains(postId) {
+                return
+            }
+            
+            try await docRef.setData([
+                "DontRecommendNews": FieldValue.arrayRemove([postId])
+            ], merge: true)
+            
+        } catch {
+            throw error
+        }
+    }
 }
 
 enum VoteState {

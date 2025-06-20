@@ -20,13 +20,14 @@ struct NewsCell: View {
     @State private var showingFullScreenMedia = false
     @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
-    
+    let recommendText : String?
     // User state management for non-current users
     @State private var newsAuthor: CachedUser?
     @State private var isLoadingAuthor = false
     
-    init(localNews: LocalNews) {
+    init(localNews: LocalNews, recommendText: String? = nil) {
         self.localNews = localNews
+        self.recommendText = recommendText
     }
     
     // MARK: - Computed Properties
@@ -147,19 +148,30 @@ struct NewsCell: View {
                         }
                     }
                     
-                    Menu {
-                        Button("Don't recommend posts from this user") {
+                    if recommendText != nil{
+                        Button {
                             Task{
-                                try await viewModel.DontRecommendUsers(newsUserId: localNews.ownerUid)
+                                try await viewModel.removeNOTRecommendNews(postId: localNews.id)
                             }
+                        } label: {
+                            Label(recommendText!, systemImage: "hand.thumbsup.fill")
                         }
-                        Button("Don't recommend this post") {
-                            Task{
-                                try await viewModel.DontRecommendNews(postId: localNews.id)
+                    }else{
+                        Menu {
+                            Button("Don't recommend posts from this user") {
+                                Task{
+                                    try await viewModel.DontRecommendUsers(newsUserId: localNews.ownerUid)
+                                }
                             }
+                            Button("Don't recommend this post") {
+                                Task{
+                                    try await viewModel.DontRecommendNews(postId: localNews.id)
+                                }
+                            }
+                        } label: {
+                            Label("Don't Recommend", systemImage: "hand.thumbsdown.fill")
                         }
-                    } label: {
-                        Label("Don't Recommend", systemImage: "hand.thumbsdown.fill")
+
                     }
                     
                     Button(role: .destructive) {
