@@ -17,6 +17,8 @@ struct ActivityView: View {
         case disliked = "Disliked"
         case commented = "Commented"
         case saved = "Saved"
+        case NoNews = "No News"
+        case NoUser = "No User"
         
         var iconName: String {
             switch self {
@@ -25,6 +27,8 @@ struct ActivityView: View {
             case .disliked: return "heart.slash"
             case .commented: return "message"
             case .saved: return "bookmark.fill"
+            case .NoNews: return "nosign"
+            case .NoUser: return "nosign"
             }
         }
     }
@@ -108,6 +112,24 @@ struct ActivityView: View {
                         // Silent error handling
                     }
                 }
+            case .NoNews:
+                Task {
+                    do {
+                        try await viewModel.fetchSavedNews(constituencyId: constituencyId)
+                    } catch {
+                        // Silent error handling
+                    }
+                }
+
+            case .NoUser:
+                Task {
+                    do {
+                        try await viewModel.fetchSavedNews(constituencyId: constituencyId)
+                    } catch {
+                        // Silent error handling
+                    }
+                }
+
             }
         }
     }

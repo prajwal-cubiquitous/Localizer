@@ -388,6 +388,54 @@ class NewsCellViewModel: ObservableObject{
             throw error
         }
     }
+    
+    func DontRecommendNews(postId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+        
+        do {
+            // First check if already saved to avoid duplicates
+            let document = try await docRef.getDocument()
+            
+            if let data = document.data(),
+               let savedNews = data["DontRecommendNews"] as? [String],
+               savedNews.contains(postId) {
+                return
+            }
+            
+            try await docRef.setData([
+                "DontRecommendNews": FieldValue.arrayUnion([postId])
+            ], merge: true)
+            
+        } catch {
+            throw error
+        }
+    }
+    
+    func DontRecommendUsers(newsUserId: String) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let docRef = db.collection("users").document(userId).collection("userNewsActivity").document(userId)
+        
+        do {
+            // First check if already saved to avoid duplicates
+            let document = try await docRef.getDocument()
+            
+            if let data = document.data(),
+               let savedNews = data["DontRecommendUser"] as? [String],
+               savedNews.contains(newsUserId) {
+                return
+            }
+            
+            try await docRef.setData([
+                "DontRecommendUser": FieldValue.arrayUnion([newsUserId])
+            ], merge: true)
+            
+        } catch {
+            throw error
+        }
+    }
 }
 
 enum VoteState {

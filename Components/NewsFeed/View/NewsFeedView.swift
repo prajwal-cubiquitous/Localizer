@@ -78,6 +78,14 @@ struct NewsFeedView: View {
                                     NewsCell(localNews: item)
                                         .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
                                         .padding(.bottom, 8) // Space between news items
+                                        .onAppear {
+                                            // Load more when this is one of the last items
+                                            if item == newsItems.last {
+                                                Task {
+                                                    await viewModel.loadMore(context: modelContext)
+                                                }
+                                            }
+                                        }
                                 }
                             }
                             .padding(.top, 8) // Top spacing from navigation

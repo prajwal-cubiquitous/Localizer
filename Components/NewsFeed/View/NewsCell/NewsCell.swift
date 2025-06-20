@@ -147,10 +147,19 @@ struct NewsCell: View {
                         }
                     }
                     
-                    Button {
-                        // Don't recommend action
+                    Menu {
+                        Button("Don't recommend posts from this user") {
+                            Task{
+                                try await viewModel.DontRecommendUsers(newsUserId: localNews.ownerUid)
+                            }
+                        }
+                        Button("Don't recommend this post") {
+                            Task{
+                                try await viewModel.DontRecommendNews(postId: localNews.id)
+                            }
+                        }
                     } label: {
-                        Label("Don't Recommend", systemImage: "hand.thumbsdown")
+                        Label("Don't Recommend", systemImage: "hand.thumbsdown.fill")
                     }
                     
                     Button(role: .destructive) {
