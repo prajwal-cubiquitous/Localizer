@@ -31,6 +31,7 @@ class ActivityViewModel : ObservableObject{
     
     func fetchNews(constituencyId: String) async throws {
         self.newsItems = []
+        UserItems = [] // Clear user items
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let user = try await FetchCurrencyUser.fetchCurrentUser(uid)
         let db = Firestore.firestore()
@@ -53,6 +54,7 @@ class ActivityViewModel : ObservableObject{
     
     func fetchLikedNews(constituencyId: String) async throws{
         newsItems = []
+        UserItems = [] // Clear user items
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
@@ -66,13 +68,13 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["LikedNews"] as? [String] else {
-                print("No savedNews array found")
+                print("No LikedNews array found")
                 return
             }
             
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
-                guard snapshot.exists else { return }
+                guard snapshot.exists else { continue } // Use continue instead of return
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
@@ -80,15 +82,14 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
+            print("Error fetching liked news: \(error.localizedDescription)")
         }
-
     }
     
     
     func fetchSavedNews(constituencyId: String) async throws {
         newsItems = []
-        print(1)
+        UserItems = [] // Clear user items
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
@@ -108,7 +109,7 @@ class ActivityViewModel : ObservableObject{
             
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
-                guard snapshot.exists else { return }
+                guard snapshot.exists else { continue } // Use continue instead of return
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
@@ -122,7 +123,7 @@ class ActivityViewModel : ObservableObject{
     
     func commentedNews(constituencyId: String) async throws{
         newsItems = []
-        print(1)
+        UserItems = [] // Clear user items
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
@@ -136,13 +137,13 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["CommentedNews"] as? [String] else {
-                print("No savedNews array found")
+                print("No CommentedNews array found")
                 return
             }
             
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
-                guard snapshot.exists else { return }
+                guard snapshot.exists else { continue } // Use continue instead of return
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
@@ -150,12 +151,12 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
+            print("Error fetching commented news: \(error.localizedDescription)")
         }
     }
     func fetchDisLikedNews(constituencyId: String) async throws{
         newsItems = []
-        print(1)
+        UserItems = [] // Clear user items
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
@@ -169,13 +170,13 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["DisLikedNews"] as? [String] else {
-                print("No savedNews array found")
+                print("No DisLikedNews array found")
                 return
             }
             
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
-                guard snapshot.exists else { return }
+                guard snapshot.exists else { continue } // Use continue instead of return
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
@@ -183,12 +184,13 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
+            print("Error fetching disliked news: \(error.localizedDescription)")
         }
     }
     
     func fetchDontRecommendNews(constituencyId: String) async throws{
         newsItems = []
+        UserItems = [] // Clear user items
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let user = try await FetchCurrencyUser.fetchCurrentUser(userId)
         let db = Firestore.firestore()
@@ -208,7 +210,7 @@ class ActivityViewModel : ObservableObject{
             
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
-                guard snapshot.exists else { return }
+                guard snapshot.exists else { continue } // Use continue instead of return
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
                     let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
@@ -216,40 +218,42 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
+            print("Error fetching DontRecommendNews: \(error.localizedDescription)")
         }
     }
     
     func fetchDontRecommendUsers() async throws{
         UserItems = []
-        print(1)
+        newsItems = [] // Clear news items
+        
         guard let userId = Auth.auth().currentUser?.uid else { return }
+        
         let db = Firestore.firestore()
         let userActivityDocRef = db
             .collection("users")
             .document(userId)
             .collection("userNewsActivity")
             .document(userId)
-        print(2)
+        
         do {
             let userDoc = try await userActivityDocRef.getDocument()
-            print(3)
-            guard let data = userDoc.data(),
-                  let savedUserIds = data["DontRecommendUser"] as? [String] else {
-                print("No DontRecommendUser array found")
-                return
-            }
-            print(4)
-            for singleuserId in savedUserIds {
-                print(singleuserId)
-                let snapshot = try await db.collection("users").document(singleuserId).getDocument()
-                guard snapshot.exists else { return }
-                let SavedUserFromFirestore = try snapshot.data(as: User.self)
-                print("User is appending to the user items \(SavedUserFromFirestore.name)")
-                self.UserItems.append(SavedUserFromFirestore)
+            
+            if let data = userDoc.data() {
+                if let savedUserIds = data["DontRecommendUser"] as? [String] {
+                    for singleuserId in savedUserIds {
+                        let snapshot = try await db.collection("users").document(singleuserId).getDocument()
+                        
+                        if snapshot.exists {
+                            let SavedUserFromFirestore = try snapshot.data(as: User.self)
+                            self.UserItems.append(SavedUserFromFirestore)
+                        }
+                    }
+                } else {
+                    print("No DontRecommendUser array found")
+                }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
+            print("Error fetching DontRecommendUsers: \(error.localizedDescription)")
         }
     }
 }

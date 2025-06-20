@@ -37,6 +37,14 @@ struct ActivityView: View {
         ConstituencyInfo?.id ?? ""
     }
     
+    private var shouldShowEmptyState: Bool {
+        if selectedFilter == .NoUser {
+            return viewModel.UserItems.isEmpty
+        } else {
+            return viewModel.newsItems.isEmpty
+        }
+    }
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -57,7 +65,7 @@ struct ActivityView: View {
                 .background(Color(UIColor.systemBackground))
                 
                 // Content
-                if viewModel.newsItems.isEmpty {
+                if shouldShowEmptyState {
                     ActivityEmptyStateView(filter: selectedFilter)
                 } else {
                     LocalNewsActivityListView(newsItems: viewModel.newsItems, selectedFilter: selectedFilter, userItems: viewModel.UserItems)
@@ -92,7 +100,7 @@ struct ActivityView: View {
                 try await viewModel.fetchDontRecommendUsers()
             }
         } catch {
-            // Silent error handling
+            print("Error fetching data: \(error.localizedDescription)")
         }
     }
 }
@@ -171,25 +179,28 @@ struct LocalNewsActivityListView: View {
     }
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                if selectedFilter != .NoUser{
+        if selectedFilter == .NoUser {
+            // Show users in a proper List
+            List(userItems, id: \.id) { user in
+                Usercell(user: user)
+            }
+            .listStyle(PlainListStyle())
+        } else {
+            // Show news in ScrollView
+            ScrollView {
+                LazyVStack(spacing: 8) {
                     ForEach(Array(uniqueNewsItems.enumerated()), id: \.offset) { index, item in
                         if selectedFilter == .NoNews {
                             NewsCell(localNews: item, recommendText: "Recommend")
                                 .padding(.horizontal, 0)
-                        }else {
+                        } else {
                             NewsCell(localNews: item)
                                 .padding(.horizontal, 0)
                         }
                     }
-                }else{
-                    List(userItems, id: \.name) { user in
-                        Usercell(user: user)
-                    }
                 }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
         }
     }
 }
