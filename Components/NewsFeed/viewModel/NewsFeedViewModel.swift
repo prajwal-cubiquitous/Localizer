@@ -24,7 +24,7 @@ final class NewsFeedViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     
     // MARK: ‑ Private state
-    private let maxNewsItems = 100
+    private let maxNewsItems = 20
     
     // MARK: ‑ API
     /// Public entry point that downloads and caches the latest news for the

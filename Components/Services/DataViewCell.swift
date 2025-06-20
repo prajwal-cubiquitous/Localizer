@@ -7,12 +7,27 @@
 
 import SwiftUI
 import UIKit
+
+// MARK: - Identifiable wrapper for sheet presentation
+struct InfoSheetItem: Identifiable {
+    let id = UUID()
+    let type: InfoType
+    let data: Any
+    
+    enum InfoType {
+        case policeStation
+        case hospital  
+        case school
+    }
+}
+
 struct DataViewCellForPoliceStation: View {
     let screenSize = UIScreen.main.bounds
     let policeStation: PoliceStation
-    @State private var showPopup = false
+    @State private var infoSheetItem: InfoSheetItem?
+    
     var body: some View {
-        VStack{
+        VStack {
             VStack(alignment: .leading) {
                 Text(policeStation.name)
                     .font(.headline)
@@ -24,30 +39,37 @@ struct DataViewCellForPoliceStation: View {
                     .font(.subheadline)
             }
             .padding()
-            HStack{
-                
-                Button{
-                    showPopup.toggle()
-                }label:{
+            
+            HStack {
+                Button {
+                    // Create new InfoSheetItem each time to ensure re-presentation
+                    infoSheetItem = InfoSheetItem(type: .policeStation, data: policeStation)
+                } label: {
                     Image(systemName: "info.circle")
                         .font(.title)
                 }
                 .padding(.trailing, 20)
-                Button{
+                
+                Button {
                     openGoogleMaps(withAddress: policeStation.name + "," + policeStation.fullAddress + "," + policeStation.pincode)
-                }label: {
+                } label: {
                     Image(systemName: "paperplane.fill")
                 }
             }
         }
         .frame(width: screenSize.width - 50)
-        .sheet(isPresented: $showPopup) {
-            // The PopupView presented as a sheet
-            PopUPView(name: policeStation.name, address: policeStation.fullAddress, constituency: policeStation.constituency, phoneNumber: policeStation.phoneNumber, pincode: policeStation.pincode)
-                .frame(maxHeight: .infinity) // Makes it extend vertically to fill available space
-                .cornerRadius(20)
-                .edgesIgnoringSafeArea(.all) // Make sure the background extends to the edges
-                .frame(height: UIScreen.main.bounds.height * 0.8) // 80% of screen height
+        .sheet(item: $infoSheetItem) { item in
+            if case .policeStation = item.type, let station = item.data as? PoliceStation {
+                PopUPView(
+                    name: station.name,
+                    address: station.fullAddress,
+                    constituency: station.constituency,
+                    phoneNumber: station.phoneNumber,
+                    pincode: station.pincode
+                )
+                .presentationDetents([.fraction(0.6), .fraction(0.8)])
+                .presentationDragIndicator(.visible)
+            }
         }
     }
 }
@@ -55,9 +77,10 @@ struct DataViewCellForPoliceStation: View {
 struct DataViewCellForHospital: View {
     let screenSize = UIScreen.main.bounds
     let hospital: Hospital
-    @State private var showPopup = false
+    @State private var infoSheetItem: InfoSheetItem?
+    
     var body: some View {
-        VStack{
+        VStack {
             VStack(alignment: .leading) {
                 Text(hospital.name)
                     .font(.headline)
@@ -68,29 +91,37 @@ struct DataViewCellForHospital: View {
                 Text("Phone Number: ").bold() + Text(hospital.phoneNumber)
                     .font(.subheadline)
             }
-            HStack{
-                Button{
-                    showPopup.toggle()
-                }label:{
+            
+            HStack {
+                Button {
+                    // Create new InfoSheetItem each time to ensure re-presentation
+                    infoSheetItem = InfoSheetItem(type: .hospital, data: hospital)
+                } label: {
                     Image(systemName: "info.circle")
                         .font(.title)
                 }
                 .padding(.trailing, 20)
-                Button{
+                
+                Button {
                     openGoogleMaps(withAddress: hospital.name + "," + hospital.fullAddress + " " + hospital.pincode)
-                }label: {
+                } label: {
                     Image(systemName: "paperplane.fill")
                 }
             }
         }
         .frame(width: screenSize.width - 50)
-        .sheet(isPresented: $showPopup) {
-            // The PopupView presented as a sheet
-            PopUPView(name: hospital.name, address: hospital.fullAddress, constituency: hospital.constituency, phoneNumber: hospital.phoneNumber, pincode: hospital.pincode)
-                .frame(maxHeight: .infinity) // Makes it extend vertically to fill available space
-                .cornerRadius(20)
-                .edgesIgnoringSafeArea(.all) // Make sure the background extends to the edges
-                .frame(height: UIScreen.main.bounds.height * 0.8) // 80% of screen height
+        .sheet(item: $infoSheetItem) { item in
+            if case .hospital = item.type, let hosp = item.data as? Hospital {
+                PopUPView(
+                    name: hosp.name,
+                    address: hosp.fullAddress,
+                    constituency: hosp.constituency,
+                    phoneNumber: hosp.phoneNumber,
+                    pincode: hosp.pincode
+                )
+                .presentationDetents([.fraction(0.6), .fraction(0.8)])
+                .presentationDragIndicator(.visible)
+            }
         }
     }
 }
@@ -98,9 +129,10 @@ struct DataViewCellForHospital: View {
 struct DataViewCellForSchool: View {
     let screenSize = UIScreen.main.bounds
     let school: School
-    @State private var showPopup = false
+    @State private var infoSheetItem: InfoSheetItem?
+    
     var body: some View {
-        VStack{
+        VStack {
             VStack(alignment: .leading) {
                 Text(school.schoolName)
                     .font(.headline)
@@ -113,33 +145,39 @@ struct DataViewCellForSchool: View {
             }
             .padding()
             
-            HStack{
-                Button{
-                    showPopup.toggle()
-                }label:{
+            HStack {
+                Button {
+                    // Create new InfoSheetItem each time to ensure re-presentation
+                    infoSheetItem = InfoSheetItem(type: .school, data: school)
+                } label: {
                     Image(systemName: "info.circle")
                         .font(.title)
                 }
                 .padding(.trailing, 20)
-                Button{
+                
+                Button {
                     openGoogleMaps(withAddress: school.schoolName + "," + school.address + " " + school.pincode)
-                }label: {
+                } label: {
                     Image(systemName: "paperplane.fill")
                 }
             }
         }
         .frame(width: screenSize.width - 50)
-        .sheet(isPresented: $showPopup) {
-            // The PopupView presented as a sheet
-            PopUPView(name: school.schoolName, address: school.address, constituency: school.assembly, phoneNumber: school.busNumber, pincode: school.pincode)
-                .frame(maxHeight: .infinity) // Makes it extend vertically to fill available space
-                .cornerRadius(20)
-                .edgesIgnoringSafeArea(.all) // Make sure the background extends to the edges
-                .frame(height: UIScreen.main.bounds.height * 0.8) // 80% of screen height
+        .sheet(item: $infoSheetItem) { item in
+            if case .school = item.type, let sch = item.data as? School {
+                PopUPView(
+                    name: sch.schoolName,
+                    address: sch.address,
+                    constituency: sch.assembly,
+                    phoneNumber: sch.busNumber,
+                    pincode: sch.pincode
+                )
+                .presentationDetents([.fraction(0.6), .fraction(0.8)])
+                .presentationDragIndicator(.visible)
+            }
         }
     }
 }
-
 
 func openGoogleMaps(withAddress address: String) {
     // Ensure it's just a plain address, not a full Google URL
@@ -151,5 +189,6 @@ func openGoogleMaps(withAddress address: String) {
     } else if let webURL = URL(string: "https://www.google.com/maps/search/\(encodedAddress)") {
         UIApplication.shared.open(webURL)
     } else {
+        // Handle error case
     }
 }

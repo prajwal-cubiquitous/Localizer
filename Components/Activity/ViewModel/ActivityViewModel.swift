@@ -10,17 +10,15 @@ import FirebaseFirestore
 import FirebaseAuth
 
 @MainActor
-class ActivityViewModel : ObservableObject{
-    
+class ActivityViewModel: ObservableObject {
     @Published var newsItems: [LocalNews] = []
     
+    @MainActor
     func fetchNews(constituencyId: String) async throws {
-        self.newsItems = []
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        newsItems = []
         let db = Firestore.firestore()
         
         let snapshot = try await db.collection("news")
-            .whereField("ownerUid", isEqualTo: uid)
             .whereField("cosntituencyId", isEqualTo: constituencyId)
             .order(by: "timestamp", descending: true)
             .getDocuments()
@@ -29,10 +27,20 @@ class ActivityViewModel : ObservableObject{
             try? doc.data(as: News.self)
         }
         
+        let currentUserId = getCurrentUserId()
+        
         for item in newsItemsFromFirebase {
-            // ✅ Fetch user data and create LocalUser
+            // ✅ Fetch user data and cache it
             let newsUser = try await fetchCurrentUser(item.ownerUid)
-            let newsUserLocal = LocalUser.from(user: newsUser)
+            await cacheUser(newsUser)
+            
+            // Only create LocalUser relationship if this news belongs to the current user
+            let newsUserLocal: LocalUser?
+            if item.ownerUid == currentUserId {
+                newsUserLocal = LocalUser.fromCurrentUser(user: newsUser, currentUserId: currentUserId)
+            } else {
+                newsUserLocal = nil // Don't create LocalUser for other users
+            }
             
             // ✅ Create LocalNews with proper user relationship
             let localNews = LocalNews(
@@ -52,7 +60,7 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func fetchLikedNews(constituencyId: String) async throws{
+    func fetchLikedNews(constituencyId: String) async throws {
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -74,9 +82,17 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Fetch user data and create LocalUser
+                    // ✅ Fetch user data and cache it
                     let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
-                    let newsUserLocal = LocalUser.from(user: newsUser)
+                    await cacheUser(newsUser)
+                    
+                    // Only create LocalUser relationship if this news belongs to the current user
+                    let newsUserLocal: LocalUser?
+                    if SavedNewsFromFirestore.ownerUid == userId {
+                        newsUserLocal = LocalUser.fromCurrentUser(user: newsUser, currentUserId: userId)
+                    } else {
+                        newsUserLocal = nil // Don't create LocalUser for other users
+                    }
                     
                     // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
@@ -100,7 +116,7 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func fetchSavedNews(constituencyId: String) async throws{
+    func fetchSavedNews(constituencyId: String) async throws {
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -122,9 +138,17 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Fetch user data and create LocalUser
+                    // ✅ Fetch user data and cache it
                     let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
-                    let newsUserLocal = LocalUser.from(user: newsUser)
+                    await cacheUser(newsUser)
+                    
+                    // Only create LocalUser relationship if this news belongs to the current user
+                    let newsUserLocal: LocalUser?
+                    if SavedNewsFromFirestore.ownerUid == userId {
+                        newsUserLocal = LocalUser.fromCurrentUser(user: newsUser, currentUserId: userId)
+                    } else {
+                        newsUserLocal = nil // Don't create LocalUser for other users
+                    }
                     
                     // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
@@ -148,14 +172,14 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func fetchDisLikedNews(constituencyId: String) async throws{
+    func fetchDisLikedNews(constituencyId: String) async throws {
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
         let userActivityDocRef = db
             .collection("users")
             .document(userId)
-            .collection("userNewsActivity")
+            .collection("userNewsActivity")  
             .document(userId)
         do {
             let userDoc = try await userActivityDocRef.getDocument()
@@ -170,9 +194,17 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Fetch user data and create LocalUser
+                    // ✅ Fetch user data and cache it
                     let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
-                    let newsUserLocal = LocalUser.from(user: newsUser)
+                    await cacheUser(newsUser)
+                    
+                    // Only create LocalUser relationship if this news belongs to the current user
+                    let newsUserLocal: LocalUser?
+                    if SavedNewsFromFirestore.ownerUid == userId {
+                        newsUserLocal = LocalUser.fromCurrentUser(user: newsUser, currentUserId: userId)
+                    } else {
+                        newsUserLocal = nil // Don't create LocalUser for other users
+                    }
                     
                     // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
@@ -196,7 +228,7 @@ class ActivityViewModel : ObservableObject{
     }
     
     @MainActor
-    func commentedNews(constituencyId: String) async throws{
+    func commentedNews(constituencyId: String) async throws {
         newsItems = []
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -218,9 +250,17 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue }
                 let SavedNewsFromFirestore = try snapshot.data(as: News.self)
                 if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    // ✅ Fetch user data and create LocalUser
+                    // ✅ Fetch user data and cache it
                     let newsUser = try await fetchCurrentUser(SavedNewsFromFirestore.ownerUid)
-                    let newsUserLocal = LocalUser.from(user: newsUser)
+                    await cacheUser(newsUser)
+                    
+                    // Only create LocalUser relationship if this news belongs to the current user
+                    let newsUserLocal: LocalUser?
+                    if SavedNewsFromFirestore.ownerUid == userId {
+                        newsUserLocal = LocalUser.fromCurrentUser(user: newsUser, currentUserId: userId)
+                    } else {
+                        newsUserLocal = nil // Don't create LocalUser for other users
+                    }
                     
                     // ✅ Create LocalNews with proper user relationship
                     let localNews = LocalNews(
@@ -243,12 +283,25 @@ class ActivityViewModel : ObservableObject{
         }
     }
     
-    // ✅ Helper method to fetch user data from Firestore
-    private func fetchCurrentUser(_ uid: String) async throws -> User {
+    // MARK: - Helper Methods
+    
+    /// Get the current user's ID
+    private func getCurrentUserId() -> String {
+        return Auth.auth().currentUser?.uid ?? ""
+    }
+    
+    /// Cache user data for UI display
+    private func cacheUser(_ user: User) async {
+        let cachedUser = CachedUser(username: user.username, profilePictureUrl: user.profileImageUrl)
+        // Cache the user for UI display
+        UserCache.shared.cacheUser(userId: user.id, cachedUser: cachedUser)
+    }
+    
+    func fetchCurrentUser(_ uid: String) async throws -> User {
         let docRef = Firestore.firestore().collection("users").document(uid)
         let snapshot = try await docRef.getDocument()
         guard let user = try? snapshot.data(as: User.self) else {
-            throw NSError(domain: "ActivityViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode user"])
+            throw NSError(domain: "ActivityViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode current user"])
         }
         return user
     }

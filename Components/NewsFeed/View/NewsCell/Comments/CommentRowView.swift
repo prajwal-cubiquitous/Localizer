@@ -8,35 +8,65 @@ import SwiftUI
 
 // 3. View for a Single Comment Row
 struct CommentRowView: View {
-    @State var islikedBYCurrentUser:Bool = false
+    @State var islikedBYCurrentUser: Bool = false
     @ObservedObject var viewModel: CommentsViewModel
-    let newsId : String
+    let newsId: String
     let comment: Comment
     let onStartReply: () -> Void
     @State var replies: [Reply] = []
     @State var showReplies = false
     
+    // User state management
+    @State private var commentUser: CachedUser?
+    @State private var isLoadingUser = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main comment content
             HStack(alignment: .top, spacing: 12) {
-                if let user = UserCache.shared.cacheusers[comment.userId]{
-                    ProfilePictureView(userProfileUrl: user.profilePictureUrl, width: 30, height: 30)
+                // Profile Picture
+                Group {
+                    if let user = commentUser {
+                        ProfilePictureView(userProfileUrl: user.profilePictureUrl, width: 30, height: 30)
+                    } else if isLoadingUser {
+                        ProgressView()
+                            .frame(width: 30, height: 30)
+                            .background(Color.gray.opacity(0.15))
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.crop.circle.badge.questionmark")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 30)
+                            .foregroundColor(.gray)
+                            .background(Color.gray.opacity(0.15))
+                            .clipShape(Circle())
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        if let user = UserCache.shared.cacheusers[comment.userId]{
-                            Text(user.username)
-                                .font(.system(size: 14, weight: .semibold))
-                        }else{
-                            Text("Unknown User")
-                                .font(.system(size: 14, weight: .semibold))
+                        // Username
+                        Group {
+                            if let user = commentUser {
+                                Text(user.username)
+                                    .font(.system(size: 14, weight: .semibold))
+                            } else if isLoadingUser {
+                                Text("Loading...")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.gray)
+                            } else {
+                                Text("Unknown User")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.gray)
+                            }
                         }
+                        
                         Text(comment.timestamp, style: .relative)
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
+                    
                     Text(comment.text)
                         .font(.system(size: 15))
                         .foregroundColor(.primary)
@@ -45,7 +75,7 @@ struct CommentRowView: View {
                     // Action Buttons: Like, Reply
                     HStack(spacing: 20) {
                         Button {
-                            Task{
+                            Task {
                                 islikedBYCurrentUser.toggle()
                                 await viewModel.toggleLike(for: comment, inNews: newsId)
                             }
@@ -61,7 +91,7 @@ struct CommentRowView: View {
                                 }
                             }
                         }
-                        .task{
+                        .task {
                             islikedBYCurrentUser = await viewModel.checkIfLiked(comment: comment, newsId: newsId)
                         }
                         .buttonStyle(.plain)
@@ -81,9 +111,9 @@ struct CommentRowView: View {
             
             // Toggle Replies Button and Replies List
             if !replies.isEmpty {
-                Button{
+                Button {
                     showReplies.toggle()
-                }label:{
+                } label: {
                     HStack {
                         Rectangle() // Little decorative line
                             .frame(width: 20, height: 1)
@@ -111,17 +141,46 @@ struct CommentRowView: View {
             }
         }
         .task {
-            do{
+            // Load comment user data
+            await loadCommentUser()
+            
+            // Load replies
+            do {
                 replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: comment.id.uuidString)
-                
-                for reply in replies {
-                    let FetchedUser = try await viewModel.fetchCurrentUser(reply.userId)
-                    
-                    UserCache.shared.cacheusers[reply.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
-                }
-            }catch{
-                print(error.localizedDescription)
+            } catch {
+                print("Error loading replies: \(error.localizedDescription)")
             }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func loadCommentUser() async {
+        isLoadingUser = true
+        
+        // First check cache
+        if let cachedUser = await UserCache.shared.getUser(userId: comment.userId) {
+            await MainActor.run {
+                self.commentUser = cachedUser
+                self.isLoadingUser = false
+            }
+            return
+        }
+        
+        // If not in cache, fetch from Firestore
+        do {
+            let fetchedUser = try await viewModel.fetchCurrentUser(comment.userId)
+            let cachedUser = CachedUser(username: fetchedUser.username, profilePictureUrl: fetchedUser.profileImageUrl)
+            
+            await MainActor.run {
+                self.commentUser = cachedUser
+                self.isLoadingUser = false
+            }
+        } catch {
+            await MainActor.run {
+                self.isLoadingUser = false
+            }
+            print("Error fetching user for comment: \(error.localizedDescription)")
         }
     }
 }

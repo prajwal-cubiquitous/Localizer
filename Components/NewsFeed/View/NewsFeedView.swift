@@ -37,33 +37,39 @@ struct NewsFeedView: View {
                 Group {
                     if newsItems.isEmpty {
                         // Empty State
-                        VStack(spacing: 24) {
-                            Image(systemName: "square.and.pencil")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 80, height: 80)
-                                .foregroundStyle(.secondary)
-                            
-                            Text("Be the first to post!")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .multilineTextAlignment(.center)
-                            
-                            Button {
-                                showCreatePostSheet = true
-                            } label: {
-                                Text("Create Post")
-                                    .font(.headline)
-                                    .padding(.horizontal, 32)
-                                    .padding(.vertical, 12)
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .clipShape(Capsule())
+                        ScrollView{
+                            VStack(spacing: 24) {
+                                Image(systemName: "square.and.pencil")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .foregroundStyle(.secondary)
+                                
+                                Text("Be the first to post!")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .multilineTextAlignment(.center)
+                                
+                                Button {
+                                    showCreatePostSheet = true
+                                } label: {
+                                    Text("Create Post")
+                                        .font(.headline)
+                                        .padding(.horizontal, 32)
+                                        .padding(.vertical, 12)
+                                        .background(Color.blue)
+                                        .foregroundColor(.white)
+                                        .clipShape(Capsule())
+                                }
                             }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
+                            .containerRelativeFrame(.vertical, alignment: .center)
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
+                        .refreshable {
+                            await viewModel.refresh(for: constituencyId, context: modelContext)
+                        }
                     } else {
                         // News Feed Content
                         ScrollView {

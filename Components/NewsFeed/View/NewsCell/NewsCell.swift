@@ -21,6 +21,10 @@ struct NewsCell: View {
     @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
     
+    // User state management for non-current users
+    @State private var newsAuthor: CachedUser?
+    @State private var isLoadingAuthor = false
+    
     init(localNews: LocalNews) {
         self.localNews = localNews
     }
@@ -60,13 +64,56 @@ struct NewsCell: View {
             // User Info Header
             HStack(spacing: 12) {
                 // Profile Image
-                ProfilePictureView(userProfileUrl: localNews.user?.profileImageUrl, width: 44, height: 44)
+                Group {
+                    if let user = localNews.user {
+                        // Current user's news - use LocalUser data
+                        ProfilePictureView(userProfileUrl: user.profileImageUrl, width: 44, height: 44)
+                    } else if let author = newsAuthor {
+                        // Other user's news - use cached data
+                        ProfilePictureView(userProfileUrl: author.profilePictureUrl, width: 44, height: 44)
+                    } else if isLoadingAuthor {
+                        ProgressView()
+                            .frame(width: 44, height: 44)
+                            .background(Color.gray.opacity(0.15))
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.crop.circle.badge.questionmark")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 44, height: 44)
+                            .foregroundColor(.gray)
+                            .background(Color.gray.opacity(0.15))
+                            .clipShape(Circle())
+                    }
+                }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(localNews.user?.name ?? "Unknown User")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                    // Username
+                    Group {
+                        if let user = localNews.user {
+                            // Current user's news - use LocalUser data
+                            Text(user.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                        } else if let author = newsAuthor {
+                            // Other user's news - use cached data
+                            Text(author.username)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                        } else if isLoadingAuthor {
+                            Text("Loading...")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                        } else {
+                            Text("Unknown User")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                        }
+                    }
                     
                     Text(timeAgo)
                         .font(.subheadline)
@@ -225,6 +272,11 @@ struct NewsCell: View {
         .task {
             await viewModel.fetchVotesStatus(postId: localNews.id)
             await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
+            
+            // Load author data if not current user's news
+            if localNews.user == nil {
+                await loadNewsAuthor()
+            }
         }
         .sheet(isPresented: $showingCommentsSheet) {
             CommentsView(localNews: localNews)
@@ -244,6 +296,37 @@ struct NewsCell: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: localNews.timestamp, relativeTo: Date())
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Load news author data for non-current user's news
+    private func loadNewsAuthor() async {
+        isLoadingAuthor = true
+        
+        // First check cache
+        if let cachedUser = await UserCache.shared.getUser(userId: localNews.ownerUid) {
+            await MainActor.run {
+                self.newsAuthor = cachedUser
+                self.isLoadingAuthor = false
+            }
+            return
+        }
+        
+        // If not in cache, the user should already be cached by the ViewModel
+        // Just wait a moment and check again
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        
+        if let cachedUser = await UserCache.shared.getUser(userId: localNews.ownerUid) {
+            await MainActor.run {
+                self.newsAuthor = cachedUser
+                self.isLoadingAuthor = false
+            }
+        } else {
+            await MainActor.run {
+                self.isLoadingAuthor = false
+            }
+        }
     }
 }
 

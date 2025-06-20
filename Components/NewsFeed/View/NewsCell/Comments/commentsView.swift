@@ -8,12 +8,13 @@ struct CommentsView: View {
     @State private var comments: [Comment] = getSampleComments()
     @State private var newCommentText: String = ""
     @State private var replyingToComment: Comment? = nil
+    @State private var replyingToUser: CachedUser? = nil
     let localNews: LocalNews
     @State var currentUser: User?
+    
     init(localNews: LocalNews) {
         self.localNews = localNews
     }
-    
     
     @Environment(\.dismiss) var dismiss
     
@@ -44,18 +45,21 @@ struct CommentsView: View {
                             Text("Replying to")
                                 .font(.caption)
                                 .foregroundColor(.gray)
-                            if let user = UserCache.shared.cacheusers[targetComment.userId]{
+                            
+                            if let user = replyingToUser {
                                 Text("@\(user.username)")
                                     .font(.caption.bold())
                                     .foregroundColor(.gray)
-                            }else{
-                                Text("@Unknow")
+                            } else {
+                                Text("@Loading...")
                                     .font(.caption.bold())
                                     .foregroundColor(.gray)
                             }
+                            
                             Spacer()
                             Button {
                                 replyingToComment = nil
+                                replyingToUser = nil
                                 newCommentText = ""
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
@@ -70,17 +74,22 @@ struct CommentsView: View {
                     HStack(spacing: 12) {
                         ProfilePictureView(userProfileUrl: currentUser?.profileImageUrl, width: 40, height: 40)
                         
-                        TextField(replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToComment?.username ?? "unknown")...", text: $newCommentText, axis: .vertical)
-                            .textFieldStyle(.plain)
-                            .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
-                            .background(Color(UIColor.systemGray6))
-                            .cornerRadius(20)
-                            .lineLimit(1...5)
+                        TextField(
+                            replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToUser?.username ?? "user")...", 
+                            text: $newCommentText, 
+                            axis: .vertical
+                        )
+                        .textFieldStyle(.plain)
+                        .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
+                        .background(Color(UIColor.systemGray6))
+                        .cornerRadius(20)
+                        .lineLimit(1...5)
                         
-                        Button{
-                            Task{
+                        Button {
+                            Task {
                                 let trimmedText = newCommentText.trimmingCharacters(in: .whitespacesAndNewlines)
                                 guard !trimmedText.isEmpty else { return }
+                                
                                 if let targetComment = replyingToComment {
                                     do {
                                         try await viewModel.addReply(
@@ -89,18 +98,20 @@ struct CommentsView: View {
                                             replyText: trimmedText
                                         )
                                         replyingToComment = nil
-                                        
+                                        replyingToUser = nil
                                     } catch {
+                                        // Handle error
                                     }
-                                }else{
+                                } else {
                                     do {
                                         try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
                                     } catch {
+                                        // Handle error
                                     }
                                 }
                                 newCommentText = ""
                             }
-                        }label:{
+                        } label: {
                             Text(replyingToComment == nil ? "Post" : "Send")
                                 .font(.headline)
                                 .foregroundColor(newCommentText.isEmpty ? .gray : .blue)
@@ -125,8 +136,8 @@ struct CommentsView: View {
                 hideKeyboard()
             }
         }
-        .task{
-            do{
+        .task {
+            do {
                 guard let uid = Auth.auth().currentUser?.uid else { return }
                 let fetchedUser = try await viewModel.fetchCurrentUser(uid)
                 try await viewModel.fetchComments(forNewsId: localNews.id)
@@ -135,7 +146,8 @@ struct CommentsView: View {
                 await MainActor.run {
                     self.currentUser = fetchedUser
                 }
-            }catch{
+            } catch {
+                // Handle error
             }
         }
     }
@@ -147,9 +159,16 @@ struct CommentsView: View {
     private func startReply(to comment: Comment) {
         replyingToComment = comment
         newCommentText = ""
-        // Consider focusing TextField if possible
+        
+        // Load user data for the comment we're replying to
+        Task {
+            if let cachedUser = await UserCache.shared.getUser(userId: comment.userId) {
+                await MainActor.run {
+                    self.replyingToUser = cachedUser
+                }
+            }
+        }
     }
-    
 }
 
 // 5. Main Content View
@@ -181,7 +200,6 @@ struct ContentView_CommentDemo: View {
             CommentsView(localNews: DummyLocalNews.News1)
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
-        
     }
 }
 
