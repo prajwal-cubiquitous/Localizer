@@ -74,41 +74,47 @@ struct UploadData {
     }
     
     static func uploadConstituencyJSON() {
-        guard let url = Bundle.main.url(forResource: "Constituency_detials", withExtension: "json"),
-              let data = try? Data(contentsOf: url) else {
-            print("❌ JSON file not found or unreadable.")
-            return
-        }
-        do {
-            let db = Firestore.firestore()
-            let rawArray = try JSONDecoder().decode([RawConstituency].self, from: data)
-            let collectionRef = db.collection("constituencies")
-            
-            for raw in rawArray {
-                let uuid = UUID().uuidString  // Generate UUID
-                
-                let item = ConstituencyDetails(
-                    id: uuid,
-                    constituencyName: raw.constituencyName,
-                    currentMLAName: raw.currentMLAName,
-                    politicalParty: raw.politicalParty,
-                    associatedPincodes: raw.pincodeString
-                        .split(separator: ",")
-                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                )
-                
-                let docRef = collectionRef.document(uuid) // Use UUID as doc ID
-                
-                do {
-                    try docRef.setData(from: item)
-                } catch {
-                    print("❌ Failed to upload item with UUID: \(error)")
-                }
+        let db = Firestore.firestore()
+        
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "constituencies") { error in
+            if let error = error {
+                print("❌ Error deleting existing constituency data: \(error)")
+                return
             }
             
-            print("✅ Uploaded \(rawArray.count) constituencies to Firestore using UUIDs.")
-        } catch {
-            print("❌ Error decoding JSON: \(error)")
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "Karnataka_Complete_Constituency_Details", withExtension: "json"),
+                  let data = try? Data(contentsOf: url) else {
+                print("❌ Karnataka_Complete_Constituency_Details.json file not found or unreadable.")
+                return
+            }
+            
+            do {
+                let constituencyArray = try JSONDecoder().decode([ConstituencyDetails].self, from: data)
+                let collectionRef = db.collection("constituencies")
+                
+                for constituency in constituencyArray {
+                    let uuid = UUID().uuidString  // Generate UUID
+                    
+                    var updatedConstituency = constituency
+                    updatedConstituency.id = uuid
+                    updatedConstituency.documentId = uuid  // Store document ID as field for easy fetching
+                    
+                    let docRef = collectionRef.document(uuid) // Use UUID as doc ID
+                    
+                    do {
+                        try docRef.setData(from: updatedConstituency)
+                        print("✅ Uploaded constituency: \(constituency.constituencyName) with ID: \(uuid)")
+                    } catch {
+                        print("❌ Failed to upload constituency \(constituency.constituencyName): \(error)")
+                    }
+                }
+                
+                print("✅ Uploaded \(constituencyArray.count) constituencies to Firestore using UUIDs.")
+            } catch {
+                print("❌ Error decoding Karnataka_Complete_Constituency_Details.json: \(error)")
+            }
         }
     }
 }
