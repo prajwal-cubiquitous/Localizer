@@ -13,63 +13,105 @@ struct UploadData {
     static let db = Firestore.firestore()
     
     static func uploadHospitals() {
-        guard let url = Bundle.main.url(forResource: "Hospital", withExtension: "json") else {
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            let hospitals = try decoder.decode([Hospital].self, from: data)
-            
-            for hospital in hospitals {
-                do {
-                    _ = try db.collection("hospitals").addDocument(from: hospital)
-                } catch {
-                }
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "hospitals") { error in
+            if let error = error {
+                print("❌ Error deleting existing hospital data: \(error)")
+                return
             }
-        } catch {
+            
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "Hospital", withExtension: "json") else {
+                print("❌ Hospital.json file not found.")
+                return
+            }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                let hospitals = try decoder.decode([Hospital].self, from: data)
+                
+                for hospital in hospitals {
+                    do {
+                        _ = try db.collection("hospitals").addDocument(from: hospital)
+                        print("✅ Uploaded hospital: \(hospital.name)")
+                    } catch {
+                        print("❌ Failed to upload hospital \(hospital.name): \(error)")
+                    }
+                }
+                print("✅ Uploaded \(hospitals.count) hospitals to Firestore.")
+            } catch {
+                print("❌ Error decoding Hospital.json: \(error)")
+            }
         }
     }
     
     static func uploadSchools() {
-        guard let url = Bundle.main.url(forResource: "school", withExtension: "json") else {
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            let schools = try decoder.decode([School].self, from: data)
-            
-            for school in schools {
-                do {
-                    _ = try db.collection("schools").addDocument(from: school)
-                } catch {
-                }
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "schools") { error in
+            if let error = error {
+                print("❌ Error deleting existing school data: \(error)")
+                return
             }
-        } catch {
+            
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "school", withExtension: "json") else {
+                print("❌ school.json file not found.")
+                return
+            }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                let schools = try decoder.decode([School].self, from: data)
+                
+                for school in schools {
+                    do {
+                        _ = try db.collection("schools").addDocument(from: school)
+                        print("✅ Uploaded school: \(school.schoolName)")
+                    } catch {
+                        print("❌ Failed to upload school \(school.schoolName): \(error)")
+                    }
+                }
+                print("✅ Uploaded \(schools.count) schools to Firestore.")
+            } catch {
+                print("❌ Error decoding school.json: \(error)")
+            }
         }
     }
     
     static func uploadPoliceStations() {
-        guard let url = Bundle.main.url(forResource: "PoliceStation", withExtension: "json") else {
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            let policeStations = try decoder.decode([PoliceStation].self, from: data)
-            
-            for policeStation in policeStations {
-                do {
-                    // Add each police station document to the "policeStations" collection
-                    _ = try db.collection("policeStations").addDocument(from: policeStation)
-                } catch {
-                }
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "policeStations") { error in
+            if let error = error {
+                print("❌ Error deleting existing police station data: \(error)")
+                return
             }
-        } catch {
+            
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "PoliceStation", withExtension: "json") else {
+                print("❌ PoliceStation.json file not found.")
+                return
+            }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                let policeStations = try decoder.decode([PoliceStation].self, from: data)
+                
+                for policeStation in policeStations {
+                    do {
+                        // Add each police station document to the "policeStations" collection
+                        _ = try db.collection("policeStations").addDocument(from: policeStation)
+                        print("✅ Uploaded police station: \(policeStation.name)")
+                    } catch {
+                        print("❌ Failed to upload police station \(policeStation.name): \(error)")
+                    }
+                }
+                print("✅ Uploaded \(policeStations.count) police stations to Firestore.")
+            } catch {
+                print("❌ Error decoding PoliceStation.json: \(error)")
+            }
         }
     }
     

@@ -13,192 +13,218 @@ struct constituencyView: View {
     @State private var showMLAHistory = false
     
     var body: some View {
-        ScrollView {
-                if let ConstituencyInfo = ConstituencyInfo{
-                    VStack(spacing: 20) {
+        ZStack {
+            ScrollView {
+                if let ConstituencyInfo = ConstituencyInfo {
+                    VStack(spacing: 24) {
                         // Profile Header Section
-                        VStack(spacing: 12) {
+                        VStack(spacing: 16) {
                             // Profile Image
-                            Image(systemName: "person.circle.fill")
-                                .font(.system(size: 80))
-                                .foregroundColor(.blue)
-                                .background(
-                                    Circle()
-                                        .fill(Color.orange.opacity(0.3))
-                                        .frame(width: 100, height: 100)
-                                )
-    
-                            // Name
-                            Text(ConstituencyInfo.currentMLAName)
-                                .font(.title2)
-                                .fontWeight(.semibold)
-    
-                            // Party
-                            switch ConstituencyInfo.politicalParty {
-                            case "BJP":
-                                Text("Bharatiya Janata Party")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            case "INC":
-                                Text("Indian National Congress")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            case "JD(S)":
-                                Text("Janata Dal (Secular)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            default:
-                                Text(ConstituencyInfo.politicalParty)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            // Gender and Election Year
-                            HStack {
-                                Text(ConstituencyInfo.gender)
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.blue.opacity(0.1))
-                                    .cornerRadius(8)
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.1))
+                                    .frame(width: 100, height: 100)
                                 
-                                Text("Elected \(ConstituencyInfo.electionYear)")
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.green.opacity(0.1))
-                                    .cornerRadius(8)
+                                Image(systemName: "person.circle.fill")
+                                    .font(.system(size: 70))
+                                    .foregroundColor(.blue)
+                            }
+
+                            // Name and Basic Info
+                            VStack(spacing: 8) {
+                                Text(ConstituencyInfo.currentMLAName)
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .multilineTextAlignment(.center)
+
+                                // Party with proper formatting
+                                Text(getFullPartyName(ConstituencyInfo.politicalParty))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                
+                                // Gender and Election Year Tags
+                                HStack(spacing: 12) {
+                                    Label(ConstituencyInfo.gender, systemImage: "person.fill")
+                                        .font(.caption)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.blue.opacity(0.1))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(12)
+                                    
+                                    Label("Elected \(ConstituencyInfo.electionYear)", systemImage: "calendar")
+                                        .font(.caption)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.green.opacity(0.1))
+                                        .foregroundColor(.green)
+                                        .cornerRadius(12)
+                                }
                             }
                         }
-                        .padding(.top, 20)
-    
-                        // Basic Constituency Info Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Constituency Details")
-                                .font(.headline)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 20)
-    
-                            // Constituency Card
-                            VStack(alignment: .leading, spacing: 12) {
+                        .padding(.top, 24)
+
+                        // Constituency Information Card
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Section Header
+                            HStack {
+                                Label("Constituency Details", systemImage: "building.2")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal, 20)
+
+                            // Main Constituency Card
+                            VStack(alignment: .leading, spacing: 16) {
+                                // Constituency Name and Number
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(ConstituencyInfo.constituencyName)
                                             .font(.title3)
-                                            .fontWeight(.medium)
-    
+                                            .fontWeight(.semibold)
+
                                         Text("Constituency #\(ConstituencyInfo.constituencyNumber)")
                                             .font(.subheadline)
                                             .foregroundColor(.secondary)
                                     }
-    
+
                                     Spacer()
-    
-                                    // Map Icon
-                                    Image(systemName: "map.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.orange)
+
+                                    // Map Icon with background
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.orange.opacity(0.1))
+                                            .frame(width: 44, height: 44)
+                                        
+                                        Image(systemName: "map.fill")
+                                            .font(.title3)
+                                            .foregroundColor(.orange)
+                                    }
                                 }
                                 
                                 Divider()
+                                    .padding(.vertical, 4)
                                 
-                                // Additional Details
-                                VStack(alignment: .leading, spacing: 8) {
-                                    ConstituencyDetailRow(title: "District", value: ConstituencyInfo.district)
-                                    ConstituencyDetailRow(title: "Lok Sabha Constituency", value: ConstituencyInfo.lokSabhaConstituency)
-                                    ConstituencyDetailRow(title: "Assembly Term", value: ConstituencyInfo.assemblyTerm)
-                                    ConstituencyDetailRow(title: "Reservation Status", value: ConstituencyInfo.reservationStatus)
-                                    ConstituencyDetailRow(title: "Previous MLA", value: ConstituencyInfo.previousMLA)
+                                // Detailed Information Grid
+                                VStack(spacing: 12) {
+                                    ConstituencyDetailRow(
+                                        title: "District", 
+                                        value: ConstituencyInfo.district,
+                                        icon: "location.fill"
+                                    )
+                                    
+                                    ConstituencyDetailRow(
+                                        title: "Lok Sabha Constituency", 
+                                        value: ConstituencyInfo.lokSabhaConstituency,
+                                        icon: "building.columns"
+                                    )
+                                    
+                                    ConstituencyDetailRow(
+                                        title: "Assembly Term", 
+                                        value: ConstituencyInfo.assemblyTerm,
+                                        icon: "calendar.badge.clock"
+                                    )
+                                    
+                                    ConstituencyDetailRow(
+                                        title: "Reservation Status", 
+                                        value: ConstituencyInfo.reservationStatus,
+                                        icon: "shield.fill"
+                                    )
+                                    
+                                    ConstituencyDetailRow(
+                                        title: "Previous MLA", 
+                                        value: ConstituencyInfo.previousMLA,
+                                        icon: "person.2.fill"
+                                    )
+                                    
+                                    ConstituencyDetailRow(
+                                        title: "Victory Margin", 
+                                        value: ConstituencyInfo.victoryMargin,
+                                        icon: "chart.bar.fill"
+                                    )
                                 }
                             }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
+                            .padding(20)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(.systemGray6))
+                            )
                             .padding(.horizontal, 20)
                         }
-                        
-                        // Pincodes Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Associated Pincodes")
-                                .font(.headline)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 20)
-                            
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
-                                ForEach(ConstituencyInfo.associatedPincodes, id: \.self) { pincode in
-                                    Text(pincode)
-                                        .font(.caption)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.orange.opacity(0.1))
-                                        .cornerRadius(6)
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                        }
-    
-                        // MLA History Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("MLA History")
-                                .font(.headline)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 20)
-    
-                            // History Card
-                            Button(action: {
-                                if ConstituencyInfo.mlaHistory != nil && !ConstituencyInfo.mlaHistory!.isEmpty {
-                                    showMLAHistory.toggle()
-                                }
-                            }) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        if let mlaHistory = ConstituencyInfo.mlaHistory, !mlaHistory.isEmpty {
-                                            Text("View Past Representatives")
-                                                .font(.body)
-                                                .foregroundColor(.primary)
-                                            Text("\(mlaHistory.count) historical records available")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        } else {
-                                            Text("MLA History")
-                                                .font(.body)
-                                                .foregroundColor(.primary)
-                                            Text("Still not added")
-                                                .font(.caption)
-                                                .foregroundColor(.red)
-                                        }
-                                    }
-    
-                                    Spacer()
-    
-                                    if ConstituencyInfo.mlaHistory != nil && !ConstituencyInfo.mlaHistory!.isEmpty {
-                                        Image(systemName: "chevron.right")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    } else {
-                                        Image(systemName: "exclamationmark.circle")
-                                            .font(.subheadline)
-                                            .foregroundColor(.red)
-                                    }
-                                }
-                            }
-                            .disabled(ConstituencyInfo.mlaHistory == nil || ConstituencyInfo.mlaHistory!.isEmpty)
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                            .padding(.horizontal, 20)
-                        }
-    
+
+                        // Bottom padding to account for floating button
                         Spacer()
+                            .frame(height: 100)
                     }
-                }else {
-                ProgressView("Loading constituencies...")
+                } else {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        
+                        Text("Loading constituency details...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+            .background(Color(.systemBackground))
+            
+            // Floating MLA History Button
+            VStack {
+                Spacer()
+                
+                HStack {
+                    Spacer()
+                    
+                    Button(action: {
+                        showMLAHistory.toggle()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 16, weight: .semibold))
+                            
+                            Text("History")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 28)
+                                .fill(Color.blue)
+                                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                        )
+                    }
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 34) // Account for safe area
+                }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemBackground))
         .sheet(isPresented: $showMLAHistory) {
-            MLAHistoryView(mlaHistory: ConstituencyInfo?.mlaHistory ?? [], constituencyName: ConstituencyInfo?.constituencyName ?? "")
+            MLAHistoryView(
+                mlaHistory: ConstituencyInfo?.mlaHistory ?? [], 
+                constituencyName: ConstituencyInfo?.constituencyName ?? ""
+            )
+        }
+    }
+    
+    // Helper function to get full party names
+    private func getFullPartyName(_ party: String) -> String {
+        switch party {
+        case "BJP":
+            return "Bharatiya Janata Party"
+        case "INC":
+            return "Indian National Congress"
+        case "JD(S)":
+            return "Janata Dal (Secular)"
+        default:
+            return party
         }
     }
 }
@@ -206,20 +232,30 @@ struct constituencyView: View {
 struct ConstituencyDetailRow: View {
     let title: String
     let value: String
+    let icon: String
     
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Icon
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(.blue)
+                .frame(width: 20, alignment: .leading)
+            
+            // Title
             Text(title)
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
-                .frame(width: 120, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
+            // Value
             Text(value)
-                .font(.caption)
+                .font(.subheadline)
                 .fontWeight(.medium)
-            
-            Spacer()
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.trailing)
         }
+        .padding(.vertical, 2)
     }
 }
 
@@ -230,45 +266,82 @@ struct MLAHistoryView: View {
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(mlaHistory.indices, id: \.self) { index in
-                    let history = mlaHistory[index]
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(history.electionYear)
-                                .font(.headline)
+            Group {
+                if mlaHistory.isEmpty {
+                    // Empty State
+                    VStack(spacing: 20) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray.opacity(0.5))
+                        
+                        VStack(spacing: 8) {
+                            Text("No History Available")
+                                .font(.title2)
                                 .fontWeight(.semibold)
+                                .foregroundColor(.primary)
                             
-                            Spacer()
-                            
-                            Text(history.politicalParty)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(partyColor(for: history.politicalParty).opacity(0.2))
-                                .foregroundColor(partyColor(for: history.politicalParty))
-                                .cornerRadius(8)
+                            Text("MLA history for this constituency is still not added")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
                         }
-                        
-                        Text(history.mlaName)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        
-                        Text(history.victoryMargin)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
-                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(.systemBackground))
+                } else {
+                    // History List
+                    List {
+                        ForEach(mlaHistory.indices, id: \.self) { index in
+                            let history = mlaHistory[index]
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                // Year and Party
+                                HStack {
+                                    Text(history.electionYear)
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Text(history.politicalParty)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 4)
+                                        .background(partyColor(for: history.politicalParty).opacity(0.15))
+                                        .foregroundColor(partyColor(for: history.politicalParty))
+                                        .cornerRadius(12)
+                                }
+                                
+                                // MLA Name
+                                Text(history.mlaName)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                
+                                // Victory Margin
+                                if !history.victoryMargin.isEmpty {
+                                    Text(history.victoryMargin)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                            .listRowBackground(Color(.systemBackground))
+                        }
+                    }
+                    .listStyle(PlainListStyle())
                 }
             }
             .navigationTitle("MLA History")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
+                    .fontWeight(.semibold)
                 }
             }
         }

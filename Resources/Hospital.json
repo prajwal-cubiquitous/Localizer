@@ -88,5 +88,491 @@
         "Pincode": "560038",
         "Phone Number": "+91 80 25260571",
         "Google Map Link": "https://www.google.com/maps/search/Epidemic+Diseases+Hospital,+Old+Madras+Road,+Indiranagar,+Bengaluru+560038"
+    },
+    {
+        "Constituency": "Bommanahalli",
+        "Name": "Apollo Hospitals Bannerghatta",
+        "Type": "Hospital",
+        "Full address ": "154/11, Opp. IIM, Bannerghatta Road, Bengaluru",
+        "Pincode": "560076",
+        "Phone Number": "+91 80 26304050",
+        "Google Map Link": "https://www.google.com/maps/search/Apollo+Hospitals+Bannerghatta,+154/11,+Opp.+IIM,+Bannerghatta+Road,+Bengaluru+560076"
+    },
+    {
+        "Constituency": "Sheshadripuram",
+        "Name": "Apollo Hospitals Sheshadripuram",
+        "Type": "Hospital",
+        "Full address ": "No. 1, Old No. 28, Platform Road, Near Mantri Square Mall, Seshadripuram, Bengaluru",
+        "Pincode": "560020",
+        "Phone Number": "+91 80 46688888",
+        "Google Map Link": "https://www.google.com/maps/search/Apollo+Hospitals+Sheshadripuram,+Platform+Road,+Seshadripuram,+Bengaluru+560020"
+    },
+    {
+        "Constituency": "Jayanagar",
+        "Name": "Apollo Speciality Hospital Jayanagar",
+        "Type": "Hospital",
+        "Full address ": "#21/2, 14th Cross Road, Near Madhavan Park Circle, Jayanagar, Bengaluru",
+        "Pincode": "560011",
+        "Phone Number": "+91 80 46124444",
+        "Google Map Link": "https://www.google.com/maps/search/Apollo+Speciality+Hospital+Jayanagar,+14th+Cross+Road,+Jayanagar,+Bengaluru+560011"
+    },
+    {
+        "Constituency": "Whitefield",
+        "Name": "Manipal Hospital Whitefield",
+        "Type": "Hospital",
+        "Full address ": "#143, 212-2015, EPIP Industrial Area, Hoodi Village, Whitefield, Bengaluru",
+        "Pincode": "560066",
+        "Phone Number": "+91 80 61505000",
+        "Google Map Link": "https://www.google.com/maps/search/Manipal+Hospital+Whitefield,+EPIP+Industrial+Area,+Hoodi+Village,+Whitefield,+Bengaluru+560066"
+    },
+    {
+        "Constituency": "Malleswaram",
+        "Name": "Manipal Hospital Malleshwaram",
+        "Type": "Hospital",
+        "Full address ": "No. 71, 11th Main Rd, Malleshwaram, Bengaluru",
+        "Pincode": "560003",
+        "Phone Number": "+91 80 25024444",
+        "Google Map Link": "https://www.google.com/maps/search/Manipal+Hospital+Malleshwaram,+11th+Main+Rd,+Malleshwaram,+Bengaluru+560003"
+    },
+    {
+        "Constituency": "Rajajinagar",
+        "Name": "Fortis Hospital Rajajinagar",
+        "Type": "Hospital",
+        "Full address ": "No. 14, Cunningham Road, Bengaluru",
+        "Pincode": "560052",
+        "Phone Number": "+91 80 66214444",
+        "Google Map Link": "https://www.google.com/maps/search/Fortis+Hospital+Rajajinagar,+Cunningham+Road,+Bengaluru+560052"
+    },
+    {
+        "Constituency": "Bommanahalli",
+        "Name": "Fortis Hospital Bannerghatta Road",
+        "Type": "Hospital",
+        "Full address ": "154/9, Opp. IIM-B, Bannerghatta Road, Bengaluru",
+        "Pincode": "560076",
+        "Phone Number": "+91 80 71791000",
+        "Google Map Link": "https://www.google.com/maps/search/Fortis+Hospital+Bannerghatta+Road,+154/9,+Opp.+IIM-B,+Bannerghatta+Road,+Bengaluru+560076"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "Columbia Asia Hospital Hebbal",
+        "Type": "Hospital",
+        "Full address ": "Kirloskar Business Park, Bellary Road, Hebbal, Bengaluru",
+        "Pincode": "560024",
+        "Phone Number": "+91 80 66765000",
+        "Google Map Link": "https://www.google.com/maps/search/Columbia+Asia+Hospital+Hebbal,+Kirloskar+Business+Park,+Bellary+Road,+Hebbal,+Bengaluru+560024"
+    },
+    {
+        "Constituency": "Yeshwanthpur",
+        "Name": "Columbia Asia Hospital Yeshwanthpur",
+        "Type": "Hospital",
+        "Full address ": "26/4, Brigade Gateway, Beside Metro, Yeshwanthpur, Bengaluru",
+        "Pincode": "560055",
+        "Phone Number": "+91 80 39989999",
+        "Google Map Link": "https://www.google.com/maps/search/Columbia+Asia+Hospital+Yeshwanthpur,+Brigade+Gateway,+Yeshwanthpur,+Bengaluru+560055"
+    },
+    {
+        "Constituency": "Whitefield",
+        "Name": "Columbia Asia Hospital Whitefield",
+        "Type": "Hospital",
+        "Full address ": "Survey No. 10P & 12P, Ramagondanahalli, Varthur Hobli, Whitefield, Bengaluru",
+        "Pincode": "560066",
+        "Phone Number": "+91 80 67676767",
+        "Google Map Link": "https://www.google.com/maps/search/Columbia+Asia+Hospital+Whitefield,+Ramagondanahalli,+Varthur+Hobli,+Whitefield,+Bengaluru+560066"
+    },
+    {
+        "Constituency": "Mahadevapura",
+        "Name": "Narayana Multispeciality Hospital",
+        "Type": "Hospital",
+        "Full address ": "258/A, Bommasandra Industrial Area, Anekal Taluk, Bengaluru",
+        "Pincode": "560099",
+        "Phone Number": "+91 80 71222222",
+        "Google Map Link": "https://www.google.com/maps/search/Narayana+Multispeciality+Hospital,+Bommasandra+Industrial+Area,+Anekal+Taluk,+Bengaluru+560099"
+    },
+    {
+        "Constituency": "Mahalakshmi Layout",
+        "Name": "Narayana Multispeciality Hospital Whitefield",
+        "Type": "Hospital",
+        "Full address ": "Survey No. 92/1 B, Hewlett Packard Avenue, Konappana Agrahara, Electronic City, Bengaluru",
+        "Pincode": "560100",
+        "Phone Number": "+91 80 71222222",
+        "Google Map Link": "https://www.google.com/maps/search/Narayana+Multispeciality+Hospital+Whitefield,+Electronic+City,+Bengaluru+560100"
+    },
+    {
+        "Constituency": "Chickpet",
+        "Name": "Sparsh Hospital Richmond Road",
+        "Type": "Hospital",
+        "Full address ": "146, Opposite Police Commissioner's Office, Richmond Road, Bengaluru",
+        "Pincode": "560025",
+        "Phone Number": "+91 80 43556666",
+        "Google Map Link": "https://www.google.com/maps/search/Sparsh+Hospital+Richmond+Road,+146,+Richmond+Road,+Bengaluru+560025"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Sparsh Hospital Yelahanka",
+        "Type": "Hospital",
+        "Full address ": "4/1, Tumkur Main Road, Yeshwanthpur Industrial Area, Phase 1, Yelahanka, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 43556666",
+        "Google Map Link": "https://www.google.com/maps/search/Sparsh+Hospital+Yelahanka,+Tumkur+Main+Road,+Yelahanka,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Rajajinagar",
+        "Name": "BGS Gleneagles Global Hospitals",
+        "Type": "Hospital",
+        "Full address ": "67, Uttarahalli Road, Kengeri, Bengaluru",
+        "Pincode": "560060",
+        "Phone Number": "+91 80 49212121",
+        "Google Map Link": "https://www.google.com/maps/search/BGS+Gleneagles+Global+Hospitals,+Uttarahalli+Road,+Kengeri,+Bengaluru+560060"
+    },
+    {
+        "Constituency": "Shantinagar",
+        "Name": "St. John's Medical College Hospital",
+        "Type": "Hospital",
+        "Full address ": "Sarjapur Road, Bengaluru",
+        "Pincode": "560034",
+        "Phone Number": "+91 80 49466666",
+        "Google Map Link": "https://www.google.com/maps/search/St.+John's+Medical+College+Hospital,+Sarjapur+Road,+Bengaluru+560034"
+    },
+    {
+        "Constituency": "Vijayanagar",
+        "Name": "Sagar Hospital Banashankari",
+        "Type": "Hospital",
+        "Full address ": "No. 44/54, 30th Cross, Tilak Nagar, Jayanagar Extension, Bengaluru",
+        "Pincode": "560041",
+        "Phone Number": "+91 80 66711111",
+        "Google Map Link": "https://www.google.com/maps/search/Sagar+Hospital+Banashankari,+Tilak+Nagar,+Jayanagar+Extension,+Bengaluru+560041"
+    },
+    {
+        "Constituency": "Dasarahalli",
+        "Name": "Sagar Hospital Kumaraswamy Layout",
+        "Type": "Hospital",
+        "Full address ": "No. 2209, 1st Floor, Kumaraswamy Layout, Bengaluru",
+        "Pincode": "560078",
+        "Phone Number": "+91 80 66711111",
+        "Google Map Link": "https://www.google.com/maps/search/Sagar+Hospital+Kumaraswamy+Layout,+Kumaraswamy+Layout,+Bengaluru+560078"
+    },
+    {
+        "Constituency": "Chickpet",
+        "Name": "Ramaiah Memorial Hospital",
+        "Type": "Hospital",
+        "Full address ": "New BEL Road, MSRIT Post, Bengaluru",
+        "Pincode": "560054",
+        "Phone Number": "+91 80 23601000",
+        "Google Map Link": "https://www.google.com/maps/search/Ramaiah+Memorial+Hospital,+New+BEL+Road,+MSRIT+Post,+Bengaluru+560054"
+    },
+    {
+        "Constituency": "Chickpet",
+        "Name": "Bangalore Baptist Hospital",
+        "Type": "Hospital",
+        "Full address ": "Bellary Road, Hebbal, Bengaluru",
+        "Pincode": "560024",
+        "Phone Number": "+91 80 22267979",
+        "Google Map Link": "https://www.google.com/maps/search/Bangalore+Baptist+Hospital,+Bellary+Road,+Hebbal,+Bengaluru+560024"
+    },
+    {
+        "Constituency": "Mysore",
+        "Name": "JSS Hospital",
+        "Type": "Hospital",
+        "Full address ": "Mahatma Gandhi Road, Mysuru",
+        "Pincode": "570004",
+        "Phone Number": "+91 821 2548400",
+        "Google Map Link": "https://www.google.com/maps/search/JSS+Hospital,+Mahatma+Gandhi+Road,+Mysuru+570004"
+    },
+    {
+        "Constituency": "Mysore",
+        "Name": "Apollo BGS Hospitals Mysore",
+        "Type": "Hospital",
+        "Full address ": "Adichunchanagiri Road, Kuvempunagar, Mysuru",
+        "Pincode": "570023",
+        "Phone Number": "+91 821 2566666",
+        "Google Map Link": "https://www.google.com/maps/search/Apollo+BGS+Hospitals+Mysore,+Adichunchanagiri+Road,+Kuvempunagar,+Mysuru+570023"
+    },
+    {
+        "Constituency": "Mysore",
+        "Name": "Columbia Asia Hospital Mysore",
+        "Type": "Hospital",
+        "Full address ": "85-86, Bangalore-Mysore Ring Road Junction, Bannimantap 'A' Layout, Mysuru",
+        "Pincode": "570015",
+        "Phone Number": "+91 821 5077777",
+        "Google Map Link": "https://www.google.com/maps/search/Columbia+Asia+Hospital+Mysore,+Bangalore-Mysore+Ring+Road+Junction,+Bannimantap,+Mysuru+570015"
+    },
+    {
+        "Constituency": "Mysore",
+        "Name": "Vikram Hospital Mysore",
+        "Type": "Hospital",
+        "Full address ": "No. 2, Nazarbad Main Road, Mysuru",
+        "Pincode": "570010",
+        "Phone Number": "+91 821 4252525",
+        "Google Map Link": "https://www.google.com/maps/search/Vikram+Hospital+Mysore,+Nazarbad+Main+Road,+Mysuru+570010"
+    },
+    {
+        "Constituency": "Mysore",
+        "Name": "K.R. Hospital",
+        "Type": "Hospital",
+        "Full address ": "Irwin Road, Mysuru",
+        "Pincode": "570001",
+        "Phone Number": "+91 821 2422269",
+        "Google Map Link": "https://www.google.com/maps/search/K.R.+Hospital,+Irwin+Road,+Mysuru+570001"
+    },
+    {
+        "Constituency": "Mangalore City North",
+        "Name": "KMC Hospital Mangalore",
+        "Type": "Hospital",
+        "Full address ": "Ambedkar Circle, Mangalore",
+        "Pincode": "575001",
+        "Phone Number": "+91 824 2444444",
+        "Google Map Link": "https://www.google.com/maps/search/KMC+Hospital+Mangalore,+Ambedkar+Circle,+Mangalore+575001"
+    },
+    {
+        "Constituency": "Mangalore City South",
+        "Name": "AJ Hospital & Research Centre",
+        "Type": "Hospital",
+        "Full address ": "Kuntikana, Mangalore",
+        "Pincode": "575004",
+        "Phone Number": "+91 824 2225533",
+        "Google Map Link": "https://www.google.com/maps/search/AJ+Hospital+%26+Research+Centre,+Kuntikana,+Mangalore+575004"
+    },
+    {
+        "Constituency": "Mangalore City North",
+        "Name": "Unity Hospital",
+        "Type": "Hospital",
+        "Full address ": "Kankanady, Mangalore",
+        "Pincode": "575002",
+        "Phone Number": "+91 824 2491919",
+        "Google Map Link": "https://www.google.com/maps/search/Unity+Hospital,+Kankanady,+Mangalore+575002"
+    },
+    {
+        "Constituency": "Mangalore City South",
+        "Name": "Father Muller Medical College Hospital",
+        "Type": "Hospital",
+        "Full address ": "Kankanady, Mangalore",
+        "Pincode": "575002",
+        "Phone Number": "+91 824 2238000",
+        "Google Map Link": "https://www.google.com/maps/search/Father+Muller+Medical+College+Hospital,+Kankanady,+Mangalore+575002"
+    },
+    {
+        "Constituency": "Mangalore City North",
+        "Name": "Wenlock Hospital",
+        "Type": "Hospital",
+        "Full address ": "Hampankatta, Mangalore",
+        "Pincode": "575001",
+        "Phone Number": "+91 824 2421321",
+        "Google Map Link": "https://www.google.com/maps/search/Wenlock+Hospital,+Hampankatta,+Mangalore+575001"
+    },
+    {
+        "Constituency": "Hubli-Dharwad Central",
+        "Name": "KIMS Hubli",
+        "Type": "Hospital",
+        "Full address ": "PB Road, Vidyanagar, Hubli",
+        "Pincode": "580021",
+        "Phone Number": "+91 836 2378100",
+        "Google Map Link": "https://www.google.com/maps/search/KIMS+Hubli,+PB+Road,+Vidyanagar,+Hubli+580021"
+    },
+    {
+        "Constituency": "Hubli-Dharwad East",
+        "Name": "SDM Hospital Dharwad",
+        "Type": "Hospital",
+        "Full address ": "Navanagar, Dharwad",
+        "Pincode": "580009",
+        "Phone Number": "+91 836 2447700",
+        "Google Map Link": "https://www.google.com/maps/search/SDM+Hospital+Dharwad,+Navanagar,+Dharwad+580009"
+    },
+    {
+        "Constituency": "Hubli-Dharwad West",
+        "Name": "KLES Dr. Prabhakar Kore Hospital",
+        "Type": "Hospital",
+        "Full address ": "Nehru Nagar, Belagavi",
+        "Pincode": "590010",
+        "Phone Number": "+91 831 2473777",
+        "Google Map Link": "https://www.google.com/maps/search/KLES+Dr.+Prabhakar+Kore+Hospital,+Nehru+Nagar,+Belagavi+590010"
+    },
+    {
+        "Constituency": "Bellary",
+        "Name": "Vijayanagara Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Cantonment, Ballari",
+        "Pincode": "583104",
+        "Phone Number": "+91 8392 262262",
+        "Google Map Link": "https://www.google.com/maps/search/Vijayanagara+Institute+of+Medical+Sciences,+Cantonment,+Ballari+583104"
+    },
+    {
+        "Constituency": "Bellary",
+        "Name": "RLS Hospital",
+        "Type": "Hospital",
+        "Full address ": "Sirwar Road, Ballari",
+        "Pincode": "583103",
+        "Phone Number": "+91 8392 255777",
+        "Google Map Link": "https://www.google.com/maps/search/RLS+Hospital,+Sirwar+Road,+Ballari+583103"
+    },
+    {
+        "Constituency": "Gulbarga North",
+        "Name": "Al-Ameen Medical College Hospital",
+        "Type": "Hospital",
+        "Full address ": "Athani Road, Bijapur",
+        "Pincode": "586108",
+        "Phone Number": "+91 8352 262100",
+        "Google Map Link": "https://www.google.com/maps/search/Al-Ameen+Medical+College+Hospital,+Athani+Road,+Bijapur+586108"
+    },
+    {
+        "Constituency": "Gulbarga South",
+        "Name": "Gulbarga Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Sedam Road, Kalaburagi",
+        "Pincode": "585105",
+        "Phone Number": "+91 8472 226464",
+        "Google Map Link": "https://www.google.com/maps/search/Gulbarga+Institute+of+Medical+Sciences,+Sedam+Road,+Kalaburagi+585105"
+    },
+    {
+        "Constituency": "Bijapur City",
+        "Name": "BLDE University Shri B.M. Patil Medical College Hospital",
+        "Type": "Hospital",
+        "Full address ": "Solapur Road, Vijayapura",
+        "Pincode": "586103",
+        "Phone Number": "+91 8352 262777",
+        "Google Map Link": "https://www.google.com/maps/search/BLDE+University+Shri+B.M.+Patil+Medical+College+Hospital,+Solapur+Road,+Vijayapura+586103"
+    },
+    {
+        "Constituency": "Udupi",
+        "Name": "Manipal Hospital Udupi",
+        "Type": "Hospital",
+        "Full address ": "Tiger Circle, Manipal",
+        "Pincode": "576104",
+        "Phone Number": "+91 820 2922222",
+        "Google Map Link": "https://www.google.com/maps/search/Manipal+Hospital+Udupi,+Tiger+Circle,+Manipal+576104"
+    },
+    {
+        "Constituency": "Udupi",
+        "Name": "Kasturba Medical College Hospital",
+        "Type": "Hospital",
+        "Full address ": "Lighthouse Hill Road, Manipal",
+        "Pincode": "576104",
+        "Phone Number": "+91 820 2922201",
+        "Google Map Link": "https://www.google.com/maps/search/Kasturba+Medical+College+Hospital,+Lighthouse+Hill+Road,+Manipal+576104"
+    },
+    {
+        "Constituency": "Shimoga",
+        "Name": "McGann Hospital",
+        "Type": "Hospital",
+        "Full address ": "Vinoba Road, Shimoga",
+        "Pincode": "577201",
+        "Phone Number": "+91 8182 274747",
+        "Google Map Link": "https://www.google.com/maps/search/McGann+Hospital,+Vinoba+Road,+Shimoga+577201"
+    },
+    {
+        "Constituency": "Tumkur",
+        "Name": "Shridevi Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "NH-4, Sira Road, Tumakuru",
+        "Pincode": "572106",
+        "Phone Number": "+91 816 2274747",
+        "Google Map Link": "https://www.google.com/maps/search/Shridevi+Institute+of+Medical+Sciences,+NH-4,+Sira+Road,+Tumakuru+572106"
+    },
+    {
+        "Constituency": "Hassan",
+        "Name": "Hassan Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Alur Road, Hassan",
+        "Pincode": "573201",
+        "Phone Number": "+91 8172 269876",
+        "Google Map Link": "https://www.google.com/maps/search/Hassan+Institute+of+Medical+Sciences,+Alur+Road,+Hassan+573201"
+    },
+    {
+        "Constituency": "Mandya",
+        "Name": "Mandya Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Mandya",
+        "Pincode": "571401",
+        "Phone Number": "+91 8232 220239",
+        "Google Map Link": "https://www.google.com/maps/search/Mandya+Institute+of+Medical+Sciences,+Mandya+571401"
+    },
+    {
+        "Constituency": "Raichur",
+        "Name": "Raichur Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Raichur",
+        "Pincode": "584102",
+        "Phone Number": "+91 8532 228481",
+        "Google Map Link": "https://www.google.com/maps/search/Raichur+Institute+of+Medical+Sciences,+Raichur+584102"
+    },
+    {
+        "Constituency": "Koppal",
+        "Name": "Koppal Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Koppal",
+        "Pincode": "583231",
+        "Phone Number": "+91 8539 220301",
+        "Google Map Link": "https://www.google.com/maps/search/Koppal+Institute+of+Medical+Sciences,+Koppal+583231"
+    },
+    {
+        "Constituency": "Gadag",
+        "Name": "Gadag Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Mallasamudra, Gadag",
+        "Pincode": "582103",
+        "Phone Number": "+91 8372 230100",
+        "Google Map Link": "https://www.google.com/maps/search/Gadag+Institute+of+Medical+Sciences,+Mallasamudra,+Gadag+582103"
+    },
+    {
+        "Constituency": "Bagalkot",
+        "Name": "S. Nijalingappa Medical College",
+        "Type": "Hospital",
+        "Full address ": "Navanagar, Bagalkot",
+        "Pincode": "587103",
+        "Phone Number": "+91 8354 230301",
+        "Google Map Link": "https://www.google.com/maps/search/S.+Nijalingappa+Medical+College,+Navanagar,+Bagalkot+587103"
+    },
+    {
+        "Constituency": "Chitradurga",
+        "Name": "Basaveshwara Medical College Hospital",
+        "Type": "Hospital",
+        "Full address ": "NH-4, Chitradurga",
+        "Pincode": "577502",
+        "Phone Number": "+91 8194 226464",
+        "Google Map Link": "https://www.google.com/maps/search/Basaveshwara+Medical+College+Hospital,+NH-4,+Chitradurga+577502"
+    },
+    {
+        "Constituency": "Davangere South",
+        "Name": "S.S. Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "NH-4, Davangere",
+        "Pincode": "577005",
+        "Phone Number": "+91 8192 231001",
+        "Google Map Link": "https://www.google.com/maps/search/S.S.+Institute+of+Medical+Sciences,+NH-4,+Davangere+577005"
+    },
+    {
+        "Constituency": "Chamarajanagar",
+        "Name": "Chamarajanagar Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Yadapura, Chamarajanagar",
+        "Pincode": "571313",
+        "Phone Number": "+91 8226 222218",
+        "Google Map Link": "https://www.google.com/maps/search/Chamarajanagar+Institute+of+Medical+Sciences,+Yadapura,+Chamarajanagar+571313"
+    },
+    {
+        "Constituency": "Chikkamagaluru",
+        "Name": "Chikkamagaluru Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Sampige Road, Chikkamagaluru",
+        "Pincode": "577102",
+        "Phone Number": "+91 8262 220301",
+        "Google Map Link": "https://www.google.com/maps/search/Chikkamagaluru+Institute+of+Medical+Sciences,+Sampige+Road,+Chikkamagaluru+577102"
+    },
+    {
+        "Constituency": "Karwar",
+        "Name": "Karwar Institute of Medical Sciences",
+        "Type": "Hospital",
+        "Full address ": "Karwar",
+        "Pincode": "581301",
+        "Phone Number": "+91 8382 226464",
+        "Google Map Link": "https://www.google.com/maps/search/Karwar+Institute+of+Medical+Sciences,+Karwar+581301"
+    },
+    {
+        "Constituency": "Kolar",
+        "Name": "Sri Devaraj Urs Medical College",
+        "Type": "Hospital",
+        "Full address ": "Tamaka, Kolar",
+        "Pincode": "563101",
+        "Phone Number": "+91 8152 243001",
+        "Google Map Link": "https://www.google.com/maps/search/Sri+Devaraj+Urs+Medical+College,+Tamaka,+Kolar+563101"
     }
 ]
