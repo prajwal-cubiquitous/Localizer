@@ -531,9 +531,10 @@ struct EditProfileView: View {
                     bio: bio.trimmingCharacters(in: .whitespacesAndNewlines)
                 )
                 
-                // Upload profile image if selected
+                // Upload profile image if selected (and delete old one)
                 if let selectedImage = selectedImage {
-                    try await viewModel.uploadProfileImage(profileImage: selectedImage)
+                    let oldImageUrl = localUser.profileImageUrl // Get current image URL
+                    try await viewModel.uploadProfileImage(profileImage: selectedImage, oldImageUrl: oldImageUrl)
                 }
                 
                 // Update local user

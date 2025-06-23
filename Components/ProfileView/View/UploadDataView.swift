@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseStorage
 
 // Main view that constructs the UI shown in the image.
 struct UploadDataView: View {
@@ -41,6 +42,18 @@ struct UploadDataView: View {
                     .buttonStyle(CustomButtonStyle())
                     Button("Constituency Data") {
                         UploadData.uploadConstituencyJSON()
+                    }
+                    .buttonStyle(CustomButtonStyle())
+                    
+                    Button("Clean Profile Images") {
+                        Task {
+                            do {
+                                try await ImageUploaderForProfile.deleteAllProfileImages()
+                                print("✅ All profile images cleaned up successfully")
+                            } catch {
+                                print("❌ Failed to clean profile images: \(error)")
+                            }
+                        }
                     }
                     .buttonStyle(CustomButtonStyle())
                 }
