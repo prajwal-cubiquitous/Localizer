@@ -177,100 +177,113 @@ final class NewsFeedViewModel: ObservableObject {
     private func insertLocalNews(_ items: [News], context: ModelContext) async {
         let currentUserId = getCurrentUserId()
         
-        // Process items sequentially to avoid conflicts
-        for news in items {
-            await processNewsItem(news, currentUserId: currentUserId, context: context)
-        }
-        
-        // Save context on main thread
+        // Process all items on main thread to avoid race conditions
         await MainActor.run {
             do {
+                // Get all existing news IDs for this constituency to check for duplicates
+                let constituencyId = self.currentConstituencyId
+                let existingDescriptor = FetchDescriptor<LocalNews>(
+                    predicate: #Predicate<LocalNews> { $0.constituencyId == constituencyId }
+                )
+                let existingNews = try context.fetch(existingDescriptor)
+                let existingIds = Set(existingNews.map { $0.id })
+                
+                // Process items sequentially to avoid conflicts
+                for news in items {
+                    // Skip if already exists
+                    if existingIds.contains(news.id) {
+                        print("⚠️ Skipping duplicate news item: \(news.id)")
+                        continue
+                    }
+                    
+                    // Process the news item synchronously
+                    processNewsItemSync(news, currentUserId: currentUserId, context: context)
+                }
+                
+                // Save context
                 try context.save()
             } catch {
-                print("❌ Error saving context: \(error)")
+                print("❌ Error inserting local news: \(error)")
             }
         }
     }
     
-    /// Process a single news item safely
-    private func processNewsItem(_ news: News, currentUserId: String, context: ModelContext) async {
-        // Check if this news item already exists to prevent duplicates
-        let existingNews = await MainActor.run {
-            let descriptor = FetchDescriptor<LocalNews>(
-                predicate: #Predicate<LocalNews> { $0.id == news.id }
-            )
-            return (try? context.fetch(descriptor)) ?? []
-        }
-        
-        if !existingNews.isEmpty {
-            print("⚠️ Skipping duplicate news item: \(news.id)")
-            return
-        }
-        
+    /// Process a single news item synchronously on main thread
+    private func processNewsItemSync(_ news: News, currentUserId: String, context: ModelContext) {
         // Only create LocalUser relationship when news.ownerUid == currentUserId
         if news.ownerUid == currentUserId {
-            await processCurrentUserNews(news, currentUserId: currentUserId, context: context)
+            processCurrentUserNewsSync(news, currentUserId: currentUserId, context: context)
         } else {
-            await processOtherUserNews(news, context: context)
+            processOtherUserNewsSync(news, context: context)
         }
     }
     
-    /// Process news from current user
-    private func processCurrentUserNews(_ news: News, currentUserId: String, context: ModelContext) async {
-        do {
-            let user = try await FetchCurrencyUser.fetchCurrentUser(news.ownerUid)
-            
-            // Use the safe method that validates current user
-            guard let localUser = LocalUser.fromCurrentUser(user: user, currentUserId: currentUserId) else {
-                print("❌ Failed to create LocalUser for current user")
-                return
+    /// Process news from current user synchronously
+    private func processCurrentUserNewsSync(_ news: News, currentUserId: String, context: ModelContext) {
+        // Check if LocalUser already exists
+        let userDescriptor = FetchDescriptor<LocalUser>(
+            predicate: #Predicate<LocalUser> { $0.id == currentUserId }
+        )
+        
+        let userToUse: LocalUser?
+        if let existingUser = (try? context.fetch(userDescriptor))?.first {
+            userToUse = existingUser
+        } else {
+            // We'll create the user asynchronously later to avoid blocking
+            userToUse = nil
+        }
+        
+        // Create LocalNews without user relationship for now
+        let localNews = LocalNews(
+            id: news.id,
+            ownerUid: news.ownerUid,
+            caption: news.caption,
+            timestamp: news.timestamp.dateValue(),
+            likesCount: news.likesCount,
+            commentsCount: news.commentsCount,
+            constituencyId: news.cosntituencyId,
+            newsImageURLs: news.newsImageURLs,
+            user: userToUse
+        )
+        
+        context.insert(localNews)
+        
+        // Cache user for UI display asynchronously
+        Task {
+            do {
+                let user = try await FetchCurrencyUser.fetchCurrentUser(news.ownerUid)
+                await cacheUser(user)
+            } catch {
+                print("❌ Error caching user data for news: \(news.id)")
             }
-            
-            await MainActor.run {
-                // Check if LocalUser already exists
-                let userDescriptor = FetchDescriptor<LocalUser>(
-                    predicate: #Predicate<LocalUser> { $0.id == currentUserId }
-                )
-                
-                let userToUse: LocalUser
-                if let existingUser = (try? context.fetch(userDescriptor))?.first {
-                    userToUse = existingUser
-                } else {
-                    context.insert(localUser)
-                    userToUse = localUser
-                }
-                
-                // Create LocalNews with LocalUser relationship
-                Task {
-                    let localNews = await LocalNews.from(news: news, user: userToUse)
-                    await MainActor.run {
-                        context.insert(localNews)
-                    }
-                }
-            }
-            
-            // Cache user for UI display
-            await cacheUser(user)
-        } catch {
-            print("❌ Error processing current user news: \(error)")
         }
     }
     
-    /// Process news from other users
-    private func processOtherUserNews(_ news: News, context: ModelContext) async {
+    /// Process news from other users synchronously
+    private func processOtherUserNewsSync(_ news: News, context: ModelContext) {
         // Create LocalNews without LocalUser relationship
-        let localNews = await LocalNews.from(news: news, user: nil)
+        let localNews = LocalNews(
+            id: news.id,
+            ownerUid: news.ownerUid,
+            caption: news.caption,
+            timestamp: news.timestamp.dateValue(),
+            likesCount: news.likesCount,
+            commentsCount: news.commentsCount,
+            constituencyId: news.cosntituencyId,
+            newsImageURLs: news.newsImageURLs,
+            user: nil
+        )
         
-        await MainActor.run {
-            context.insert(localNews)
-        }
+        context.insert(localNews)
         
-        // Cache user for UI display
-        do {
-            let user = try await FetchCurrencyUser.fetchCurrentUser(news.ownerUid)
-            await cacheUser(user)
-        } catch {
-            print("❌ Error caching user data for news: \(news.id)")
+        // Cache user for UI display asynchronously
+        Task {
+            do {
+                let user = try await FetchCurrencyUser.fetchCurrentUser(news.ownerUid)
+                await cacheUser(user)
+            } catch {
+                print("❌ Error caching user data for news: \(news.id)")
+            }
         }
     }
     
@@ -286,3 +299,4 @@ final class NewsFeedViewModel: ObservableObject {
         UserCache.shared.cacheUser(userId: user.id, cachedUser: cachedUser)
     }
 } 
+

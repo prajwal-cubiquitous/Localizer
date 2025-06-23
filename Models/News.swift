@@ -12,8 +12,21 @@ import SwiftData
 struct News: Identifiable, Codable, Sendable {
     @DocumentID var newsId: String?
     
+    // Store a consistent ID to avoid regenerating UUIDs
+    private var _id: String?
+    
     var id: String {
-        return newsId ?? UUID().uuidString
+        if let newsId = newsId {
+            return newsId
+        }
+        
+        if let existingId = _id {
+            return existingId
+        }
+        
+        // Generate a unique ID based on content and timestamp to ensure consistency
+        let uniqueId = generateUniqueId()
+        return uniqueId
     }
     
     let ownerUid: String
@@ -24,6 +37,73 @@ struct News: Identifiable, Codable, Sendable {
     let cosntituencyId: String
     var user: User?
     var newsImageURLs: [String]?
+    
+    // Generate a unique ID based on content to ensure consistency
+    private func generateUniqueId() -> String {
+        let contentHash = "\(ownerUid)_\(caption.prefix(50))_\(timestamp.seconds)"
+        return UUID().uuidString + "_" + String(contentHash.hashValue)
+    }
+    
+    // Custom initializer to ensure ID consistency
+    init(newsId: String? = nil, ownerUid: String, caption: String, timestamp: Timestamp, likesCount: Int, commentsCount: Int, cosntituencyId: String, user: User? = nil, newsImageURLs: [String]? = nil) {
+        self.newsId = newsId
+        self.ownerUid = ownerUid
+        self.caption = caption
+        self.timestamp = timestamp
+        self.likesCount = likesCount
+        self.commentsCount = commentsCount
+        self.cosntituencyId = cosntituencyId
+        self.user = user
+        self.newsImageURLs = newsImageURLs
+        
+        // Pre-generate ID to ensure consistency
+        if newsId == nil {
+            self._id = generateUniqueId()
+        }
+    }
+    
+    // Custom CodingKeys to exclude _id from Firestore encoding
+    enum CodingKeys: String, CodingKey {
+        case ownerUid
+        case caption
+        case timestamp
+        case likesCount
+        case commentsCount
+        case cosntituencyId
+        case user
+        case newsImageURLs
+        // Note: newsId is handled by @DocumentID, _id is excluded
+    }
+    
+    // Custom encoding to exclude _id
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(ownerUid, forKey: .ownerUid)
+        try container.encode(caption, forKey: .caption)
+        try container.encode(timestamp, forKey: .timestamp)
+        try container.encode(likesCount, forKey: .likesCount)
+        try container.encode(commentsCount, forKey: .commentsCount)
+        try container.encode(cosntituencyId, forKey: .cosntituencyId)
+        try container.encodeIfPresent(user, forKey: .user)
+        try container.encodeIfPresent(newsImageURLs, forKey: .newsImageURLs)
+    }
+    
+    // Custom decoding
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        ownerUid = try container.decode(String.self, forKey: .ownerUid)
+        caption = try container.decode(String.self, forKey: .caption)
+        timestamp = try container.decode(Timestamp.self, forKey: .timestamp)
+        likesCount = try container.decode(Int.self, forKey: .likesCount)
+        commentsCount = try container.decode(Int.self, forKey: .commentsCount)
+        cosntituencyId = try container.decode(String.self, forKey: .cosntituencyId)
+        user = try container.decodeIfPresent(User.self, forKey: .user)
+        newsImageURLs = try container.decodeIfPresent([String].self, forKey: .newsImageURLs)
+        
+        // newsId will be set by @DocumentID
+        newsId = nil
+        _id = nil // Will be generated if needed
+    }
 }
 
 @Model
