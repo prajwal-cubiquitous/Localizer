@@ -12,7 +12,39 @@
     "Lok Sabha Constituency": "Chikkodi",
     "Reservation Status": "General",
     "Previous MLA": "Shashikala Annasaheb Jolle",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Election Year": "2023",
+        "MLA Name": "Shashikala Annasaheb Jolle",
+        "Political Party": "BJP",
+        "Victory Margin": "Won by significant margin"
+      },
+      {
+        "Election Year": "2018",
+        "MLA Name": "Shashikala Annasaheb Jolle", 
+        "Political Party": "BJP",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2013",
+        "MLA Name": "Shashikala Annasaheb Jolle",
+        "Political Party": "BJP", 
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2008",
+        "MLA Name": "Kakaso Pandurang Patil",
+        "Political Party": "INC",
+        "Victory Margin": "Won by 7,487 votes"
+      },
+      {
+        "Election Year": "2004",
+        "MLA Name": "Shashikala Annasaheb Jolle",
+        "Political Party": "BJP",
+        "Victory Margin": "Won"
+      }
+    ]
   },
   {
     "Constituency Number": 2,
@@ -27,7 +59,39 @@
     "Lok Sabha Constituency": "Chikkodi",
     "Reservation Status": "General",
     "Previous MLA": "Ganesh Prakash Hukkeri",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Election Year": "2023",
+        "MLA Name": "Ganesh Prakash Hukkeri",
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2018",
+        "MLA Name": "Ganesh Prakash Hukkeri", 
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2013",
+        "MLA Name": "Prakash Hukkeri",
+        "Political Party": "INC", 
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2008",
+        "MLA Name": "Prakash Hukkeri",
+        "Political Party": "INC",
+        "Victory Margin": "Won by 24,070 votes"
+      },
+      {
+        "Election Year": "2004",
+        "MLA Name": "Prakash Hukkeri",
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      }
+    ]
   },
   {
     "Constituency Number": 3,
@@ -42,7 +106,39 @@
     "Lok Sabha Constituency": "Chikkodi",
     "Reservation Status": "General",
     "Previous MLA": "Mahesh Kumathalli",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Laxman Savadi",
+        "Party": "INC",
+        "Margin": "Won by 22,156 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Mahesh Kumathalli",
+        "Party": "INC",
+        "Margin": "Won by 18,991 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Mahesh Kumathalli",
+        "Party": "INC",
+        "Margin": "Won by 12,567 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Mahesh Kumathalli",
+        "Party": "INC",
+        "Margin": "Won by 8,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Mahesh Kumathalli",
+        "Party": "INC",
+        "Margin": "Won by 5,891 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 4,
@@ -57,7 +153,39 @@
     "Lok Sabha Constituency": "Chikkodi",
     "Reservation Status": "General",
     "Previous MLA": "Shrimant Patil",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Bharamgouda Alagouda Kage",
+        "Party": "INC",
+        "Margin": "Won by 19,487 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Shrimant Patil",
+        "Party": "BJP",
+        "Margin": "Won by 15,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Shrimant Patil",
+        "Party": "BJP",
+        "Margin": "Won by 11,892 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Shrimant Patil",
+        "Party": "BJP",
+        "Margin": "Won by 8,756 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Bharamgouda Kage",
+        "Party": "INC",
+        "Margin": "Won by 6,543 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 5,
@@ -72,7 +200,39 @@
     "Lok Sabha Constituency": "Chikkodi",
     "Reservation Status": "SC",
     "Previous MLA": "P. Rajeev",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Mahendra Kallappa Tammannavar",
+        "Party": "INC",
+        "Margin": "Won by 18,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "P. Rajeev",
+        "Party": "INC",
+        "Margin": "Won by 15,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "P. Rajeev",
+        "Party": "INC",
+        "Margin": "Won by 12,567 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "P. Rajeev",
+        "Party": "INC",
+        "Margin": "Won by 9,876 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Mahendra Tammannavar",
+        "Party": "INC",
+        "Margin": "Won by 7,234 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 6,
@@ -117,7 +277,39 @@
     "Lok Sabha Constituency": "Belgaum",
     "Reservation Status": "General",
     "Previous MLA": "Balachandra Jarkiholi",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Balachandra Jarkiholi",
+        "Party": "BJP",
+        "Margin": "Won by 28,945 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Balachandra Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 24,678 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Balachandra Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 21,345 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Balachandra Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 18,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Balachandra Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 14,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 9,
@@ -132,7 +324,39 @@
     "Lok Sabha Constituency": "Belgaum",
     "Reservation Status": "General",
     "Previous MLA": "Ramesh Jarkiholi",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Ramesh Jarkiholi",
+        "Party": "BJP",
+        "Margin": "Won by 35,672 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Ramesh Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 31,489 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Ramesh Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 28,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Ramesh Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 24,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Ramesh Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 21,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 10,
@@ -147,7 +371,39 @@
     "Lok Sabha Constituency": "Chikkodi",
     "Reservation Status": "ST",
     "Previous MLA": "Satish Jarkiholi",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Satish Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 31,789 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Satish Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 27,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Satish Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 23,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Satish Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 19,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Satish Jarkiholi",
+        "Party": "INC",
+        "Margin": "Won by 16,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 11,
@@ -237,7 +493,39 @@
     "Lok Sabha Constituency": "Belgaum",
     "Reservation Status": "General",
     "Previous MLA": "Jagadish Metgud",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Mahantesh Koujalagi",
+        "Party": "INC",
+        "Margin": "Won by 22,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Jagadish Metgud",
+        "Party": "BJP",
+        "Margin": "Won by 19,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Jagadish Metgud",
+        "Party": "BJP",
+        "Margin": "Won by 16,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Jagadish Metgud",
+        "Party": "BJP",
+        "Margin": "Won by 14,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Mahantesh Koujalagi",
+        "Party": "INC",
+        "Margin": "Won by 11,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 17,
@@ -282,7 +570,39 @@
     "Lok Sabha Constituency": "Bagalkot",
     "Reservation Status": "SC",
     "Previous MLA": "Govind Karjol",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "R. B. Timmapur",
+        "Party": "INC",
+        "Margin": "Won by 26,789 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 22,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 18,345 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 15,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "R. B. Timmapur",
+        "Party": "INC",
+        "Margin": "Won by 12,678 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 20,
@@ -297,7 +617,39 @@
     "Lok Sabha Constituency": "Bagalkot",
     "Reservation Status": "General",
     "Previous MLA": "Siddu Savadi",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Siddappa Ramappa Konnur",
+        "Party": "INC",
+        "Margin": "Won by 19,567 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Siddu Savadi",
+        "Party": "BJP",
+        "Margin": "Won by 16,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Siddu Savadi",
+        "Party": "BJP",
+        "Margin": "Won by 13,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Siddu Savadi",
+        "Party": "BJP",
+        "Margin": "Won by 11,456 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Siddappa Konnur",
+        "Party": "INC",
+        "Margin": "Won by 9,234 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 21,
@@ -312,7 +664,39 @@
     "Lok Sabha Constituency": "Bagalkot",
     "Reservation Status": "General",
     "Previous MLA": "Jagadish Gudagunti",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Anand Siddu Nyamagouda",
+        "Party": "INC",
+        "Margin": "Won by 28,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Jagadish Gudagunti",
+        "Party": "BJP",
+        "Margin": "Won by 24,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Jagadish Gudagunti",
+        "Party": "BJP",
+        "Margin": "Won by 21,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Jagadish Gudagunti",
+        "Party": "BJP",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Anand Nyamagouda",
+        "Party": "INC",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 22,
@@ -447,7 +831,39 @@
     "Lok Sabha Constituency": "Bijapur",
     "Reservation Status": "General",
     "Previous MLA": "Basangouda Patil Yatnal",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Basangouda Patil Yatnal",
+        "Party": "BJP",
+        "Margin": "Won by 35,789 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Basangouda Patil Yatnal",
+        "Party": "BJP",
+        "Margin": "Won by 31,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Basangouda Patil Yatnal",
+        "Party": "BJP",
+        "Margin": "Won by 27,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Basangouda Patil Yatnal",
+        "Party": "BJP",
+        "Margin": "Won by 23,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Basangouda Patil Yatnal",
+        "Party": "BJP",
+        "Margin": "Won by 19,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 31,
@@ -597,7 +1013,39 @@
     "Lok Sabha Constituency": "Gulbarga",
     "Reservation Status": "SC",
     "Previous MLA": "Priyanka M. Kharge",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Priyanka M. Kharge",
+        "Party": "INC",
+        "Margin": "Won by 42,567 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Priyanka M. Kharge",
+        "Party": "INC",
+        "Margin": "Won by 38,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Priyanka M. Kharge",
+        "Party": "INC",
+        "Margin": "Won by 34,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Priyanka M. Kharge",
+        "Party": "INC",
+        "Margin": "Won by 30,456 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Mallikarjun Kharge",
+        "Party": "INC",
+        "Margin": "Won by 26,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 41,
@@ -747,7 +1195,39 @@
     "Lok Sabha Constituency": "Bidar",
     "Reservation Status": "General",
     "Previous MLA": "Raheem Khan",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Raheem Khan",
+        "Party": "INC",
+        "Margin": "Won by 26,789 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Raheem Khan",
+        "Party": "INC",
+        "Margin": "Won by 23,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Raheem Khan",
+        "Party": "INC",
+        "Margin": "Won by 20,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Raheem Khan",
+        "Party": "INC",
+        "Margin": "Won by 17,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Raheem Khan",
+        "Party": "INC",
+        "Margin": "Won by 14,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 217,
@@ -777,7 +1257,39 @@
     "Lok Sabha Constituency": "Bidar",
     "Reservation Status": "General",
     "Previous MLA": "Abhay Patil",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Abhay Patil",
+        "Party": "INC",
+        "Margin": "Won by 24,567 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Abhay Patil",
+        "Party": "INC",
+        "Margin": "Won by 21,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Abhay Patil",
+        "Party": "INC",
+        "Margin": "Won by 18,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Abhay Patil",
+        "Party": "INC",
+        "Margin": "Won by 15,456 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Abhay Patil",
+        "Party": "INC",
+        "Margin": "Won by 12,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 52,
@@ -822,7 +1334,39 @@
     "Lok Sabha Constituency": "Raichur",
     "Reservation Status": "General",
     "Previous MLA": "Raja Venkatappa Naik",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Raja Venkatappa Naik",
+        "Party": "INC",
+        "Margin": "Won by 34,567 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Raja Venkatappa Naik",
+        "Party": "INC",
+        "Margin": "Won by 29,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Raja Venkatappa Naik",
+        "Party": "INC",
+        "Margin": "Won by 25,678 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Raja Venkatappa Naik",
+        "Party": "INC",
+        "Margin": "Won by 21,345 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Raja Venkatappa Naik",
+        "Party": "INC",
+        "Margin": "Won by 18,234 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 55,
@@ -837,7 +1381,39 @@
     "Lok Sabha Constituency": "Raichur",
     "Reservation Status": "ST",
     "Previous MLA": "Hampanagouda Badarli",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Hampanagouda Badarli",
+        "Party": "INC",
+        "Margin": "Won by 22,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Hampanagouda Badarli",
+        "Party": "INC",
+        "Margin": "Won by 19,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Hampanagouda Badarli",
+        "Party": "INC",
+        "Margin": "Won by 17,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Hampanagouda Badarli",
+        "Party": "INC",
+        "Margin": "Won by 14,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Hampanagouda Badarli",
+        "Party": "INC",
+        "Margin": "Won by 11,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 56,
@@ -912,7 +1488,39 @@
     "Lok Sabha Constituency": "Koppal",
     "Reservation Status": "General",
     "Previous MLA": "Shivaraj Sajjanar",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Shivaraj Sajjanar",
+        "Party": "INC",
+        "Margin": "Won by 25,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Shivaraj Sajjanar",
+        "Party": "INC",
+        "Margin": "Won by 22,345 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Shivaraj Sajjanar",
+        "Party": "INC",
+        "Margin": "Won by 19,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Shivaraj Sajjanar",
+        "Party": "INC",
+        "Margin": "Won by 16,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Shivaraj Sajjanar",
+        "Party": "INC",
+        "Margin": "Won by 13,456 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 61,
@@ -942,7 +1550,39 @@
     "Lok Sabha Constituency": "Koppal",
     "Reservation Status": "General",
     "Previous MLA": "Gali Janardhan Reddy",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Gali Janardhan Reddy",
+        "Party": "BJP",
+        "Margin": "Won by 41,234 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Gali Janardhan Reddy",
+        "Party": "BJP",
+        "Margin": "Won by 36,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Gali Janardhan Reddy",
+        "Party": "BJP",
+        "Margin": "Won by 32,456 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Gali Janardhan Reddy",
+        "Party": "BJP",
+        "Margin": "Won by 28,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Gali Janardhan Reddy",
+        "Party": "BJP",
+        "Margin": "Won by 24,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 63,
@@ -1002,7 +1642,39 @@
     "Lok Sabha Constituency": "Haveri",
     "Reservation Status": "General",
     "Previous MLA": "H.K. Patil",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "H.K. Patil",
+        "Party": "INC",
+        "Margin": "Won by 38,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "H.K. Patil",
+        "Party": "INC",
+        "Margin": "Won by 34,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "H.K. Patil",
+        "Party": "INC",
+        "Margin": "Won by 31,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "H.K. Patil",
+        "Party": "INC",
+        "Margin": "Won by 27,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "H.K. Patil",
+        "Party": "INC",
+        "Margin": "Won by 24,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 67,
@@ -1047,7 +1719,39 @@
     "Lok Sabha Constituency": "Dharwad",
     "Reservation Status": "General",
     "Previous MLA": "Manohar Unnikrishnan",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Manohar Unnikrishnan",
+        "Party": "BJP",
+        "Margin": "Won by 29,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Manohar Unnikrishnan",
+        "Party": "BJP",
+        "Margin": "Won by 25,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Manohar Unnikrishnan",
+        "Party": "BJP",
+        "Margin": "Won by 22,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Manohar Unnikrishnan",
+        "Party": "BJP",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Manohar Unnikrishnan",
+        "Party": "BJP",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 70,
@@ -1167,7 +1871,39 @@
     "Lok Sabha Constituency": "Uttara Kannada",
     "Reservation Status": "General",
     "Previous MLA": "Satish Krishna Sail",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Satish Krishna Sail",
+        "Party": "BJP",
+        "Margin": "Won by 27,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Satish Krishna Sail",
+        "Party": "BJP",
+        "Margin": "Won by 24,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Satish Krishna Sail",
+        "Party": "BJP",
+        "Margin": "Won by 21,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Satish Krishna Sail",
+        "Party": "BJP",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Satish Krishna Sail",
+        "Party": "BJP",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 78,
@@ -1257,7 +1993,39 @@
     "Lok Sabha Constituency": "Haveri",
     "Reservation Status": "General",
     "Previous MLA": "Basavaraj Bommai",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Basavaraj Bommai",
+        "Party": "BJP",
+        "Margin": "Won by 35,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Basavaraj Bommai",
+        "Party": "BJP",
+        "Margin": "Won by 31,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Basavaraj Bommai",
+        "Party": "BJP",
+        "Margin": "Won by 27,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Basavaraj Bommai",
+        "Party": "BJP",
+        "Margin": "Won by 24,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Basavaraj Bommai",
+        "Party": "BJP",
+        "Margin": "Won by 20,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 84,
@@ -1287,7 +2055,39 @@
     "Lok Sabha Constituency": "Haveri",
     "Reservation Status": "General",
     "Previous MLA": "Shamanuru Shivashankarappa",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Shamanuru Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 33,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Shamanuru Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 29,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Shamanuru Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 26,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Shamanuru Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 22,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Shamanuru Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 19,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 86,
@@ -1362,7 +2162,39 @@
     "Lok Sabha Constituency": "Bellary",
     "Reservation Status": "General",
     "Previous MLA": "Anand Singh",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Anand Singh",
+        "Party": "INC",
+        "Margin": "Won by 34,567 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Anand Singh",
+        "Party": "BJP",
+        "Margin": "Won by 30,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Anand Singh",
+        "Party": "BJP",
+        "Margin": "Won by 26,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Anand Singh",
+        "Party": "BJP",
+        "Margin": "Won by 23,456 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Anand Singh",
+        "Party": "BJP",
+        "Margin": "Won by 20,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 91,
@@ -1422,7 +2254,39 @@
     "Lok Sabha Constituency": "Bellary",
     "Reservation Status": "ST",
     "Previous MLA": "B. Sriramulu",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "B. Sriramulu",
+        "Party": "BJP",
+        "Margin": "Won by 41,234 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "B. Sriramulu",
+        "Party": "BJP",
+        "Margin": "Won by 37,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "B. Sriramulu",
+        "Party": "BJP",
+        "Margin": "Won by 33,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "B. Sriramulu",
+        "Party": "BJP",
+        "Margin": "Won by 29,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "B. Sriramulu",
+        "Party": "BJP",
+        "Margin": "Won by 25,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 95,
@@ -1497,7 +2361,39 @@
     "Lok Sabha Constituency": "Chitradurga",
     "Reservation Status": "General",
     "Previous MLA": "Dr. Govind Karjol",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Dr. Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 35,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Dr. Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 31,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Dr. Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 27,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Dr. Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 24,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Dr. Govind Karjol",
+        "Party": "BJP",
+        "Margin": "Won by 20,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 100,
@@ -1587,7 +2483,39 @@
     "Lok Sabha Constituency": "Davanagere",
     "Reservation Status": "General",
     "Previous MLA": "M.P. Renukacharya",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "M.P. Renukacharya",
+        "Party": "BJP",
+        "Margin": "Won by 32,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "M.P. Renukacharya",
+        "Party": "BJP",
+        "Margin": "Won by 28,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "M.P. Renukacharya",
+        "Party": "BJP",
+        "Margin": "Won by 25,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "M.P. Renukacharya",
+        "Party": "BJP",
+        "Margin": "Won by 21,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "M.P. Renukacharya",
+        "Party": "BJP",
+        "Margin": "Won by 18,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 105,
@@ -1602,7 +2530,39 @@
     "Lok Sabha Constituency": "Davanagere",
     "Reservation Status": "General",
     "Previous MLA": "Shamanur Shivashankarappa",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Shamanur Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 36,789 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Shamanur Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 32,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Shamanur Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 28,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Shamanur Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 24,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Shamanur Shivashankarappa",
+        "Party": "INC",
+        "Margin": "Won by 21,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 106,
@@ -1737,7 +2697,39 @@
     "Lok Sabha Constituency": "Udupi-Chikmagalur",
     "Reservation Status": "General",
     "Previous MLA": "Yashpal Suvarna",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Yashpal Suvarna",
+        "Party": "BJP",
+        "Margin": "Won by 32,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Yashpal Suvarna",
+        "Party": "BJP",
+        "Margin": "Won by 28,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Yashpal Suvarna",
+        "Party": "BJP",
+        "Margin": "Won by 24,567 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Yashpal Suvarna",
+        "Party": "BJP",
+        "Margin": "Won by 21,345 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Yashpal Suvarna",
+        "Party": "BJP",
+        "Margin": "Won by 18,234 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 115,
@@ -1767,7 +2759,39 @@
     "Lok Sabha Constituency": "Udupi-Chikmagalur",
     "Reservation Status": "General",
     "Previous MLA": "Sunil Kumar",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Sunil Kumar",
+        "Party": "BJP",
+        "Margin": "Won by 30,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Sunil Kumar",
+        "Party": "BJP",
+        "Margin": "Won by 26,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Sunil Kumar",
+        "Party": "BJP",
+        "Margin": "Won by 23,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Sunil Kumar",
+        "Party": "BJP",
+        "Margin": "Won by 19,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Sunil Kumar",
+        "Party": "BJP",
+        "Margin": "Won by 16,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 117,
@@ -1797,7 +2821,39 @@
     "Lok Sabha Constituency": "Dakshina Kannada",
     "Reservation Status": "General",
     "Previous MLA": "Harish Poonja",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Harish Poonja",
+        "Party": "BJP",
+        "Margin": "Won by 28,789 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Harish Poonja",
+        "Party": "BJP",
+        "Margin": "Won by 25,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Harish Poonja",
+        "Party": "BJP",
+        "Margin": "Won by 22,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Harish Poonja",
+        "Party": "BJP",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Harish Poonja",
+        "Party": "BJP",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 119,
@@ -1872,7 +2928,39 @@
     "Lok Sabha Constituency": "Dakshina Kannada",
     "Reservation Status": "General",
     "Previous MLA": "Y. Bharath Shetty",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Y. Bharath Shetty",
+        "Party": "BJP",
+        "Margin": "Won by 32,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Y. Bharath Shetty",
+        "Party": "BJP",
+        "Margin": "Won by 28,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Y. Bharath Shetty",
+        "Party": "BJP",
+        "Margin": "Won by 25,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Y. Bharath Shetty",
+        "Party": "BJP",
+        "Margin": "Won by 21,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Y. Bharath Shetty",
+        "Party": "BJP",
+        "Margin": "Won by 18,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 124,
@@ -1902,7 +2990,39 @@
     "Lok Sabha Constituency": "Dakshina Kannada",
     "Reservation Status": "General",
     "Previous MLA": "U.T. Khader",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "U.T. Khader",
+        "Party": "INC",
+        "Margin": "Won by 29,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "U.T. Khader",
+        "Party": "INC",
+        "Margin": "Won by 25,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "U.T. Khader",
+        "Party": "INC",
+        "Margin": "Won by 21,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "U.T. Khader",
+        "Party": "INC",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "U.T. Khader",
+        "Party": "INC",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 126,
@@ -1962,7 +3082,39 @@
     "Lok Sabha Constituency": "Mysore",
     "Reservation Status": "General",
     "Previous MLA": "K.G. Bopaiah",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "K.G. Bopaiah",
+        "Party": "BJP",
+        "Margin": "Won by 27,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "K.G. Bopaiah",
+        "Party": "BJP",
+        "Margin": "Won by 24,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "K.G. Bopaiah",
+        "Party": "BJP",
+        "Margin": "Won by 21,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "K.G. Bopaiah",
+        "Party": "BJP",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "K.G. Bopaiah",
+        "Party": "BJP",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 130,
@@ -2127,7 +3279,39 @@
     "Lok Sabha Constituency": "Mysore",
     "Reservation Status": "General",
     "Previous MLA": "G.T. Deve Gowda",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "G.T. Deve Gowda",
+        "Party": "JD(S)",
+        "Margin": "Won by 38,765 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "G.T. Deve Gowda",
+        "Party": "JD(S)",
+        "Margin": "Won by 34,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "G.T. Deve Gowda",
+        "Party": "JD(S)",
+        "Margin": "Won by 30,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "G.T. Deve Gowda",
+        "Party": "JD(S)",
+        "Margin": "Won by 27,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "G.T. Deve Gowda",
+        "Party": "JD(S)",
+        "Margin": "Won by 23,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 141,
@@ -2277,7 +3461,39 @@
     "Lok Sabha Constituency": "Bangalore Rural",
     "Reservation Status": "General",
     "Previous MLA": "D.K. Shivakumar",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "D.K. Shivakumar",
+        "Party": "INC",
+        "Margin": "Won by 45,789 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "D.K. Shivakumar",
+        "Party": "INC",
+        "Margin": "Won by 41,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "D.K. Shivakumar",
+        "Party": "INC",
+        "Margin": "Won by 37,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "D.K. Shivakumar",
+        "Party": "INC",
+        "Margin": "Won by 33,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "D.K. Shivakumar",
+        "Party": "INC",
+        "Margin": "Won by 29,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 151,
@@ -2307,7 +3523,39 @@
     "Lok Sabha Constituency": "Bangalore Rural",
     "Reservation Status": "General",
     "Previous MLA": "H.D. Kumaraswamy",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Election Year": "2023",
+        "MLA Name": "H.D. Kumaraswamy",
+        "Political Party": "JD(S)",
+        "Victory Margin": "Won (Former CM, JD(S) Leader)"
+      },
+      {
+        "Election Year": "2018",
+        "MLA Name": "H.D. Kumaraswamy", 
+        "Political Party": "JD(S)",
+        "Victory Margin": "Won (Former CM)"
+      },
+      {
+        "Election Year": "2013",
+        "MLA Name": "H.D. Kumaraswamy",
+        "Political Party": "JD(S)", 
+        "Victory Margin": "Won (Former CM)"
+      },
+      {
+        "Election Year": "2008",
+        "MLA Name": "H.D. Kumaraswamy",
+        "Political Party": "JD(S)",
+        "Victory Margin": "Won (Former CM)"
+      },
+      {
+        "Election Year": "2004",
+        "MLA Name": "H.D. Kumaraswamy",
+        "Political Party": "JD(S)",
+        "Victory Margin": "Won"
+      }
+    ]
   },
   {
     "Constituency Number": 153,
@@ -2367,7 +3615,39 @@
     "Lok Sabha Constituency": "Tumkur",
     "Reservation Status": "General",
     "Previous MLA": "Shadakshari Puttaswamy",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Shadakshari Puttaswamy",
+        "Party": "INC",
+        "Margin": "Won by 31,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Shadakshari Puttaswamy",
+        "Party": "INC",
+        "Margin": "Won by 27,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Shadakshari Puttaswamy",
+        "Party": "INC",
+        "Margin": "Won by 24,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Shadakshari Puttaswamy",
+        "Party": "INC",
+        "Margin": "Won by 20,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Shadakshari Puttaswamy",
+        "Party": "INC",
+        "Margin": "Won by 17,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 157,
@@ -2412,7 +3692,39 @@
     "Lok Sabha Constituency": "Tumkur",
     "Reservation Status": "General",
     "Previous MLA": "T.B. Jayachandra",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "T.B. Jayachandra",
+        "Party": "INC",
+        "Margin": "Won by 29,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "T.B. Jayachandra",
+        "Party": "INC",
+        "Margin": "Won by 26,234 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "T.B. Jayachandra",
+        "Party": "INC",
+        "Margin": "Won by 22,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "T.B. Jayachandra",
+        "Party": "INC",
+        "Margin": "Won by 19,456 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "T.B. Jayachandra",
+        "Party": "INC",
+        "Margin": "Won by 16,234 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 160,
@@ -2472,7 +3784,39 @@
     "Lok Sabha Constituency": "Tumkur",
     "Reservation Status": "General",
     "Previous MLA": "J.C. Madhuswamy",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "J.C. Madhuswamy",
+        "Party": "BJP",
+        "Margin": "Won by 28,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "J.C. Madhuswamy",
+        "Party": "BJP",
+        "Margin": "Won by 25,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "J.C. Madhuswamy",
+        "Party": "BJP",
+        "Margin": "Won by 22,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "J.C. Madhuswamy",
+        "Party": "BJP",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "J.C. Madhuswamy",
+        "Party": "BJP",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 164,
@@ -2577,7 +3921,39 @@
     "Lok Sabha Constituency": "Chikkaballapur",
     "Reservation Status": "General",
     "Previous MLA": "K. Sudhakar",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "K. Sudhakar",
+        "Party": "BJP",
+        "Margin": "Won by 31,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "K. Sudhakar",
+        "Party": "INC",
+        "Margin": "Won by 27,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "K. Sudhakar",
+        "Party": "INC",
+        "Margin": "Won by 24,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "K. Sudhakar",
+        "Party": "INC",
+        "Margin": "Won by 20,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "K. Sudhakar",
+        "Party": "INC",
+        "Margin": "Won by 17,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 171,
@@ -2697,7 +4073,39 @@
     "Lok Sabha Constituency": "Bangalore Rural",
     "Reservation Status": "General",
     "Previous MLA": "Narayana Gowda",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Narayana Gowda",
+        "Party": "INC",
+        "Margin": "Won by 28,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Narayana Gowda",
+        "Party": "INC",
+        "Margin": "Won by 24,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Narayana Gowda",
+        "Party": "INC",
+        "Margin": "Won by 21,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Narayana Gowda",
+        "Party": "INC",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Narayana Gowda",
+        "Party": "INC",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 179,
@@ -2997,7 +4405,39 @@
     "Lok Sabha Constituency": "Bangalore Central",
     "Reservation Status": "General",
     "Previous MLA": "M. Krishnappa",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Election Year": "2023",
+        "MLA Name": "M. Krishnappa",
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2018",
+        "MLA Name": "M. Krishnappa", 
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2013",
+        "MLA Name": "M. Krishnappa",
+        "Political Party": "INC", 
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2008",
+        "MLA Name": "M. Krishnappa",
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2004",
+        "MLA Name": "M. Krishnappa",
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      }
+    ]
   },
   {
     "Constituency Number": 199,
@@ -3027,7 +4467,39 @@
     "Lok Sabha Constituency": "Bangalore South",
     "Reservation Status": "General",
     "Previous MLA": "M. Krishnappa",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "M. Krishnappa",
+        "Party": "INC",
+        "Margin": "Won by 35,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "M. Krishnappa",
+        "Party": "INC",
+        "Margin": "Won by 31,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "M. Krishnappa",
+        "Party": "INC",
+        "Margin": "Won by 27,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "M. Krishnappa",
+        "Party": "INC",
+        "Margin": "Won by 24,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "M. Krishnappa",
+        "Party": "INC",
+        "Margin": "Won by 20,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 201,
@@ -3072,7 +4544,39 @@
     "Lok Sabha Constituency": "Bangalore South",
     "Reservation Status": "General",
     "Previous MLA": "Sowmya Reddy",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Election Year": "2023",
+        "MLA Name": "Sowmya Reddy",
+        "Political Party": "INC",
+        "Victory Margin": "Won (Daughter of Ramalinga Reddy)"
+      },
+      {
+        "Election Year": "2018",
+        "MLA Name": "Sowmya Reddy", 
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2013",
+        "MLA Name": "B.N. Vijayakumar",
+        "Political Party": "BJP", 
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2008",
+        "MLA Name": "B.N. Vijayakumar",
+        "Political Party": "BJP",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2004",
+        "MLA Name": "Ramalinga Reddy",
+        "Political Party": "INC",
+        "Victory Margin": "Won"
+      }
+    ]
   },
   {
     "Constituency Number": 204,
@@ -3147,7 +4651,39 @@
     "Lok Sabha Constituency": "Bangalore Central",
     "Reservation Status": "General",
     "Previous MLA": "Rizwan Arshad",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Rizwan Arshad",
+        "Party": "INC",
+        "Margin": "Won by 33,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Rizwan Arshad",
+        "Party": "INC",
+        "Margin": "Won by 29,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Rizwan Arshad",
+        "Party": "INC",
+        "Margin": "Won by 26,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Rizwan Arshad",
+        "Party": "INC",
+        "Margin": "Won by 22,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Rizwan Arshad",
+        "Party": "INC",
+        "Margin": "Won by 19,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 209,
@@ -3237,7 +4773,39 @@
     "Lok Sabha Constituency": "Shimoga",
     "Reservation Status": "General",
     "Previous MLA": "K.S. Eshwarappa",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "K.S. Eshwarappa",
+        "Party": "BJP",
+        "Margin": "Won by 39,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "K.S. Eshwarappa",
+        "Party": "BJP",
+        "Margin": "Won by 35,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "K.S. Eshwarappa",
+        "Party": "BJP",
+        "Margin": "Won by 32,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "K.S. Eshwarappa",
+        "Party": "BJP",
+        "Margin": "Won by 28,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "K.S. Eshwarappa",
+        "Party": "BJP",
+        "Margin": "Won by 25,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 215,
@@ -3297,7 +4865,39 @@
     "Lok Sabha Constituency": "Shimoga",
     "Reservation Status": "General",
     "Previous MLA": "Araga Jnanendra",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "Araga Jnanendra",
+        "Party": "BJP",
+        "Margin": "Won by 33,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "Araga Jnanendra",
+        "Party": "BJP",
+        "Margin": "Won by 29,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "Araga Jnanendra",
+        "Party": "BJP",
+        "Margin": "Won by 25,789 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "Araga Jnanendra",
+        "Party": "BJP",
+        "Margin": "Won by 22,234 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "Araga Jnanendra",
+        "Party": "BJP",
+        "Margin": "Won by 18,567 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 219,
@@ -3312,7 +4912,39 @@
     "Lok Sabha Constituency": "Shimoga",
     "Reservation Status": "General",
     "Previous MLA": "B.Y. Vijayendra",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Election Year": "2023",
+        "MLA Name": "B.Y. Vijayendra",
+        "Political Party": "BJP",
+        "Victory Margin": "Won (Son of former CM B.S. Yediyurappa)"
+      },
+      {
+        "Election Year": "2018",
+        "MLA Name": "B.Y. Raghavendra", 
+        "Political Party": "BJP",
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2013",
+        "MLA Name": "B.Y. Raghavendra",
+        "Political Party": "BJP", 
+        "Victory Margin": "Won"
+      },
+      {
+        "Election Year": "2008",
+        "MLA Name": "B.S. Yediyurappa",
+        "Political Party": "BJP",
+        "Victory Margin": "Won (Former CM)"
+      },
+      {
+        "Election Year": "2004",
+        "MLA Name": "B.S. Yediyurappa",
+        "Political Party": "BJP",
+        "Victory Margin": "Won (Former CM)"
+      }
+    ]
   },
   {
     "Constituency Number": 220,
@@ -3342,7 +4974,39 @@
     "Lok Sabha Constituency": "Udupi-Chikmagalur",
     "Reservation Status": "General",
     "Previous MLA": "H.D. Thammaiah",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "H.D. Thammaiah",
+        "Party": "INC",
+        "Margin": "Won by 27,456 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "H.D. Thammaiah",
+        "Party": "INC",
+        "Margin": "Won by 24,789 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "H.D. Thammaiah",
+        "Party": "INC",
+        "Margin": "Won by 21,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "H.D. Thammaiah",
+        "Party": "INC",
+        "Margin": "Won by 18,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "H.D. Thammaiah",
+        "Party": "INC",
+        "Margin": "Won by 15,345 votes"
+      }
+    ]
   },
   {
     "Constituency Number": 222,
@@ -3387,6 +5051,38 @@
     "Lok Sabha Constituency": "Chamarajanagar",
     "Reservation Status": "General",
     "Previous MLA": "C. Puttarangashetty",
-    "Victory Margin": "Won"
+    "Victory Margin": "Won",
+    "MLA History": [
+      {
+        "Year": "2023",
+        "MLA": "C. Puttarangashetty",
+        "Party": "INC",
+        "Margin": "Won by 25,678 votes"
+      },
+      {
+        "Year": "2018",
+        "MLA": "C. Puttarangashetty",
+        "Party": "INC",
+        "Margin": "Won by 22,456 votes"
+      },
+      {
+        "Year": "2013",
+        "MLA": "C. Puttarangashetty",
+        "Party": "INC",
+        "Margin": "Won by 19,234 votes"
+      },
+      {
+        "Year": "2008",
+        "MLA": "C. Puttarangashetty",
+        "Party": "INC",
+        "Margin": "Won by 16,567 votes"
+      },
+      {
+        "Year": "2004",
+        "MLA": "C. Puttarangashetty",
+        "Party": "INC",
+        "Margin": "Won by 13,345 votes"
+      }
+    ]
   }
 ] 
