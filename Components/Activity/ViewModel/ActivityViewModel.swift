@@ -62,7 +62,7 @@ class ActivityViewModel : ObservableObject{
                 }
                 return newsItem
             } catch {
-                print("❌ Error decoding news document \(doc.documentID): \(error)")
+                // Silently handle decoding errors
                 return nil
             }
         }
@@ -89,7 +89,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["LikedNews"] as? [String] else {
-                print("No LikedNews array found")
                 return
             }
             
@@ -118,11 +117,11 @@ class ActivityViewModel : ObservableObject{
                         addUniqueNewsItem(localNews)
                     }
                 } catch {
-                    print("❌ Error decoding liked news document \(newsId): \(error)")
+                    // Silently handle decoding errors
                 }
             }
         } catch {
-            print("Error fetching liked news: \(error.localizedDescription)")
+            // Silently handle fetch errors
         }
     }
     
@@ -143,7 +142,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["savedNews"] as? [String] else {
-                print("No savedNews array found")
                 return
             }
             
@@ -172,11 +170,11 @@ class ActivityViewModel : ObservableObject{
                         addUniqueNewsItem(localNews)
                     }
                 } catch {
-                    print("❌ Error decoding saved news document \(newsId): \(error)")
+                    // Silently handle decoding errors
                 }
             }
         } catch {
-            print("Error fetching saved news: \(error.localizedDescription)")
+            // Silently handle fetch errors
         }
     }
     
@@ -196,7 +194,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["CommentedNews"] as? [String] else {
-                print("No CommentedNews array found")
                 return
             }
             
@@ -225,11 +222,11 @@ class ActivityViewModel : ObservableObject{
                         addUniqueNewsItem(localNews)
                     }
                 } catch {
-                    print("❌ Error decoding commented news document \(newsId): \(error)")
+                    // Silently handle decoding errors
                 }
             }
         } catch {
-            print("Error fetching commented news: \(error.localizedDescription)")
+            // Silently handle fetch errors
         }
     }
     func fetchDisLikedNews(constituencyId: String) async throws{
@@ -248,7 +245,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["DisLikedNews"] as? [String] else {
-                print("No DisLikedNews array found")
                 return
             }
             
@@ -277,11 +273,11 @@ class ActivityViewModel : ObservableObject{
                         addUniqueNewsItem(localNews)
                     }
                 } catch {
-                    print("❌ Error decoding disliked news document \(newsId): \(error)")
+                    // Silently handle decoding errors
                 }
             }
         } catch {
-            print("Error fetching disliked news: \(error.localizedDescription)")
+            // Silently handle fetch errors
         }
     }
     
@@ -301,7 +297,6 @@ class ActivityViewModel : ObservableObject{
             
             guard let data = userDoc.data(),
                   let savedNewsIds = data["DontRecommendNews"] as? [String] else {
-                print("No DontRecommendNews array found")
                 return
             }
             
@@ -330,11 +325,11 @@ class ActivityViewModel : ObservableObject{
                         addUniqueNewsItem(localNews)
                     }
                 } catch {
-                    print("❌ Error decoding DontRecommendNews document \(newsId): \(error)")
+                    // Silently handle decoding errors
                 }
             }
         } catch {
-            print("Error fetching DontRecommendNews: \(error.localizedDescription)")
+            // Silently handle fetch errors
         }
     }
     
@@ -369,7 +364,7 @@ class ActivityViewModel : ObservableObject{
                 }
             }
         } catch {
-            print("Error fetching DontRecommendUsers: \(error.localizedDescription)")
+            // Silently handle fetch errors
         }
     }
 }

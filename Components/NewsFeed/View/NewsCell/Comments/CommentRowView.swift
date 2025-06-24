@@ -148,12 +148,9 @@ struct CommentRowView: View {
             if let commentId = comment.actualId {
                 do {
                     replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: commentId)
-                    print("DEBUG: Loaded \(replies.count) replies for comment: \(comment.text)")
                 } catch {
-                    print("Error loading replies: \(error.localizedDescription)")
+                    // Silently handle error - replies will remain empty
                 }
-            } else {
-                print("DEBUG: No actualId available for comment: \(comment.text)")
             }
         }
     }
@@ -185,7 +182,7 @@ struct CommentRowView: View {
             await MainActor.run {
                 self.isLoadingUser = false
             }
-            print("Error fetching user for comment: \(error.localizedDescription)")
+            // Silently handle error - will show "Unknown User"
         }
     }
 }

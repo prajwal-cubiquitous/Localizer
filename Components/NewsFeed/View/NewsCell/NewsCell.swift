@@ -527,7 +527,7 @@ struct FullScreenMediaItem: View {
                     isVideoReady = true
                 }
             } catch {
-                print("❌ Failed to setup video player: \(error)")
+                // Silently handle video player setup errors
             }
         }
     }

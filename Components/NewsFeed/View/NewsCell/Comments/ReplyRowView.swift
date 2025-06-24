@@ -100,7 +100,7 @@ struct ReplyRowView: View {
             await MainActor.run {
                 self.isLoadingUser = false
             }
-            print("Error fetching user for reply: \(error.localizedDescription)")
+            // Silently handle error - will show "Unknown User"
         }
     }
 }

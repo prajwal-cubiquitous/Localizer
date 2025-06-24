@@ -59,15 +59,9 @@ class CommentsViewModel: ObservableObject {
                 .order(by: "timestamp", descending: false)
                 .getDocuments()
             
-            print("DEBUG: Fetched \(snapshot.documents.count) comment documents for newsId: \(newsId)")
-            
             let fetchedComments = snapshot.documents.compactMap { doc in
                 do {
                     var comment = try doc.data(as: Comment.self)
-                    print("DEBUG: Successfully decoded comment: \(comment.text)")
-                    print("DEBUG: Comment ID from @DocumentID: \(comment.id ?? "nil")")
-                    print("DEBUG: Document ID from doc: \(doc.documentID)")
-                    print("DEBUG: Comment documentId field: \(comment.documentId ?? "nil")")
                     
                     // If both IDs are nil, set the documentId field
                     if comment.actualId == nil {
@@ -82,19 +76,13 @@ class CommentsViewModel: ObservableObject {
                             likes: comment.likes,
                             replies: comment.replies
                         )
-                        print("DEBUG: Set documentId field to: \(doc.documentID)")
                     }
                     
-                    print("DEBUG: Final comment actualId: \(comment.actualId ?? "nil")")
                     return comment
                 } catch {
-                    print("DEBUG: Failed to decode comment from document \(doc.documentID): \(error)")
-                    print("DEBUG: Document data: \(doc.data())")
                     return nil
                 }
             }
-            
-            print("DEBUG: Successfully decoded \(fetchedComments.count) comments")
             
             await MainActor.run {
                 self.comments = fetchedComments
@@ -106,7 +94,6 @@ class CommentsViewModel: ObservableObject {
                 UserCache.shared.cacheusers[comment.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
             }
         } catch {
-            print("DEBUG: Error in fetchComments: \(error)")
             throw error
         }
     }
@@ -205,7 +192,6 @@ class CommentsViewModel: ObservableObject {
 
 
     func fetchReplies(forNewsId newsId: String, commentId: String) async throws -> [Reply] {
-        print("DEBUG: Fetching replies for newsId: \(newsId), commentId: \(commentId)")
         let snapshot = try await Firestore.firestore()
             .collection("news")
             .document(newsId)
@@ -215,20 +201,15 @@ class CommentsViewModel: ObservableObject {
             .order(by: "timestamp", descending: false)
             .getDocuments()
 
-        print("DEBUG: Found \(snapshot.documents.count) reply documents")
-        
         let replies = snapshot.documents.compactMap { doc in
             do {
                 let reply = try doc.data(as: Reply.self)
-                print("DEBUG: Successfully decoded reply: \(reply.text)")
                 return reply
             } catch {
-                print("DEBUG: Failed to decode reply from document \(doc.documentID): \(error)")
                 return nil
             }
         }
         
-        print("DEBUG: Returning \(replies.count) replies")
         return replies
     }
     

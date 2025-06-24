@@ -131,10 +131,10 @@ final class NewsFeedViewModel: ObservableObject {
                     )
                 }
                 return newsItem
-            } catch {
-                print("❌ Error decoding news document \(doc.documentID): \(error)")
-                return nil
-            }
+                            } catch {
+                    // Silently handle decoding errors
+                    return nil
+                }
         }
         
         let lastDoc = snapshot.documents.last
@@ -175,7 +175,7 @@ final class NewsFeedViewModel: ObservableObject {
                     try context.save()
                 }
             } catch {
-                print("❌ Error managing local items limit: \(error)")
+                // Silently handle local items limit errors
             }
         }
     }
@@ -214,7 +214,7 @@ final class NewsFeedViewModel: ObservableObject {
                 for news in items {
                     // Skip if already exists
                     if existingIds.contains(news.id) {
-                        print("⚠️ Skipping duplicate news item: \(news.id)")
+                        // Skip duplicate news item
                         continue
                     }
                     
@@ -224,9 +224,9 @@ final class NewsFeedViewModel: ObservableObject {
                 
                 // Save context
                 try context.save()
-            } catch {
-                print("❌ Error inserting local news: \(error)")
-            }
+                            } catch {
+                    // Silently handle local news insertion errors
+                }
         }
     }
     
@@ -276,7 +276,7 @@ final class NewsFeedViewModel: ObservableObject {
                 let user = try await FetchCurrencyUser.fetchCurrentUser(news.ownerUid)
                 await cacheUser(user)
             } catch {
-                print("❌ Error caching user data for news: \(news.id)")
+                // Silently handle user caching errors
             }
         }
     }
@@ -304,7 +304,7 @@ final class NewsFeedViewModel: ObservableObject {
                 let user = try await FetchCurrencyUser.fetchCurrentUser(news.ownerUid)
                 await cacheUser(user)
             } catch {
-                print("❌ Error caching user data for news: \(news.id)")
+                // Silently handle user caching errors
             }
         }
     }

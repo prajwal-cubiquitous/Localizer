@@ -143,7 +143,7 @@ class PostViewModel: ObservableObject {
                         cosntituencyId: cosntituencyId)
         
         let documentId = try await NewsService.uploadNews(news)
-        print("✅ News uploaded successfully with ID: \(documentId)")
+                    // News uploaded successfully
         
         // Increment post count in Firestore & SwiftData
         try await incrementPostCount(for: uid)
@@ -161,7 +161,7 @@ class PostViewModel: ObservableObject {
                         newsImageURLs: imageURLS)
         
         let documentId = try await NewsService.uploadNews(news)
-        print("✅ News with images uploaded successfully with ID: \(documentId)")
+                    // News with images uploaded successfully
         
         // Increment post count
         try await incrementPostCount(for: uid)
