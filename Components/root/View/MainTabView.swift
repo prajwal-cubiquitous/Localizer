@@ -44,12 +44,9 @@ struct MainTabView: View {
     private var allPincodes: [String] {
         if let constituency = selectedConstituency {
             // Use all pincodes from the constituency
-            let pincodes = constituency.associatedPincodes.isEmpty ? [pincode] : constituency.associatedPincodes
-            print("🔍 DataView pincodes from constituency '\(constituency.constituencyName)': \(pincodes)")
-            return pincodes
+            return constituency.associatedPincodes.isEmpty ? [pincode] : constituency.associatedPincodes
         }
         // Fallback to current pincode
-        print("🔍 DataView fallback to single pincode: [\(pincode)]")
         return [pincode]
     }
     
@@ -113,13 +110,9 @@ struct MainTabView: View {
             }
         }
         .task(id: pincode){
-            print("🔍 Fetching constituencies for pincode: \(pincode)")
             constituencies = await ConstituencyViewModel.fetchConstituency(forPincode: pincode)
             if let first = constituencies?.first {
                 selectedName = first.constituencyName
-                print("🔍 Found constituency: \(first.constituencyName) with pincodes: \(first.associatedPincodes)")
-            } else {
-                print("🔍 No constituencies found for pincode: \(pincode)")
             }
         }
     }
