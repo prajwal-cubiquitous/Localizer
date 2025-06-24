@@ -29,8 +29,28 @@ struct MainTabView: View {
     @StateObject var ConstituencyViewModel = constituencyViewModel()
     @State var constituencies : [ConstituencyDetails]?
     @State private var selectedName: String = ""
+    
+    // Improved selectedConstituency computation with better fallback
     var selectedConstituency: ConstituencyDetails? {
-        constituencies?.first { $0.constituencyName == selectedName }
+        // First try to find by selectedName
+        if let constituency = constituencies?.first(where: { $0.constituencyName == selectedName }) {
+            return constituency
+        }
+        // Fallback to first constituency if selectedName doesn't match
+        return constituencies?.first
+    }
+    
+    // Computed property to get all pincodes for the DataView
+    private var allPincodes: [String] {
+        if let constituency = selectedConstituency {
+            // Use all pincodes from the constituency
+            let pincodes = constituency.associatedPincodes.isEmpty ? [pincode] : constituency.associatedPincodes
+            print("🔍 DataView pincodes from constituency '\(constituency.constituencyName)': \(pincodes)")
+            return pincodes
+        }
+        // Fallback to current pincode
+        print("🔍 DataView fallback to single pincode: [\(pincode)]")
+        return [pincode]
     }
     
     // MARK: - Initialization
@@ -93,9 +113,13 @@ struct MainTabView: View {
             }
         }
         .task(id: pincode){
+            print("🔍 Fetching constituencies for pincode: \(pincode)")
             constituencies = await ConstituencyViewModel.fetchConstituency(forPincode: pincode)
             if let first = constituencies?.first {
                 selectedName = first.constituencyName
+                print("🔍 Found constituency: \(first.constituencyName) with pincodes: \(first.associatedPincodes)")
+            } else {
+                print("🔍 No constituencies found for pincode: \(pincode)")
             }
         }
     }
@@ -119,7 +143,8 @@ struct MainTabView: View {
                 .tag(0)
             
             // Services Tab
-            DataView(pincodes: selectedConstituency?.associatedPincodes ?? [pincode], ConstituencyName: selectedConstituency?.constituencyName ?? "")
+            DataView(pincodes: allPincodes, ConstituencyName: selectedConstituency?.constituencyName ?? "")
+                .id("dataview-\(selectedConstituency?.constituencyName ?? pincode)")
                 .environmentObject(appState)
                 .tabItem {
                     Label {

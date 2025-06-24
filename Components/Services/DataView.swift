@@ -154,7 +154,13 @@ struct DataView: View {
         }
         .background(Color(.systemGroupedBackground))
         .onChange(of: pincodes)  {
-            viewModel.fetchData(for: viewModel.postalCodes)
+            // Update viewModel's postalCodes and fetch data
+            viewModel.postalCodes = pincodes
+            viewModel.fetchData(for: pincodes)
+        }
+        .onAppear {
+            // Trigger initial data fetch when view appears
+            viewModel.fetchData(for: pincodes)
         }
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.large)
