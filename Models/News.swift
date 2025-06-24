@@ -44,9 +44,8 @@ struct News: Identifiable, Codable, Sendable {
         self.newsImageURLs = newsImageURLs
     }
     
-    // CodingKeys - newsId is handled by @DocumentID but we need to include it for manual encoding
+    // CodingKeys - newsId is handled by @DocumentID
     enum CodingKeys: String, CodingKey {
-        case newsId
         case ownerUid
         case caption
         case timestamp
@@ -60,7 +59,6 @@ struct News: Identifiable, Codable, Sendable {
     // Standard Codable implementation
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(newsId, forKey: .newsId)
         try container.encode(ownerUid, forKey: .ownerUid)
         try container.encode(caption, forKey: .caption)
         try container.encode(timestamp, forKey: .timestamp)
@@ -73,7 +71,6 @@ struct News: Identifiable, Codable, Sendable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        newsId = try container.decodeIfPresent(String.self, forKey: .newsId)
         ownerUid = try container.decode(String.self, forKey: .ownerUid)
         caption = try container.decode(String.self, forKey: .caption)
         timestamp = try container.decode(Timestamp.self, forKey: .timestamp)
@@ -82,6 +79,9 @@ struct News: Identifiable, Codable, Sendable {
         cosntituencyId = try container.decode(String.self, forKey: .cosntituencyId)
         user = try container.decodeIfPresent(User.self, forKey: .user)
         newsImageURLs = try container.decodeIfPresent([String].self, forKey: .newsImageURLs)
+        
+        // newsId will be set by @DocumentID after decoding
+        newsId = nil
     }
 }
 
@@ -145,7 +145,7 @@ final class LocalNews: @unchecked Sendable {
 extension LocalNews {
     // ✅ Performance optimized: Create LocalNews immediately with original URLs
     // Download media in background without blocking UI
-    static func from(news: News, user: LocalUser?) async -> LocalNews {
+    static func from(news: News, user: LocalUser?) async -> LocalNews {        
         // Create LocalNews immediately with original URLs for immediate display
         let localNews = LocalNews(
             id: news.id,

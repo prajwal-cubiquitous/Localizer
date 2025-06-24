@@ -112,7 +112,28 @@ final class NewsFeedViewModel: ObservableObject {
         
         let snapshot = try await query.getDocuments()
         let news = snapshot.documents.compactMap { doc in
-            try? doc.data(as: News.self)
+            do {
+                var newsItem = try doc.data(as: News.self)
+                // Ensure the newsId is set to the document ID if it's not already set
+                if newsItem.newsId == nil {
+                    // Create a new News instance with the correct document ID
+                    newsItem = News(
+                        newsId: doc.documentID,
+                        ownerUid: newsItem.ownerUid,
+                        caption: newsItem.caption,
+                        timestamp: newsItem.timestamp,
+                        likesCount: newsItem.likesCount,
+                        commentsCount: newsItem.commentsCount,
+                        cosntituencyId: newsItem.cosntituencyId,
+                        user: newsItem.user,
+                        newsImageURLs: newsItem.newsImageURLs
+                    )
+                }
+                return newsItem
+            } catch {
+                print("❌ Error decoding news document \(doc.documentID): \(error)")
+                return nil
+            }
         }
         
         let lastDoc = snapshot.documents.last
