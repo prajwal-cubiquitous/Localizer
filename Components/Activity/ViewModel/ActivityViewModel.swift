@@ -43,7 +43,27 @@ class ActivityViewModel : ObservableObject{
             .getDocuments()
         
         let newsItemsFromFirebase = snapshot.documents.compactMap { doc in
-            try? doc.data(as: News.self)
+            do {
+                var newsItem = try doc.data(as: News.self)
+                // Ensure the newsId is set to the document ID if it's not already set
+                if newsItem.newsId == nil {
+                    newsItem = News(
+                        newsId: doc.documentID,
+                        ownerUid: newsItem.ownerUid,
+                        caption: newsItem.caption,
+                        timestamp: newsItem.timestamp,
+                        likesCount: newsItem.likesCount,
+                        commentsCount: newsItem.commentsCount,
+                        cosntituencyId: newsItem.cosntituencyId,
+                        user: newsItem.user,
+                        newsImageURLs: newsItem.newsImageURLs
+                    )
+                }
+                return newsItem
+            } catch {
+                print("❌ Error decoding news document \(doc.documentID): \(error)")
+                return nil
+            }
         }
         
         for item in newsItemsFromFirebase {
@@ -75,10 +95,28 @@ class ActivityViewModel : ObservableObject{
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue } // Use continue instead of return
-                let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
-                    addUniqueNewsItem(localNews)
+                do {
+                    var SavedNewsFromFirestore = try snapshot.data(as: News.self)
+                    // Ensure the newsId is set to the document ID if it's not already set
+                    if SavedNewsFromFirestore.newsId == nil {
+                        SavedNewsFromFirestore = News(
+                            newsId: snapshot.documentID,
+                            ownerUid: SavedNewsFromFirestore.ownerUid,
+                            caption: SavedNewsFromFirestore.caption,
+                            timestamp: SavedNewsFromFirestore.timestamp,
+                            likesCount: SavedNewsFromFirestore.likesCount,
+                            commentsCount: SavedNewsFromFirestore.commentsCount,
+                            cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            user: SavedNewsFromFirestore.user,
+                            newsImageURLs: SavedNewsFromFirestore.newsImageURLs
+                        )
+                    }
+                    if SavedNewsFromFirestore.cosntituencyId == constituencyId {
+                        let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
+                        addUniqueNewsItem(localNews)
+                    }
+                } catch {
+                    print("❌ Error decoding liked news document \(newsId): \(error)")
                 }
             }
         } catch {
@@ -162,10 +200,28 @@ class ActivityViewModel : ObservableObject{
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue } // Use continue instead of return
-                let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
-                    addUniqueNewsItem(localNews)
+                do {
+                    var SavedNewsFromFirestore = try snapshot.data(as: News.self)
+                    // Ensure the newsId is set to the document ID if it's not already set
+                    if SavedNewsFromFirestore.newsId == nil {
+                        SavedNewsFromFirestore = News(
+                            newsId: snapshot.documentID,
+                            ownerUid: SavedNewsFromFirestore.ownerUid,
+                            caption: SavedNewsFromFirestore.caption,
+                            timestamp: SavedNewsFromFirestore.timestamp,
+                            likesCount: SavedNewsFromFirestore.likesCount,
+                            commentsCount: SavedNewsFromFirestore.commentsCount,
+                            cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            user: SavedNewsFromFirestore.user,
+                            newsImageURLs: SavedNewsFromFirestore.newsImageURLs
+                        )
+                    }
+                    if SavedNewsFromFirestore.cosntituencyId == constituencyId {
+                        let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
+                        addUniqueNewsItem(localNews)
+                    }
+                } catch {
+                    print("❌ Error decoding commented news document \(newsId): \(error)")
                 }
             }
         } catch {
@@ -195,10 +251,28 @@ class ActivityViewModel : ObservableObject{
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue } // Use continue instead of return
-                let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
-                    addUniqueNewsItem(localNews)
+                do {
+                    var SavedNewsFromFirestore = try snapshot.data(as: News.self)
+                    // Ensure the newsId is set to the document ID if it's not already set
+                    if SavedNewsFromFirestore.newsId == nil {
+                        SavedNewsFromFirestore = News(
+                            newsId: snapshot.documentID,
+                            ownerUid: SavedNewsFromFirestore.ownerUid,
+                            caption: SavedNewsFromFirestore.caption,
+                            timestamp: SavedNewsFromFirestore.timestamp,
+                            likesCount: SavedNewsFromFirestore.likesCount,
+                            commentsCount: SavedNewsFromFirestore.commentsCount,
+                            cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            user: SavedNewsFromFirestore.user,
+                            newsImageURLs: SavedNewsFromFirestore.newsImageURLs
+                        )
+                    }
+                    if SavedNewsFromFirestore.cosntituencyId == constituencyId {
+                        let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
+                        addUniqueNewsItem(localNews)
+                    }
+                } catch {
+                    print("❌ Error decoding disliked news document \(newsId): \(error)")
                 }
             }
         } catch {
@@ -229,10 +303,28 @@ class ActivityViewModel : ObservableObject{
             for newsId in savedNewsIds {
                 let snapshot = try await db.collection("news").document(newsId).getDocument()
                 guard snapshot.exists else { continue } // Use continue instead of return
-                let SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                if SavedNewsFromFirestore.cosntituencyId == constituencyId {
-                    let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
-                    addUniqueNewsItem(localNews)
+                do {
+                    var SavedNewsFromFirestore = try snapshot.data(as: News.self)
+                    // Ensure the newsId is set to the document ID if it's not already set
+                    if SavedNewsFromFirestore.newsId == nil {
+                        SavedNewsFromFirestore = News(
+                            newsId: snapshot.documentID,
+                            ownerUid: SavedNewsFromFirestore.ownerUid,
+                            caption: SavedNewsFromFirestore.caption,
+                            timestamp: SavedNewsFromFirestore.timestamp,
+                            likesCount: SavedNewsFromFirestore.likesCount,
+                            commentsCount: SavedNewsFromFirestore.commentsCount,
+                            cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            user: SavedNewsFromFirestore.user,
+                            newsImageURLs: SavedNewsFromFirestore.newsImageURLs
+                        )
+                    }
+                    if SavedNewsFromFirestore.cosntituencyId == constituencyId {
+                        let localNews = await LocalNews.from(news: SavedNewsFromFirestore, user: LocalUser.from(user: user))
+                        addUniqueNewsItem(localNews)
+                    }
+                } catch {
+                    print("❌ Error decoding DontRecommendNews document \(newsId): \(error)")
                 }
             }
         } catch {
