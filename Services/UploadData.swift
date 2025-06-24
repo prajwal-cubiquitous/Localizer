@@ -12,6 +12,238 @@ import FirebaseFirestore
 struct UploadData {
     static let db = Firestore.firestore()
     
+    // MARK: - Async versions with completion handlers for UI
+    
+    static func uploadHospitalsAsync(completion: @escaping (Result<Int, Error>) -> Void) {
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "hospitals") { error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "Hospital", withExtension: "json") else {
+                let error = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Hospital.json file not found."])
+                completion(.failure(error))
+                return
+            }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                let hospitals = try decoder.decode([Hospital].self, from: data)
+                
+                let dispatchGroup = DispatchGroup()
+                var uploadErrors: [Error] = []
+                var successCount = 0
+                
+                for hospital in hospitals {
+                    dispatchGroup.enter()
+                    do {
+                        _ = try db.collection("hospitals").addDocument(from: hospital) { error in
+                            if let error = error {
+                                uploadErrors.append(error)
+                            } else {
+                                successCount += 1
+                            }
+                            dispatchGroup.leave()
+                        }
+                    } catch {
+                        uploadErrors.append(error)
+                        dispatchGroup.leave()
+                    }
+                }
+                
+                dispatchGroup.notify(queue: .main) {
+                    if uploadErrors.isEmpty {
+                        completion(.success(successCount))
+                    } else {
+                        let combinedError = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to upload \(uploadErrors.count) hospitals"])
+                        completion(.failure(combinedError))
+                    }
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    static func uploadSchoolsAsync(completion: @escaping (Result<Int, Error>) -> Void) {
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "schools") { error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "school", withExtension: "json") else {
+                let error = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "school.json file not found."])
+                completion(.failure(error))
+                return
+            }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                let schools = try decoder.decode([School].self, from: data)
+                
+                let dispatchGroup = DispatchGroup()
+                var uploadErrors: [Error] = []
+                var successCount = 0
+                
+                for school in schools {
+                    dispatchGroup.enter()
+                    do {
+                        _ = try db.collection("schools").addDocument(from: school) { error in
+                            if let error = error {
+                                uploadErrors.append(error)
+                            } else {
+                                successCount += 1
+                            }
+                            dispatchGroup.leave()
+                        }
+                    } catch {
+                        uploadErrors.append(error)
+                        dispatchGroup.leave()
+                    }
+                }
+                
+                dispatchGroup.notify(queue: .main) {
+                    if uploadErrors.isEmpty {
+                        completion(.success(successCount))
+                    } else {
+                        let combinedError = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to upload \(uploadErrors.count) schools"])
+                        completion(.failure(combinedError))
+                    }
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    static func uploadPoliceStationsAsync(completion: @escaping (Result<Int, Error>) -> Void) {
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "policeStations") { error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "PoliceStation", withExtension: "json") else {
+                let error = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "PoliceStation.json file not found."])
+                completion(.failure(error))
+                return
+            }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                let policeStations = try decoder.decode([PoliceStation].self, from: data)
+                
+                let dispatchGroup = DispatchGroup()
+                var uploadErrors: [Error] = []
+                var successCount = 0
+                
+                for policeStation in policeStations {
+                    dispatchGroup.enter()
+                    do {
+                        _ = try db.collection("policeStations").addDocument(from: policeStation) { error in
+                            if let error = error {
+                                uploadErrors.append(error)
+                            } else {
+                                successCount += 1
+                            }
+                            dispatchGroup.leave()
+                        }
+                    } catch {
+                        uploadErrors.append(error)
+                        dispatchGroup.leave()
+                    }
+                }
+                
+                dispatchGroup.notify(queue: .main) {
+                    if uploadErrors.isEmpty {
+                        completion(.success(successCount))
+                    } else {
+                        let combinedError = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to upload \(uploadErrors.count) police stations"])
+                        completion(.failure(combinedError))
+                    }
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    static func uploadConstituencyJSONAsync(completion: @escaping (Result<Int, Error>) -> Void) {
+        // First delete existing data
+        deleteCollectionIfExists(db: db, collectionName: "constituencies") { error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            // After deletion, proceed with upload
+            guard let url = Bundle.main.url(forResource: "Karnataka_Complete_Constituency_Details", withExtension: "json"),
+                  let data = try? Data(contentsOf: url) else {
+                let error = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Karnataka_Complete_Constituency_Details.json file not found or unreadable."])
+                completion(.failure(error))
+                return
+            }
+            
+            do {
+                let constituencyArray = try JSONDecoder().decode([ConstituencyDetails].self, from: data)
+                let collectionRef = db.collection("constituencies")
+                
+                let dispatchGroup = DispatchGroup()
+                var uploadErrors: [Error] = []
+                var successCount = 0
+                
+                for constituency in constituencyArray {
+                    dispatchGroup.enter()
+                    let uuid = UUID().uuidString  // Generate UUID
+                    
+                    var updatedConstituency = constituency
+                    updatedConstituency.id = uuid
+                    updatedConstituency.documentId = uuid  // Store document ID as field for easy fetching
+                    
+                    let docRef = collectionRef.document(uuid) // Use UUID as doc ID
+                    
+                    do {
+                        try docRef.setData(from: updatedConstituency) { error in
+                            if let error = error {
+                                uploadErrors.append(error)
+                            } else {
+                                successCount += 1
+                            }
+                            dispatchGroup.leave()
+                        }
+                    } catch {
+                        uploadErrors.append(error)
+                        dispatchGroup.leave()
+                    }
+                }
+                
+                dispatchGroup.notify(queue: .main) {
+                    if uploadErrors.isEmpty {
+                        completion(.success(successCount))
+                    } else {
+                        let combinedError = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to upload \(uploadErrors.count) constituencies"])
+                        completion(.failure(combinedError))
+                    }
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    // MARK: - Original synchronous versions (kept for backward compatibility)
+    
     static func uploadHospitals() {
         // First delete existing data
         deleteCollectionIfExists(db: db, collectionName: "hospitals") { error in
