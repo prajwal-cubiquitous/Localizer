@@ -799,5 +799,230 @@
         "Pincode": "560092",
         "Phone Number": "+91 80 46969999",
         "Google Map Link": "https://www.google.com/maps/search/Cloudnine+Hospitals+Sahakarnagar,+Survey+No.+17/2,+Sahakarnagar+Main+Road,+Byatarayanapura,+Bengaluru+560092"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "Manipal Hospital Hebbal",
+        "Type": "Hospital",
+        "Full address ": "Kirloskar Business Park, Bellary Road, Hebbal, Bengaluru",
+        "Pincode": "560024",
+        "Phone Number": "+91 80 22221111",
+        "Google Map Link": "https://www.google.com/maps/search/Manipal+Hospital+Hebbal,+Kirloskar+Business+Park,+Bellary+Road,+Hebbal,+Bengaluru+560024"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "SPARSH Hospital Yelahanka",
+        "Type": "Hospital",
+        "Full address ": "No. 1474/138, International Airport Road, Kogilu Cross, Yelahanka, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 61222000",
+        "Google Map Link": "https://www.google.com/maps/search/SPARSH+Hospital+Yelahanka,+No.+1474/138,+International+Airport+Road,+Kogilu+Cross,+Yelahanka,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "St. Martha's Hospital",
+        "Type": "Hospital",
+        "Full address ": "No.5, Nrupathunga Road, Opp RBI, Bengaluru",
+        "Pincode": "560001",
+        "Phone Number": "+91 80 40128241",
+        "Google Map Link": "https://www.google.com/maps/search/St.+Martha's+Hospital,+No.5,+Nrupathunga+Road,+Opp+RBI,+Bengaluru+560001"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "Chinmaya Mission Hospital",
+        "Type": "Hospital",
+        "Full address ": "1/1, CMH Road, Indiranagar, Bengaluru",
+        "Pincode": "560038",
+        "Phone Number": "+91 80 25026100",
+        "Google Map Link": "https://www.google.com/maps/search/Chinmaya+Mission+Hospital,+1/1,+CMH+Road,+Indiranagar,+Bengaluru+560038"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Aster Clinic Yelahanka New Town",
+        "Type": "Clinic",
+        "Full address ": "Yelahanka New Town, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 43420100",
+        "Google Map Link": "https://www.google.com/maps/search/Aster+Clinic+Yelahanka+New+Town,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "HBS Hospital",
+        "Type": "Hospital",
+        "Full address ": "Hebbal, Bengaluru",
+        "Pincode": "560043",
+        "Phone Number": "+91 80 23456789",
+        "Google Map Link": "https://www.google.com/maps/search/HBS+Hospital,+Hebbal,+Bengaluru+560043"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Manipal Hospital Doddaballapur",
+        "Type": "Hospital",
+        "Full address ": "Doddaballapur, Bengaluru Rural",
+        "Pincode": "561203",
+        "Phone Number": "+91 80 22221111",
+        "Google Map Link": "https://www.google.com/maps/search/Manipal+Hospital+Doddaballapur,+Bengaluru+Rural+561203"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "Sahyadri Narayana Multispeciality Hospital",
+        "Type": "Hospital",
+        "Full address ": "Near Hebbal Flyover, Bellary Road, Hebbal, Bengaluru",
+        "Pincode": "560024",
+        "Phone Number": "+91 80 71222222",
+        "Google Map Link": "https://www.google.com/maps/search/Sahyadri+Narayana+Multispeciality+Hospital,+Near+Hebbal+Flyover,+Bellary+Road,+Hebbal,+Bengaluru+560024"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Cloudnine Hospital Yelahanka",
+        "Type": "Hospital",
+        "Full address ": "Survey No. 17/2, International Airport Road, Yelahanka, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 46969999",
+        "Google Map Link": "https://www.google.com/maps/search/Cloudnine+Hospital+Yelahanka,+Survey+No.+17/2,+International+Airport+Road,+Yelahanka,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "Apollo Cradle Hebbal",
+        "Type": "Hospital",
+        "Full address ": "Bellary Road, Near Hebbal Metro Station, Bengaluru",
+        "Pincode": "560024",
+        "Phone Number": "+91 80 46969999",
+        "Google Map Link": "https://www.google.com/maps/search/Apollo+Cradle+Hebbal,+Bellary+Road,+Near+Hebbal+Metro+Station,+Bengaluru+560024"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "Northside Hospital",
+        "Type": "Hospital",
+        "Full address ": "8 G Block, 60 Feet Road, Sahakarnagar, Bengaluru",
+        "Pincode": "560092",
+        "Phone Number": "+91 80 23456123",
+        "Google Map Link": "https://www.google.com/maps/search/Northside+Hospital,+8+G+Block,+60+Feet+Road,+Sahakarnagar,+Bengaluru+560092"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "Hebbal Government Hospital",
+        "Type": "Hospital",
+        "Full address ": "Bellary Road, Hebbal, Bengaluru",
+        "Pincode": "560024",
+        "Phone Number": "+91 80 23456789",
+        "Google Map Link": "https://www.google.com/maps/search/Hebbal+Government+Hospital,+Bellary+Road,+Hebbal,+Bengaluru+560024"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Yelahanka Government Hospital",
+        "Type": "Hospital",
+        "Full address ": "Yelahanka Main Road, Yelahanka, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 28465432",
+        "Google Map Link": "https://www.google.com/maps/search/Yelahanka+Government+Hospital,+Yelahanka+Main+Road,+Yelahanka,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "Sahakarnagar Primary Health Centre",
+        "Type": "Clinic",
+        "Full address ": "Sahakarnagar Main Road, Byatarayanapura, Bengaluru",
+        "Pincode": "560092",
+        "Phone Number": "+91 80 23456890",
+        "Google Map Link": "https://www.google.com/maps/search/Sahakarnagar+Primary+Health+Centre,+Sahakarnagar+Main+Road,+Byatarayanapura,+Bengaluru+560092"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Jakkur Primary Health Centre",
+        "Type": "Clinic",
+        "Full address ": "Jakkur Main Road, Near Water Tank, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 28461200",
+        "Google Map Link": "https://www.google.com/maps/search/Jakkur+Primary+Health+Centre,+Jakkur+Main+Road,+Near+Water+Tank,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "Manyata Tech Park Medical Centre",
+        "Type": "Clinic",
+        "Full address ": "Manyata Tech Park, Nagavara, Bengaluru",
+        "Pincode": "560045",
+        "Phone Number": "+91 80 43420100",
+        "Google Map Link": "https://www.google.com/maps/search/Manyata+Tech+Park+Medical+Centre,+Manyata+Tech+Park,+Nagavara,+Bengaluru+560045"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "Amruthahalli Multispeciality Hospital",
+        "Type": "Hospital",
+        "Full address ": "Amruthahalli Main Road, Near Religare, Hoodi Layout, Bengaluru",
+        "Pincode": "560092",
+        "Phone Number": "+91 80 28465200",
+        "Google Map Link": "https://www.google.com/maps/search/Amruthahalli+Multispeciality+Hospital,+Amruthahalli+Main+Road,+Near+Religare,+Hoodi+Layout,+Bengaluru+560092"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Kogilu Cross Medical Centre",
+        "Type": "Clinic",
+        "Full address ": "Kogilu Cross, International Airport Road, Yelahanka, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 28467890",
+        "Google Map Link": "https://www.google.com/maps/search/Kogilu+Cross+Medical+Centre,+Kogilu+Cross,+International+Airport+Road,+Yelahanka,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "Bellary Road Specialty Hospital",
+        "Type": "Hospital",
+        "Full address ": "Bellary Road, Near Esteem Mall, Hebbal, Bengaluru",
+        "Pincode": "560024",
+        "Phone Number": "+91 80 23458901",
+        "Google Map Link": "https://www.google.com/maps/search/Bellary+Road+Specialty+Hospital,+Bellary+Road,+Near+Esteem+Mall,+Hebbal,+Bengaluru+560024"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "Thanisandra General Hospital",
+        "Type": "Hospital",
+        "Full address ": "Thanisandra Main Road, Near Bus Stand, Bengaluru",
+        "Pincode": "560077",
+        "Phone Number": "+91 80 28462345",
+        "Google Map Link": "https://www.google.com/maps/search/Thanisandra+General+Hospital,+Thanisandra+Main+Road,+Near+Bus+Stand,+Bengaluru+560077"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Bagalur Cross Hospital",
+        "Type": "Hospital",
+        "Full address ": "Bagalur Cross, Yelahanka Hobli, Bengaluru",
+        "Pincode": "560063",
+        "Phone Number": "+91 80 28468901",
+        "Google Map Link": "https://www.google.com/maps/search/Bagalur+Cross+Hospital,+Bagalur+Cross,+Yelahanka+Hobli,+Bengaluru+560063"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "Kempegowda International Airport Medical Centre",
+        "Type": "Clinic",
+        "Full address ": "Kempegowda International Airport, Devanahalli, Bengaluru",
+        "Pincode": "560300",
+        "Phone Number": "+91 80 66782425",
+        "Google Map Link": "https://www.google.com/maps/search/Kempegowda+International+Airport+Medical+Centre,+Devanahalli,+Bengaluru+560300"
+    },
+    {
+        "Constituency": "Byatarayanapura",
+        "Name": "Banaswadi General Hospital",
+        "Type": "Hospital",
+        "Full address ": "Banaswadi Main Road, Near Railway Station, Bengaluru",
+        "Pincode": "560043",
+        "Phone Number": "+91 80 25674321",
+        "Google Map Link": "https://www.google.com/maps/search/Banaswadi+General+Hospital,+Banaswadi+Main+Road,+Near+Railway+Station,+Bengaluru+560043"
+    },
+    {
+        "Constituency": "Yelahanka",
+        "Name": "Chikkajala Primary Health Centre",
+        "Type": "Clinic",
+        "Full address ": "Chikkajala Village, Yelahanka Taluk, Bengaluru",
+        "Pincode": "560064",
+        "Phone Number": "+91 80 28469012",
+        "Google Map Link": "https://www.google.com/maps/search/Chikkajala+Primary+Health+Centre,+Chikkajala+Village,+Yelahanka+Taluk,+Bengaluru+560064"
+    },
+    {
+        "Constituency": "Hebbal",
+        "Name": "RT Nagar Government Hospital",
+        "Type": "Hospital",
+        "Full address ": "RT Nagar Main Road, Near BDA Complex, Bengaluru",
+        "Pincode": "560032",
+        "Phone Number": "+91 80 23460123",
+        "Google Map Link": "https://www.google.com/maps/search/RT+Nagar+Government+Hospital,+RT+Nagar+Main+Road,+Near+BDA+Complex,+Bengaluru+560032"
     }
 ]

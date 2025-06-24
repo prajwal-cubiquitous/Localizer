@@ -23,6 +23,7 @@ class DataViewModel: ObservableObject {
 
     init(postalCodes: [String]) {
         self.postalCodes = postalCodes
+        print(self.postalCodes)
     }
     
     // A cancellables set to hold any Combine subscriptions
