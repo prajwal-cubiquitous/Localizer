@@ -18,20 +18,31 @@ class CommentsViewModel: ObservableObject {
     func addComment(toNewsId newsId: String, commentText: String) async throws {
         
         guard let uid = Auth.auth().currentUser?.uid else { return }
-                
-        let comment = Comment(userId: uid, text: commentText)
         
         let commentRef = Firestore.firestore()
             .collection("news")
             .document(newsId)
             .collection("comments")
-            .document(comment.id.uuidString)
+            .document()
         
-        try commentRef.setData(from: comment)
+        try await commentRef.setData([
+            "userId": uid,
+            "text": commentText,
+            "timestamp": Date(),
+            "likes": 0
+        ])
+        
         Task{
             try await AddCommentedNews(postId: newsId)
         }
-        comments.append(comment)
+        
+        let createdComment = try await commentRef.getDocument()
+        if let commentData = try? createdComment.data(as: Comment.self) {
+            await MainActor.run {
+                comments.append(commentData)
+            }
+        }
+        
         try await incrementLikesCount(forPostId: newsId, by: 1)
     }
     
@@ -70,12 +81,13 @@ class CommentsViewModel: ObservableObject {
     
     func toggleLike(for comment: Comment, inNews newsId: String) async  {
         guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let commentId = comment.id else { return }
 
         let commentRef = Firestore.firestore()
             .collection("news")
             .document(newsId)
             .collection("comments")
-            .document(comment.id.uuidString)
+            .document(commentId)
 
         let likeRef = commentRef
             .collection("likes")
@@ -119,12 +131,13 @@ class CommentsViewModel: ObservableObject {
 
     func checkIfLiked(comment: Comment, newsId: String) async -> Bool {
         guard let uid = Auth.auth().currentUser?.uid else { return false }
+        guard let commentId = comment.id else { return false }
 
         let likeRef = Firestore.firestore()
             .collection("news")
             .document(newsId)
             .collection("comments")
-            .document(comment.id.uuidString)
+            .document(commentId)
             .collection("likes")
             .document(uid)
 
@@ -139,12 +152,6 @@ class CommentsViewModel: ObservableObject {
     func addReply(toNewsId newsId: String, commentId: String, replyText: String) async throws {
         guard let currentUser = Auth.auth().currentUser else { return }
 
-        let reply = Reply(
-            userId: currentUser.uid,
-            text: replyText,
-            timestamp: Date()
-        )
-
         let db = Firestore.firestore()
         let replyRef = db
             .collection("news")
@@ -152,8 +159,13 @@ class CommentsViewModel: ObservableObject {
             .collection("comments")
             .document(commentId)
             .collection("replies")
-            .document(reply.id.uuidString)
-        try replyRef.setData(from: reply)
+            .document() // Let Firestore auto-generate the document ID
+            
+        try await replyRef.setData([
+            "userId": currentUser.uid,
+            "text": replyText,
+            "timestamp": Date()
+        ])
     }
 
 

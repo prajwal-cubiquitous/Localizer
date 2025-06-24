@@ -145,10 +145,12 @@ struct CommentRowView: View {
             await loadCommentUser()
             
             // Load replies
-            do {
-                replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: comment.id.uuidString)
-            } catch {
-                print("Error loading replies: \(error.localizedDescription)")
+            if let commentId = comment.id {
+                do {
+                    replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: commentId)
+                } catch {
+                    print("Error loading replies: \(error.localizedDescription)")
+                }
             }
         }
     }

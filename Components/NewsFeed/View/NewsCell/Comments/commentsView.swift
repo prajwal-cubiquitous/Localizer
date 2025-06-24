@@ -90,11 +90,12 @@ struct CommentsView: View {
                                 let trimmedText = newCommentText.trimmingCharacters(in: .whitespacesAndNewlines)
                                 guard !trimmedText.isEmpty else { return }
                                 
-                                if let targetComment = replyingToComment {
+                                if let targetComment = replyingToComment,
+                                   let commentId = targetComment.id {
                                     do {
                                         try await viewModel.addReply(
                                             toNewsId: localNews.id,
-                                            commentId: targetComment.id.uuidString, // Must be String
+                                            commentId: commentId,
                                             replyText: trimmedText
                                         )
                                         replyingToComment = nil

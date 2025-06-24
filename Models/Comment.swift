@@ -2,14 +2,14 @@ import Foundation
 import FirebaseFirestore
 
 struct Reply: Identifiable, Codable, Hashable {
-    var id = UUID()
+    @DocumentID var id: String?
     var userId: String
     var username: String?
     var text: String
     var profileImageName: String? // For placeholder system images
     var timestamp: Date
     
-    init(id: UUID = UUID(), userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date()) {
+    init(id: String? = nil, userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date()) {
         self.id = id
         self.userId = userId
         self.username = username
@@ -20,7 +20,7 @@ struct Reply: Identifiable, Codable, Hashable {
 }
 
 struct Comment: Identifiable, Hashable, Codable {
-    var id = UUID()
+    @DocumentID var id: String?
     var userId: String
     var username: String?
     var text: String
@@ -29,7 +29,7 @@ struct Comment: Identifiable, Hashable, Codable {
     var likes: Int
     var replies: [Reply]
     
-    init(id: UUID = UUID(), userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date(), likes: Int = 0, replies: [Reply] = []) {
+    init(id: String? = nil, userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date(), likes: Int = 0, replies: [Reply] = []) {
         self.id = id
         self.userId = userId
         self.username = username

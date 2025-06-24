@@ -28,14 +28,26 @@ class NewsCellViewModel: ObservableObject{
     /// Saves or updates a vote in the subcollection `votes` under the specific `news` document
     func saveVote(postId: String, voteType: Int, PostLikeCount: Int) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let vote = Vote(postId: postId, userId: uid, voteType: voteType, timestamp: Date.now)
+        
         let docRef = db.collection("news")
-            .document(vote.postId)
+            .document(postId)
             .collection("votes")
-            .document(vote.userId) // each user has one vote per post
+            .document(uid) // Use userId as document ID to ensure uniqueness
         
-        try docRef.setData(from: vote)
+        if voteType == 0 {
+            // Remove the vote document when voteType is 0 (neutral)
+            try await docRef.delete()
+        } else {
+            // Create or update the vote document
+            try await docRef.setData([
+                "postId": postId,
+                "userId": uid,
+                "voteType": voteType,
+                "timestamp": Date()
+            ], merge: true)
+        }
         
+        // Update the likes count on the main news document
         try await incrementLikesCount(forPostId: postId, by: PostLikeCount)
     }
     
@@ -52,28 +64,30 @@ class NewsCellViewModel: ObservableObject{
                     self.likesCount = count
                 }
             }
-            let snapshot = try await docRef.collection("votes")
+            
+            // Check user's vote status
+            let voteSnapshot = try await docRef.collection("votes")
                 .document(uid).getDocument()
-            if let data = snapshot.data(), let voteType = data["voteType"] as? Int {
-                DispatchQueue.main.async {
+                
+            if let voteData = voteSnapshot.data(), 
+               let voteType = voteData["voteType"] as? Int {
+                await MainActor.run {
                     switch voteType {
                     case 1:
                         self.voteState = .upvoted
                     case -1:
                         self.voteState = .downvoted
-                    case 0:
-                        self.voteState = .none
                     default:
                         self.voteState = .none
                     }
                 }
             } else {
-                DispatchQueue.main.async {
+                await MainActor.run {
                     self.voteState = .none
                 }
             }
         } catch {
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.voteState = .none
             }
         }
