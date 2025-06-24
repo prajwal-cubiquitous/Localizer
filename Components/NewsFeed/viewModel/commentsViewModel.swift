@@ -205,6 +205,7 @@ class CommentsViewModel: ObservableObject {
 
 
     func fetchReplies(forNewsId newsId: String, commentId: String) async throws -> [Reply] {
+        print("DEBUG: Fetching replies for newsId: \(newsId), commentId: \(commentId)")
         let snapshot = try await Firestore.firestore()
             .collection("news")
             .document(newsId)
@@ -214,9 +215,21 @@ class CommentsViewModel: ObservableObject {
             .order(by: "timestamp", descending: false)
             .getDocuments()
 
-        return snapshot.documents.compactMap { doc in
-            try? doc.data(as: Reply.self)
+        print("DEBUG: Found \(snapshot.documents.count) reply documents")
+        
+        let replies = snapshot.documents.compactMap { doc in
+            do {
+                let reply = try doc.data(as: Reply.self)
+                print("DEBUG: Successfully decoded reply: \(reply.text)")
+                return reply
+            } catch {
+                print("DEBUG: Failed to decode reply from document \(doc.documentID): \(error)")
+                return nil
+            }
         }
+        
+        print("DEBUG: Returning \(replies.count) replies")
+        return replies
     }
     
     func fetchCurrentUser(_ uid: String) async throws -> User {
