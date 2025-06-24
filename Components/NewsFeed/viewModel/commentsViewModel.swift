@@ -36,12 +36,8 @@ class CommentsViewModel: ObservableObject {
             try await AddCommentedNews(postId: newsId)
         }
         
-        let createdComment = try await commentRef.getDocument()
-        if let commentData = try? createdComment.data(as: Comment.self) {
-            await MainActor.run {
-                comments.append(commentData)
-            }
-        }
+        // Refresh comments instead of manually appending
+        try await fetchComments(forNewsId: newsId)
         
         try await incrementLikesCount(forPostId: newsId, by: 1)
     }
@@ -63,11 +59,46 @@ class CommentsViewModel: ObservableObject {
                 .order(by: "timestamp", descending: false)
                 .getDocuments()
             
+            print("DEBUG: Fetched \(snapshot.documents.count) comment documents for newsId: \(newsId)")
+            
             let fetchedComments = snapshot.documents.compactMap { doc in
-                try? doc.data(as: Comment.self)
+                do {
+                    var comment = try doc.data(as: Comment.self)
+                    print("DEBUG: Successfully decoded comment: \(comment.text)")
+                    print("DEBUG: Comment ID from @DocumentID: \(comment.id ?? "nil")")
+                    print("DEBUG: Document ID from doc: \(doc.documentID)")
+                    print("DEBUG: Comment documentId field: \(comment.documentId ?? "nil")")
+                    
+                    // If both IDs are nil, set the documentId field
+                    if comment.actualId == nil {
+                        comment = Comment(
+                            id: nil, // Don't set @DocumentID manually
+                            documentId: doc.documentID, // Use the regular field
+                            userId: comment.userId,
+                            username: comment.username,
+                            text: comment.text,
+                            profileImageName: comment.profileImageName,
+                            timestamp: comment.timestamp,
+                            likes: comment.likes,
+                            replies: comment.replies
+                        )
+                        print("DEBUG: Set documentId field to: \(doc.documentID)")
+                    }
+                    
+                    print("DEBUG: Final comment actualId: \(comment.actualId ?? "nil")")
+                    return comment
+                } catch {
+                    print("DEBUG: Failed to decode comment from document \(doc.documentID): \(error)")
+                    print("DEBUG: Document data: \(doc.data())")
+                    return nil
+                }
             }
             
-            self.comments = fetchedComments
+            print("DEBUG: Successfully decoded \(fetchedComments.count) comments")
+            
+            await MainActor.run {
+                self.comments = fetchedComments
+            }
             
             for comment in comments {
                 let FetchedUser = try await fetchCurrentUser(comment.userId)
@@ -75,13 +106,14 @@ class CommentsViewModel: ObservableObject {
                 UserCache.shared.cacheusers[comment.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
             }
         } catch {
-             throw error
+            print("DEBUG: Error in fetchComments: \(error)")
+            throw error
         }
     }
     
     func toggleLike(for comment: Comment, inNews newsId: String) async  {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        guard let commentId = comment.id else { return }
+        guard let commentId = comment.actualId else { return }
 
         let commentRef = Firestore.firestore()
             .collection("news")
@@ -104,7 +136,7 @@ class CommentsViewModel: ObservableObject {
                 ])
 
                 await MainActor.run {
-                    if let index = comments.firstIndex(where: { $0.id == comment.id }) {
+                    if let index = comments.firstIndex(where: { $0.actualId == comment.actualId }) {
                         comments[index].likes -= 1
                     }
                 }
@@ -120,7 +152,7 @@ class CommentsViewModel: ObservableObject {
                 ])
 
                 await MainActor.run {
-                    if let index = comments.firstIndex(where: { $0.id == comment.id }) {
+                    if let index = comments.firstIndex(where: { $0.actualId == comment.actualId }) {
                         comments[index].likes += 1
                     }
                 }
@@ -131,7 +163,7 @@ class CommentsViewModel: ObservableObject {
 
     func checkIfLiked(comment: Comment, newsId: String) async -> Bool {
         guard let uid = Auth.auth().currentUser?.uid else { return false }
-        guard let commentId = comment.id else { return false }
+        guard let commentId = comment.actualId else { return false }
 
         let likeRef = Firestore.firestore()
             .collection("news")
@@ -166,6 +198,9 @@ class CommentsViewModel: ObservableObject {
             "text": replyText,
             "timestamp": Date()
         ])
+        
+        // Refresh comments to show the new reply
+        try await fetchComments(forNewsId: newsId)
     }
 
 

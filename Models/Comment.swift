@@ -21,16 +21,30 @@ struct Reply: Identifiable, Codable, Hashable {
 
 struct Comment: Identifiable, Hashable, Codable {
     @DocumentID var id: String?
+    var documentId: String? // Manual document ID field as backup
     var userId: String
     var username: String?
     var text: String
     var profileImageName: String? // For placeholder system images
     var timestamp: Date
     var likes: Int
-    var replies: [Reply]
     
-    init(id: String? = nil, userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date(), likes: Int = 0, replies: [Reply] = []) {
+    // This will be populated separately in the view model, not from Firestore
+    var replies: [Reply] = []
+    
+    // Computed property that prioritizes documentId over id
+    var actualId: String? {
+        return documentId ?? id
+    }
+    
+    // Exclude replies from Firestore encoding/decoding
+    private enum CodingKeys: String, CodingKey {
+        case userId, username, text, profileImageName, timestamp, likes, documentId
+    }
+    
+    init(id: String? = nil, documentId: String? = nil, userId: String, username: String? = nil, text: String, profileImageName: String? = nil, timestamp: Date = Date(), likes: Int = 0, replies: [Reply] = []) {
         self.id = id
+        self.documentId = documentId
         self.userId = userId
         self.username = username
         self.text = text
@@ -40,7 +54,6 @@ struct Comment: Identifiable, Hashable, Codable {
         self.replies = replies
     }
 }
-
 
 func getSampleComments() -> [Comment] {
     return [
@@ -55,7 +68,6 @@ func getSampleComments() -> [Comment] {
         Comment(userId: "ldhgfoivdjfhojgdf" , username: "PhotoDave", text: "Great composition and lighting. Keep it up!", profileImageName: "camera.fill", timestamp: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, likes: 8, replies: [])
     ]
 }
-
 
 struct CommentForFirebase: Identifiable, Codable, Hashable {
     @DocumentID var id: String?  // Firestore will auto-generate this if nil

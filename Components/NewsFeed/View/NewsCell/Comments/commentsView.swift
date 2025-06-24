@@ -1,11 +1,9 @@
 import SwiftUI
-// Sample data
 import FirebaseAuth
 
 // 4. Main Comments View (Pop-up)
 struct CommentsView: View {
     @StateObject var viewModel = CommentsViewModel()
-    @State private var comments: [Comment] = getSampleComments()
     @State private var newCommentText: String = ""
     @State private var replyingToComment: Comment? = nil
     @State private var replyingToUser: CachedUser? = nil
@@ -22,7 +20,7 @@ struct CommentsView: View {
         NavigationView {
             VStack(spacing: 0) {
                 List {
-                    ForEach(viewModel.comments) { comment in
+                    ForEach(viewModel.comments, id: \.actualId) { comment in
                         CommentRowView(
                             viewModel: viewModel,
                             newsId: localNews.id,
@@ -90,8 +88,14 @@ struct CommentsView: View {
                                 let trimmedText = newCommentText.trimmingCharacters(in: .whitespacesAndNewlines)
                                 guard !trimmedText.isEmpty else { return }
                                 
+                                print("DEBUG: About to post - replyingToComment: \(replyingToComment != nil)")
+                                if let targetComment = replyingToComment {
+                                    print("DEBUG: Target comment ID: \(targetComment.id ?? "nil")")
+                                }
+                                
                                 if let targetComment = replyingToComment,
-                                   let commentId = targetComment.id {
+                                   let commentId = targetComment.actualId {
+                                    print("DEBUG: Adding reply to comment \(commentId)")
                                     do {
                                         try await viewModel.addReply(
                                             toNewsId: localNews.id,
@@ -101,13 +105,14 @@ struct CommentsView: View {
                                         replyingToComment = nil
                                         replyingToUser = nil
                                     } catch {
-                                        // Handle error
+                                        print("DEBUG: Error adding reply: \(error)")
                                     }
                                 } else {
+                                    print("DEBUG: Adding new comment (not a reply)")
                                     do {
                                         try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
                                     } catch {
-                                        // Handle error
+                                        print("DEBUG: Error adding comment: \(error)")
                                     }
                                 }
                                 newCommentText = ""
@@ -136,19 +141,28 @@ struct CommentsView: View {
             .onTapGesture {
                 hideKeyboard()
             }
-        }
-        .task {
-            do {
-                guard let uid = Auth.auth().currentUser?.uid else { return }
-                let fetchedUser = try await viewModel.fetchCurrentUser(uid)
-                try await viewModel.fetchComments(forNewsId: localNews.id)
-                
-                // Ensure assignment happens on main actor
-                await MainActor.run {
-                    self.currentUser = fetchedUser
+            .onAppear() {
+                print("Debug 1")
+                Task{
+                    do {
+                        guard let uid = Auth.auth().currentUser?.uid else {
+                            print("DEBUG: No current user found")
+                            return
+                        }
+                        print("DEBUG: Starting to fetch comments for newsId: \(localNews.id)")
+                        let fetchedUser = try await viewModel.fetchCurrentUser(uid)
+                        try await viewModel.fetchComments(forNewsId: localNews.id)
+                        
+                        // Ensure assignment happens on main actor
+                        await MainActor.run {
+                            self.currentUser = fetchedUser
+                            print("DEBUG: Comments count: \(viewModel.comments.count)")
+                        }
+                    } catch {
+                        print("DEBUG: Error in CommentsView task: \(error)")
+                        // Handle error - you might want to show an alert or error message
+                    }
                 }
-            } catch {
-                // Handle error
             }
         }
     }
@@ -158,6 +172,10 @@ struct CommentsView: View {
     }
     
     private func startReply(to comment: Comment) {
+        print("DEBUG: Starting reply to comment with actualId: \(comment.actualId ?? "nil")")
+        print("DEBUG: Comment @DocumentID: \(comment.id ?? "nil")")
+        print("DEBUG: Comment documentId field: \(comment.documentId ?? "nil")")
+        print("DEBUG: Comment text: \(comment.text)")
         replyingToComment = comment
         newCommentText = ""
         
