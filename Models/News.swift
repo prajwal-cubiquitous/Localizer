@@ -11,13 +11,17 @@ import SwiftData
 
 struct News: Identifiable, Codable, Sendable {
     @DocumentID var newsId: String?
+    var documentId: String? // Regular field for document ID
     
     var id: String {
-        // Always use the actual Firestore document ID when available
+        // First try the regular documentId field
+        if let documentId = documentId {
+            return documentId
+        }
+        // Then try the @DocumentID field
         if let newsId = newsId {
             return newsId
         }
-        
         // Only generate a temporary UUID for unsaved documents
         return UUID().uuidString
     }
@@ -32,8 +36,9 @@ struct News: Identifiable, Codable, Sendable {
     var newsImageURLs: [String]?
     
     // Simplified initializer
-    init(newsId: String? = nil, ownerUid: String, caption: String, timestamp: Timestamp, likesCount: Int, commentsCount: Int, cosntituencyId: String, user: User? = nil, newsImageURLs: [String]? = nil) {
+    init(newsId: String? = nil, documentId: String? = nil, ownerUid: String, caption: String, timestamp: Timestamp, likesCount: Int, commentsCount: Int, cosntituencyId: String, user: User? = nil, newsImageURLs: [String]? = nil) {
         self.newsId = newsId
+        self.documentId = documentId
         self.ownerUid = ownerUid
         self.caption = caption
         self.timestamp = timestamp
@@ -44,8 +49,9 @@ struct News: Identifiable, Codable, Sendable {
         self.newsImageURLs = newsImageURLs
     }
     
-    // CodingKeys - newsId is handled by @DocumentID
+    // CodingKeys - newsId is handled by @DocumentID, documentId is a regular field
     enum CodingKeys: String, CodingKey {
+        case documentId
         case ownerUid
         case caption
         case timestamp
@@ -59,6 +65,7 @@ struct News: Identifiable, Codable, Sendable {
     // Standard Codable implementation
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(documentId, forKey: .documentId)
         try container.encode(ownerUid, forKey: .ownerUid)
         try container.encode(caption, forKey: .caption)
         try container.encode(timestamp, forKey: .timestamp)
@@ -71,6 +78,7 @@ struct News: Identifiable, Codable, Sendable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        documentId = try container.decodeIfPresent(String.self, forKey: .documentId)
         ownerUid = try container.decode(String.self, forKey: .ownerUid)
         caption = try container.decode(String.self, forKey: .caption)
         timestamp = try container.decode(Timestamp.self, forKey: .timestamp)
@@ -193,7 +201,8 @@ extension LocalNews {
 
     func toNews() -> News {
         return News(
-            newsId: self.id,
+            newsId: nil, // Don't set @DocumentID manually
+            documentId: self.id, // Use regular field
             ownerUid: self.ownerUid,
             caption: self.caption,
             timestamp: Timestamp(date: self.timestamp),

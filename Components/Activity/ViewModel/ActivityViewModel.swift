@@ -45,10 +45,11 @@ class ActivityViewModel : ObservableObject{
         let newsItemsFromFirebase = snapshot.documents.compactMap { doc in
             do {
                 var newsItem = try doc.data(as: News.self)
-                // Ensure the newsId is set to the document ID if it's not already set
-                if newsItem.newsId == nil {
+                // Set the regular documentId field if it's not already set
+                if newsItem.documentId == nil && newsItem.newsId == nil {
                     newsItem = News(
-                        newsId: doc.documentID,
+                        newsId: nil, // Don't set @DocumentID manually
+                        documentId: doc.documentID, // Use regular field
                         ownerUid: newsItem.ownerUid,
                         caption: newsItem.caption,
                         timestamp: newsItem.timestamp,
@@ -97,10 +98,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue } // Use continue instead of return
                 do {
                     var SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                    // Ensure the newsId is set to the document ID if it's not already set
-                    if SavedNewsFromFirestore.newsId == nil {
+                    // Set the regular documentId field if it's not already set
+                    if SavedNewsFromFirestore.documentId == nil && SavedNewsFromFirestore.newsId == nil {
                         SavedNewsFromFirestore = News(
-                            newsId: snapshot.documentID,
+                            newsId: nil, // Don't set @DocumentID manually
+                            documentId: snapshot.documentID, // Use regular field
                             ownerUid: SavedNewsFromFirestore.ownerUid,
                             caption: SavedNewsFromFirestore.caption,
                             timestamp: SavedNewsFromFirestore.timestamp,
@@ -150,10 +152,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue } // Use continue instead of return
                 do {
                     var SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                    // Ensure the newsId is set to the document ID if it's not already set
-                    if SavedNewsFromFirestore.newsId == nil {
+                    // Set the regular documentId field if it's not already set
+                    if SavedNewsFromFirestore.documentId == nil && SavedNewsFromFirestore.newsId == nil {
                         SavedNewsFromFirestore = News(
-                            newsId: snapshot.documentID,
+                            newsId: nil, // Don't set @DocumentID manually
+                            documentId: snapshot.documentID, // Use regular field
                             ownerUid: SavedNewsFromFirestore.ownerUid,
                             caption: SavedNewsFromFirestore.caption,
                             timestamp: SavedNewsFromFirestore.timestamp,
@@ -202,10 +205,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue } // Use continue instead of return
                 do {
                     var SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                    // Ensure the newsId is set to the document ID if it's not already set
-                    if SavedNewsFromFirestore.newsId == nil {
+                    // Set the regular documentId field if it's not already set
+                    if SavedNewsFromFirestore.documentId == nil && SavedNewsFromFirestore.newsId == nil {
                         SavedNewsFromFirestore = News(
-                            newsId: snapshot.documentID,
+                            newsId: nil, // Don't set @DocumentID manually
+                            documentId: snapshot.documentID, // Use regular field
                             ownerUid: SavedNewsFromFirestore.ownerUid,
                             caption: SavedNewsFromFirestore.caption,
                             timestamp: SavedNewsFromFirestore.timestamp,
@@ -253,10 +257,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue } // Use continue instead of return
                 do {
                     var SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                    // Ensure the newsId is set to the document ID if it's not already set
-                    if SavedNewsFromFirestore.newsId == nil {
+                    // Set the regular documentId field if it's not already set
+                    if SavedNewsFromFirestore.documentId == nil && SavedNewsFromFirestore.newsId == nil {
                         SavedNewsFromFirestore = News(
-                            newsId: snapshot.documentID,
+                            newsId: nil, // Don't set @DocumentID manually
+                            documentId: snapshot.documentID, // Use regular field
                             ownerUid: SavedNewsFromFirestore.ownerUid,
                             caption: SavedNewsFromFirestore.caption,
                             timestamp: SavedNewsFromFirestore.timestamp,
@@ -305,10 +310,11 @@ class ActivityViewModel : ObservableObject{
                 guard snapshot.exists else { continue } // Use continue instead of return
                 do {
                     var SavedNewsFromFirestore = try snapshot.data(as: News.self)
-                    // Ensure the newsId is set to the document ID if it's not already set
-                    if SavedNewsFromFirestore.newsId == nil {
+                    // Set the regular documentId field if it's not already set
+                    if SavedNewsFromFirestore.documentId == nil && SavedNewsFromFirestore.newsId == nil {
                         SavedNewsFromFirestore = News(
-                            newsId: snapshot.documentID,
+                            newsId: nil, // Don't set @DocumentID manually
+                            documentId: snapshot.documentID, // Use regular field
                             ownerUid: SavedNewsFromFirestore.ownerUid,
                             caption: SavedNewsFromFirestore.caption,
                             timestamp: SavedNewsFromFirestore.timestamp,

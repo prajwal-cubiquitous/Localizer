@@ -114,11 +114,12 @@ final class NewsFeedViewModel: ObservableObject {
         let news = snapshot.documents.compactMap { doc in
             do {
                 var newsItem = try doc.data(as: News.self)
-                // Ensure the newsId is set to the document ID if it's not already set
-                if newsItem.newsId == nil {
-                    // Create a new News instance with the correct document ID
+                // Set the regular documentId field if it's not already set
+                if newsItem.documentId == nil && newsItem.newsId == nil {
+                    // Create a new News instance with the document ID in the regular field
                     newsItem = News(
-                        newsId: doc.documentID,
+                        newsId: nil, // Don't set @DocumentID manually
+                        documentId: doc.documentID, // Use regular field
                         ownerUid: newsItem.ownerUid,
                         caption: newsItem.caption,
                         timestamp: newsItem.timestamp,
