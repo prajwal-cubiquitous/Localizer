@@ -27,8 +27,7 @@ struct ProfilePictureView: View {
                     )
                     .shadow(radius: 5)
                     .padding(.bottom, 8)
-            }
-        else{
+            } else {
             Circle()
                 .fill(Color.gray.opacity(0.2))
                 .frame(width: width, height: height)
