@@ -16,76 +16,70 @@ struct constituencyView: View {
         ZStack {
             ScrollView {
                 if let ConstituencyInfo = ConstituencyInfo {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 32) {
                         // Profile Header Section
-                        VStack(spacing: 16) {
-                            // Profile Image
+                        VStack(spacing: 24) {
+                            // Profile Image with enhanced design
                             ZStack {
                                 Circle()
-                                    .fill(Color.blue.opacity(0.1))
-                                    .frame(width: 100, height: 100)
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.4)]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 120, height: 120)
+                                    .shadow(color: .blue.opacity(0.3), radius: 10, x: 0, y: 5)
                                 
                                 Image(systemName: "person.circle.fill")
-                                    .font(.system(size: 70))
-                                    .foregroundColor(.blue)
+                                    .font(.system(size: 80))
+                                    .foregroundColor(.white)
                             }
 
                             // Name and Basic Info
-                            VStack(spacing: 8) {
+                            VStack(spacing: 16) {
                                 Text(ConstituencyInfo.currentMLAName)
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
+                                    .font(.largeTitle)
+                                    .fontWeight(.bold)
                                     .multilineTextAlignment(.center)
+                                    .foregroundColor(.primary)
 
-                                // Party with proper formatting
+                                // Party with enhanced styling
                                 Text(getFullPartyName(ConstituencyInfo.politicalParty))
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.blue)
                                     .multilineTextAlignment(.center)
                                 
-                                // Gender and Election Year Tags
-                                HStack(spacing: 12) {
-                                    Label(ConstituencyInfo.gender, systemImage: "person.fill")
-                                        .font(.caption)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
-                                        .cornerRadius(12)
-                                    
-                                    Label("Elected \(ConstituencyInfo.electionYear)", systemImage: "calendar")
-                                        .font(.caption)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color.green.opacity(0.1))
-                                        .foregroundColor(.green)
-                                        .cornerRadius(12)
+                                // Status Tags
+                                HStack(spacing: 16) {
+                                    StatusTag(text: ConstituencyInfo.gender, icon: "person.fill", color: .purple)
+                                    StatusTag(text: "Elected \(ConstituencyInfo.electionYear)", icon: "calendar", color: .green)
                                 }
                             }
                         }
                         .padding(.top, 24)
 
+                        // MLA Personal Information Card
+                        MLAPersonalInfoCard()
+                        
+                        // Office Address Card
+                        OfficeAddressCard()
+
                         // Constituency Information Card
-                        VStack(alignment: .leading, spacing: 20) {
-                            // Section Header
-                            HStack {
-                                Label("Constituency Details", systemImage: "building.2")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                            }
-                            .padding(.horizontal, 20)
+                        VStack(alignment: .leading, spacing: 24) {
+                            SectionHeader(title: "Constituency Details", icon: "building.2")
 
                             // Main Constituency Card
-                            VStack(alignment: .leading, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 20) {
                                 // Constituency Name and Number
                                 HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
+                                    VStack(alignment: .leading, spacing: 8) {
                                         Text(ConstituencyInfo.constituencyName)
-                                            .font(.title3)
-                                            .fontWeight(.semibold)
+                                            .font(.title2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.primary)
 
                                         Text("Constituency #\(ConstituencyInfo.constituencyNumber)")
                                             .font(.subheadline)
@@ -94,23 +88,23 @@ struct constituencyView: View {
 
                                     Spacer()
 
-                                    // Map Icon with background
+                                    // Map Icon with enhanced background
                                     ZStack {
                                         Circle()
-                                            .fill(Color.orange.opacity(0.1))
-                                            .frame(width: 44, height: 44)
+                                            .fill(Color.orange.opacity(0.15))
+                                            .frame(width: 50, height: 50)
                                         
                                         Image(systemName: "map.fill")
-                                            .font(.title3)
+                                            .font(.title2)
                                             .foregroundColor(.orange)
                                     }
                                 }
                                 
                                 Divider()
-                                    .padding(.vertical, 4)
+                                    .padding(.vertical, 8)
                                 
                                 // Detailed Information Grid
-                                VStack(spacing: 12) {
+                                VStack(spacing: 16) {
                                     ConstituencyDetailRow(
                                         title: "District", 
                                         value: ConstituencyInfo.district,
@@ -134,24 +128,13 @@ struct constituencyView: View {
                                         value: ConstituencyInfo.reservationStatus,
                                         icon: "shield.fill"
                                     )
-                                    
-                                    ConstituencyDetailRow(
-                                        title: "Previous MLA", 
-                                        value: ConstituencyInfo.previousMLA,
-                                        icon: "person.2.fill"
-                                    )
-                                    
-                                    ConstituencyDetailRow(
-                                        title: "Victory Margin", 
-                                        value: ConstituencyInfo.victoryMargin,
-                                        icon: "chart.bar.fill"
-                                    )
                                 }
                             }
-                            .padding(20)
+                            .padding(24)
                             .background(
-                                RoundedRectangle(cornerRadius: 16)
+                                RoundedRectangle(cornerRadius: 20)
                                     .fill(Color(.systemGray6))
+                                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
                             )
                             .padding(.horizontal, 20)
                         }
@@ -161,12 +144,12 @@ struct constituencyView: View {
                             .frame(height: 100)
                     }
                 } else {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
                         ProgressView()
-                            .scaleEffect(1.2)
+                            .scaleEffect(1.5)
                         
                         Text("Loading constituency details...")
-                            .font(.subheadline)
+                            .font(.headline)
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -174,7 +157,7 @@ struct constituencyView: View {
             }
             .background(Color(.systemBackground))
             
-            // Floating MLA History Button
+            // Enhanced Floating MLA History Button
             VStack {
                 Spacer()
                 
@@ -184,24 +167,30 @@ struct constituencyView: View {
                     Button(action: {
                         showMLAHistory.toggle()
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 10) {
                             Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(size: 18, weight: .semibold))
                             
                             Text("History")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(size: 18, weight: .semibold))
                         }
                         .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 14)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
                         .background(
-                            RoundedRectangle(cornerRadius: 28)
-                                .fill(Color.blue)
-                                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                            RoundedRectangle(cornerRadius: 30)
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
                         )
                     }
                     .padding(.trailing, 20)
-                    .padding(.bottom, 34) // Account for safe area
+                    .padding(.bottom, 34)
                 }
             }
         }
@@ -229,33 +218,155 @@ struct constituencyView: View {
     }
 }
 
+// MARK: - New Components for Enhanced UI
+
+struct StatusTag: View {
+    let text: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        Label(text, systemImage: icon)
+            .font(.caption)
+            .fontWeight(.medium)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(color.opacity(0.15))
+            .foregroundColor(color)
+            .cornerRadius(14)
+    }
+}
+
+struct SectionHeader: View {
+    let title: String
+    let icon: String
+    
+    var body: some View {
+        HStack {
+            Label(title, systemImage: icon)
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+    }
+}
+
+struct MLAPersonalInfoCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            SectionHeader(title: "Personal Information", icon: "person.text.rectangle")
+            
+            VStack(alignment: .leading, spacing: 18) {
+                InfoRow(title: "Age", value: "58 years", icon: "calendar", color: .blue)
+                InfoRow(title: "Education", value: "B.A., LL.B from Bangalore University", icon: "graduationcap.fill", color: .purple)
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemGray6))
+                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+            )
+            .padding(.horizontal, 20)
+        }
+    }
+}
+
+struct OfficeAddressCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            SectionHeader(title: "Office Address", icon: "building.2.fill")
+            
+            VStack(alignment: .leading, spacing: 18) {
+                InfoRow(title: "Official Address", value: "Room No. 245, Vidhana Soudha, Bangalore - 560001", icon: "building.2.fill", color: .blue)
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemGray6))
+                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+            )
+            .padding(.horizontal, 20)
+        }
+    }
+}
+
+struct InfoRow: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            // Icon with background
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(color)
+            }
+            
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                
+                Text(value)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 struct ConstituencyDetailRow: View {
     let title: String
     let value: String
     let icon: String
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Icon
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundColor(.blue)
-                .frame(width: 20, alignment: .leading)
+        HStack(alignment: .top, spacing: 16) {
+            // Icon with background
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.15))
+                    .frame(width: 32, height: 32)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.blue)
+            }
             
-            // Title
-            Text(title)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                
+                Text(value)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             
-            // Value
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.trailing)
+            Spacer()
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
     }
 }
 
@@ -319,13 +430,6 @@ struct MLAHistoryView: View {
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                                     .foregroundColor(.primary)
-                                
-                                // Victory Margin
-                                if !history.victoryMargin.isEmpty {
-                                    Text(history.victoryMargin)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
                             }
                             .padding(.vertical, 8)
                             .listRowBackground(Color(.systemBackground))
@@ -361,8 +465,8 @@ struct MLAHistoryView: View {
     }
 }
 
-//#Preview {
-//    NavigationView {
-//        constituencyView(, ConstituencyInfo: <#ConstituencyDetails?#>)
-//    }
-//}
+#Preview {
+    NavigationView {
+        constituencyView(ConstituencyInfo: DummyConstituencyDetials.detials1)
+    }
+}
