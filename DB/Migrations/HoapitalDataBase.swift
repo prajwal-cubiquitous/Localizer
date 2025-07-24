@@ -60,16 +60,33 @@ struct HospitalDatabase {
         sqlite3_finalize(statement)
     }
 
-    static func fetch(from db: OpaquePointer?, pincode: String) -> [Hospital] {
-        // IMPORTANT: Using parameter binding to prevent SQL injection
-        let selectSQL = "SELECT * FROM Hospitals WHERE pincode = ? ORDER BY name ASC;"
+    // Add this function inside your HospitalDatabase struct
+    static func fetch(from db: OpaquePointer?, forPincodes pincodes: [String]) -> [Hospital] {
+        // 1. Handle the edge case of an empty pincode list to prevent an SQL error.
+        guard !pincodes.isEmpty else {
+            return []
+        }
+
+        // 2. Create the correct number of '?' placeholders for the IN clause.
+        //    Example: ["123", "456"] -> "?,?"
+        let placeholders = Array(repeating: "?", count: pincodes.count).joined(separator: ",")
+        print("pin codes: \(placeholders)")
+        // 3. Construct the final SQL query.
+        let selectSQL = "SELECT * FROM Hospitals WHERE pincode IN (\(placeholders)) ORDER BY name ASC;"
+        
         var statement: OpaquePointer?
         var hospitals: [Hospital] = []
 
+        // 4. Prepare the statement.
         if sqlite3_prepare_v2(db, selectSQL, -1, &statement, nil) == SQLITE_OK {
-            // Bind the pincode to the '?' placeholder
-            sqlite3_bind_text(statement, 1, (pincode as NSString).utf8String, -1, nil)
             
+            // 5. Bind each pincode in the array to its corresponding placeholder.
+            for (index, pincode) in pincodes.enumerated() {
+                // SQLite bind indexes are 1-based.
+                sqlite3_bind_text(statement, Int32(index + 1), (pincode as NSString).utf8String, -1, nil)
+            }
+            
+            // 6. Loop through the results.
             while sqlite3_step(statement) == SQLITE_ROW {
                 let id = String(cString: sqlite3_column_text(statement, 0))
                 let constituency = String(cString: sqlite3_column_text(statement, 1))
@@ -86,9 +103,48 @@ struct HospitalDatabase {
             }
         } else {
             let errorMessage = String(cString: sqlite3_errmsg(db))
-            print("❌ Failed to prepare fetch statement: \(errorMessage)")
+            print("❌ Failed to prepare fetch statement for multiple pincodes: \(errorMessage)")
         }
+
+        // 7. Clean up.
         sqlite3_finalize(statement)
         return hospitals
+    }
+    static func deleteTable(_ db: OpaquePointer?) {
+        let deleteTableSQL = "DROP TABLE IF EXISTS Hospitals;"
+        var statement: OpaquePointer?
+
+        if sqlite3_prepare_v2(db, deleteTableSQL, -1, &statement, nil) == SQLITE_OK {
+            if sqlite3_step(statement) == SQLITE_DONE {
+                print("✅ Hospitals table deleted successfully.")
+            } else {
+                let errorMessage = String(cString: sqlite3_errmsg(db))
+                print("❌ Failed to delete Hospitals table: \(errorMessage)")
+            }
+        } else {
+            let errorMessage = String(cString: sqlite3_errmsg(db))
+            print("❌ Error preparing DROP TABLE statement: \(errorMessage)")
+        }
+
+        sqlite3_finalize(statement)
+    }
+    
+    static func deleteAllRows(from db: OpaquePointer?) {
+        let deleteSQL = "DELETE FROM Hospitals;"
+        var statement: OpaquePointer?
+
+        if sqlite3_prepare_v2(db, deleteSQL, -1, &statement, nil) == SQLITE_OK {
+            if sqlite3_step(statement) == SQLITE_DONE {
+                print("✅ All rows deleted from Hospitals table.")
+            } else {
+                let errorMessage = String(cString: sqlite3_errmsg(db))
+                print("❌ Failed to delete rows: \(errorMessage)")
+            }
+        } else {
+            let errorMessage = String(cString: sqlite3_errmsg(db))
+            print("❌ Error preparing DELETE statement: \(errorMessage)")
+        }
+
+        sqlite3_finalize(statement)
     }
 }

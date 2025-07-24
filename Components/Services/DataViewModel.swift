@@ -25,6 +25,8 @@ class DataViewModel: ObservableObject {
         self.postalCodes = postalCodes
     }
     
+    let DBsqlite = DBManager.shared
+    
     // A cancellables set to hold any Combine subscriptions
     private var cancellables = Set<AnyCancellable>()
     
@@ -46,64 +48,22 @@ class DataViewModel: ObservableObject {
     
     // Fetch schools for multiple pincodes
     private func fetchSchoolsForPincodes(_ pincodes: [String]) {
-        db.collection("schools")
-            .whereField("Pincode", in: pincodes)
-            .getDocuments { [weak self] (querySnapshot, error) in
-                if let error = error {
-                    print("❌ Error fetching schools: \(error)")
-                    return
-                }
-                
-                let schools = querySnapshot?.documents.compactMap { document in
-                    try? document.data(as: School.self)
-                } ?? []
-                
-                DispatchQueue.main.async {
-                    self?.schools = schools
-                    print("✅ Fetched \(schools.count) schools for \(pincodes.count) areas")
-                }
-            }
+        DispatchQueue.main.async {
+            self.schools = self.DBsqlite.fetchSchools(forPincodes: pincodes)
+        }
     }
     
     // Fetch hospitals for multiple pincodes
     private func fetchHospitalsForPincodes(_ pincodes: [String]) {
-        db.collection("hospitals")
-            .whereField("Pincode", in: pincodes)
-            .getDocuments { [weak self] (querySnapshot, error) in
-                if let error = error {
-                    print("❌ Error fetching hospitals: \(error)")
-                    return
-                }
-                
-                let hospitals = querySnapshot?.documents.compactMap { document in
-                    try? document.data(as: Hospital.self)
-                } ?? []
-                
-                DispatchQueue.main.async {
-                    self?.hospitals = hospitals
-                    print("✅ Fetched \(hospitals.count) hospitals for \(pincodes.count) areas")
-                }
-            }
+        DispatchQueue.main.async {
+            self.hospitals = self.DBsqlite.fetchHospitals(forPincodes: pincodes)
+        }
     }
     
     // Fetch police stations for multiple pincodes
     private func fetchPoliceStationsForPincodes(_ pincodes: [String]) {
-        db.collection("policeStations")
-            .whereField("Pincode", in: pincodes)
-            .getDocuments { [weak self] (querySnapshot, error) in
-                if let error = error {
-                    print("❌ Error fetching police stations: \(error)")
-                    return
-                }
-                
-                let policeStations = querySnapshot?.documents.compactMap { document in
-                    try? document.data(as: PoliceStation.self)
-                } ?? []
-                
-                DispatchQueue.main.async {
-                    self?.policeStations = policeStations
-                    print("✅ Fetched \(policeStations.count) police stations for \(pincodes.count) areas")
-                }
-            }
+        DispatchQueue.main.async {
+            self.policeStations = self.DBsqlite.fetchPoliceStations(forPincodes: pincodes)
+        }
     }
 }

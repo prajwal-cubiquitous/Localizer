@@ -170,101 +170,34 @@ struct UploadDataView: View {
         
         Task {
             await MainActor.run {
-                UploadData.uploadHospitalsAsync { result in
-                    Task { @MainActor in
-                        switch result {
-                        case .success(let count):
-                            loadingMessage = "Upload completed successfully!"
-                            // Brief delay to show completion message
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                                isLoading = false
-                                alertMessage = "Successfully uploaded \(count) hospitals to Firestore."
-                                showSuccessAlert = true
-                            }
-                        case .failure(let error):
-                            isLoading = false
-                            alertMessage = "Failed to upload hospital data: \(error.localizedDescription)"
-                            showErrorAlert = true
-                        }
-                    }
-                }
-                // Update loading message after deletion starts
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    if isLoading {
-                        loadingMessage = "Uploading hospital data to Firestore..."
-                    }
-                }
+                UploadData.uploadHospitalsAsync()
+                isLoading = false
             }
         }
     }
     
     private func uploadSchoolData() {
         isLoading = true
-        loadingMessage = "Deleting existing school data..."
+        loadingMessage = "Deleting existing hospital data..."
         
         Task {
             await MainActor.run {
-                UploadData.uploadSchoolsAsync { result in
-                    Task { @MainActor in
-                        switch result {
-                        case .success(let count):
-                            loadingMessage = "Upload completed successfully!"
-                            // Brief delay to show completion message
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                                isLoading = false
-                                alertMessage = "Successfully uploaded \(count) schools to Firestore."
-                                showSuccessAlert = true
-                            }
-                        case .failure(let error):
-                            isLoading = false
-                            alertMessage = "Failed to upload school data: \(error.localizedDescription)"
-                            showErrorAlert = true
-                        }
-                    }
-                }
-                // Update loading message after deletion starts
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    if isLoading {
-                        loadingMessage = "Uploading school data to Firestore..."
-                    }
-                }
+                UploadData.uploadSchoolsAsync()
+                isLoading = false
             }
         }
     }
     
     private func uploadPoliceData() {
         isLoading = true
-        loadingMessage = "Deleting existing police station data..."
+        loadingMessage = "Deleting existing hospital data..."
         
         Task {
             await MainActor.run {
-                UploadData.uploadPoliceStationsAsync { result in
-                    Task { @MainActor in
-                        switch result {
-                        case .success(let count):
-                            loadingMessage = "Upload completed successfully!"
-                            // Brief delay to show completion message
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                                isLoading = false
-                                alertMessage = "Successfully uploaded \(count) police stations to Firestore."
-                                showSuccessAlert = true
-                            }
-                        case .failure(let error):
-                            isLoading = false
-                            alertMessage = "Failed to upload police station data: \(error.localizedDescription)"
-                            showErrorAlert = true
-                        }
-                    }
-                }
-                // Update loading message after deletion starts
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    if isLoading {
-                        loadingMessage = "Uploading police station data to Firestore..."
-                    }
-                }
+                UploadData.uploadPoliceStationsAsync()
+                isLoading = false
             }
-        }
-    }
+        }    }
     
     private func uploadConstituencyData() {
         isLoading = true
