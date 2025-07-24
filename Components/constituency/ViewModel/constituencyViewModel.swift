@@ -13,6 +13,7 @@ class constituencyViewModel: ObservableObject {
     @Published var constituencies: [ConstituencyDetails] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var wards: [Ward] = []
     
     func fetchConstituency(forPincode pincode: String) async -> [ConstituencyDetails] {
         isLoading = true
@@ -179,4 +180,28 @@ class constituencyViewModel: ObservableObject {
             return []
         }
     }
+    
+    func fetchWards(for constituencyId: String) {
+        let db = Firestore.firestore()
+        let wardsRef = db.collection("constituencies")
+                         .document(constituencyId)
+                         .collection("wards")
+        
+        wardsRef.getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching wards: \(error)")
+                return
+            }
+            
+            guard let documents = snapshot?.documents, !documents.isEmpty else {
+                print("No wards subcollection found or it's empty.")
+                return
+            }
+            
+            self.wards = documents.compactMap {
+                try? $0.data(as: Ward.self)
+            }
+        }
+    }
+
 }

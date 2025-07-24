@@ -11,6 +11,7 @@ struct constituencyView: View {
     @StateObject var viewModel = constituencyViewModel()
     let ConstituencyInfo : ConstituencyDetails?
     @State private var showMLAHistory = false
+    @State private var showWards = false
     
     var body: some View {
         ZStack {
@@ -63,6 +64,11 @@ struct constituencyView: View {
 
                         // MLA Personal Information Card
                         MLAPersonalInfoCard()
+                            .onAppear{
+                                if let ConstituencyInfoId = ConstituencyInfo.id{
+                                    viewModel.fetchWards(for: ConstituencyInfoId)
+                                }
+                            }
                         
                         // Office Address Card
                         OfficeAddressCard()
@@ -139,6 +145,62 @@ struct constituencyView: View {
                             .padding(.horizontal, 20)
                         }
 
+                        // Large Vertical Wards Button
+                        // (Removed from here)
+                        // if  viewModel.wards.count > 0{
+                        //     VStack(spacing: 16) {
+                        //         Button(action: {
+                        //             showWards.toggle()
+                        //         }) {
+                        //             VStack(spacing: 12) {
+                        //                 // Icon
+                        //                 ZStack {
+                        //                     Circle()
+                        //                         .fill(
+                        //                             LinearGradient(
+                        //                                 gradient: Gradient(colors: [Color.green, Color.green.opacity(0.7)]),
+                        //                                 startPoint: .topLeading,
+                        //                                 endPoint: .bottomTrailing
+                        //                             )
+                        //                         )
+                        //                         .frame(width: 60, height: 60)
+                        //                         .shadow(color: .green.opacity(0.3), radius: 8, x: 0, y: 4)
+                        //                     
+                        //                     Image(systemName: "building.2.fill")
+                        //                         .font(.system(size: 28, weight: .semibold))
+                        //                         .foregroundColor(.white)
+                        //                 }
+                        //                 
+                        //                 // Text
+                        //                 VStack(spacing: 4) {
+                        //                     Text("View Wards")
+                        //                         .font(.title2)
+                        //                         .fontWeight(.bold)
+                        //                         .foregroundColor(.primary)
+                        //                     
+                        //                     Text("Explore all wards in this constituency")
+                        //                         .font(.subheadline)
+                        //                         .foregroundColor(.secondary)
+                        //                         .multilineTextAlignment(.center)
+                        //                 }
+                        //             }
+                        //             .padding(32)
+                        //             .frame(maxWidth: .infinity)
+                        //             .background(
+                        //                 RoundedRectangle(cornerRadius: 20)
+                        //                     .fill(Color(.systemBackground))
+                        //                     .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+                        //             )
+                        //             .overlay(
+                        //                 RoundedRectangle(cornerRadius: 20)
+                        //                     .stroke(Color.green.opacity(0.2), lineWidth: 1)
+                        //             )
+                        //         }
+                        //         .buttonStyle(PlainButtonStyle())
+                        //     }
+                        //     .padding(.horizontal, 20)
+                        // }
+
                         // Bottom padding to account for floating button
                         Spacer()
                             .frame(height: 100)
@@ -160,17 +222,46 @@ struct constituencyView: View {
             // Enhanced Floating MLA History Button
             VStack {
                 Spacer()
-                
                 HStack {
+                    // Floating View Wards Button (bottom left)
+                    if viewModel.wards.count > 0 {
+                        Button(action: {
+                            showWards.toggle()
+                        }) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "building.2.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                Text("View Wards")
+                                    .font(.system(size: 18, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 30)
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.green, Color.green.opacity(0.8)]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .shadow(color: .green.opacity(0.3), radius: 12, x: 0, y: 6)
+                            )
+                        }
+                        .padding(.leading, 20)
+                        .padding(.bottom, 34)
+                    } else {
+                        Spacer().frame(width: 0)
+                    }
                     Spacer()
-                    
+                    // Floating History Button (bottom right)
                     Button(action: {
                         showMLAHistory.toggle()
                     }) {
                         HStack(spacing: 10) {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(.system(size: 18, weight: .semibold))
-                            
                             Text("History")
                                 .font(.system(size: 18, weight: .semibold))
                         }
@@ -200,6 +291,24 @@ struct constituencyView: View {
                 mlaHistory: ConstituencyInfo?.mlaHistory ?? [], 
                 constituencyName: ConstituencyInfo?.constituencyName ?? ""
             )
+        }
+        .sheet(isPresented: $showWards) {
+            NavigationView {
+                WardsListView(
+                    wards: viewModel.wards,
+                    constituencyName: ConstituencyInfo?.constituencyName ?? "Constituency"
+                )
+                .navigationTitle("Wards")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            showWards = false
+                        }
+                        .fontWeight(.semibold)
+                    }
+                }
+            }
         }
     }
     

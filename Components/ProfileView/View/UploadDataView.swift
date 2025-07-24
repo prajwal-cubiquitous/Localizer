@@ -19,6 +19,7 @@ struct UploadDataView: View {
     @State private var showSuccessAlert = false
     @State private var showErrorAlert = false
     @State private var alertMessage = ""
+    @State var showUploadward: Bool = false
     
     var body: some View {
         // Use a NavigationView to get the top navigation bar.
@@ -95,6 +96,12 @@ struct UploadDataView: View {
                     }
                     .buttonStyle(CustomButtonStyle())
                     .disabled(isLoading)
+                    
+                    Button("Upload ward detials for one ward 560043") {
+                        showUploadward.toggle()
+                    }
+                    .buttonStyle(CustomButtonStyle())
+                    .disabled(isLoading)
                 }
                 .padding(.top, 10)
 
@@ -140,6 +147,11 @@ struct UploadDataView: View {
             Button("OK") { }
         } message: {
             Text(alertMessage)
+        }
+        .sheet(isPresented: $showUploadward) {
+            NavigationView {
+                WardUploaderView()
+            }
         }
     }
     
