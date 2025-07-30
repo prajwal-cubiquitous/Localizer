@@ -85,6 +85,28 @@ class DBManager {
     func clearAllPoliceStations() {
         PoliceStationDatabase.deleteAllRows(from: self.db)
     }
+    
+    func populateDatabase(from jsonData: Data) {
+            let decoder = JSONDecoder()
+            do {
+                let allDetails = try decoder.decode([ConstituencyDetails].self, from: jsonData)
+                for details in allDetails {
+                    // Use the new static insert method
+                    ConstituencyDatabase.insert(details: details, into: self.db)
+                }
+                print("✅ Database population complete.")
+            } catch {
+                print("❌ Error decoding or populating database: \(error)")
+            }
+        }
+        
+        func fetchConstituencies(forPincodes pincodes: [String]) -> [ConstituencyDetails] {
+            return ConstituencyDatabase.fetch(forPincodes: pincodes, from: self.db)
+        }
+        
+        func clearAllConstituencyData() {
+            ConstituencyDatabase.deleteAllData(from: self.db)
+        }
 }
 
 

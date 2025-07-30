@@ -13,61 +13,48 @@ struct MLAHistory: Codable {
     var mlaName: String
     var politicalParty: String
     var victoryMargin: String
-    
+
+    // This initializer is added to fix the compile error.
+    init(electionYear: String, mlaName: String, politicalParty: String, victoryMargin: String) {
+        self.electionYear = electionYear
+        self.mlaName = mlaName
+        self.politicalParty = politicalParty
+        self.victoryMargin = victoryMargin
+    }
+
     enum CodingKeys: String, CodingKey {
         case electionYear = "Election Year"
         case mlaName = "MLA Name"
         case politicalParty = "Political Party"
         case victoryMargin = "Victory Margin"
     }
-    
-    // Alternative coding keys for different formats in the JSON
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        // Try different key formats
         if let year = try? container.decode(String.self, forKey: .electionYear) {
             electionYear = year
-        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self),
-                  let year = try? container2.decode(String.self, forKey: .year) {
+        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self), let year = try? container2.decode(String.self, forKey: .year) {
             electionYear = year
-        } else {
-            electionYear = ""
-        }
-        
+        } else { electionYear = "" }
         if let name = try? container.decode(String.self, forKey: .mlaName) {
             mlaName = name
-        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self),
-                  let name = try? container2.decode(String.self, forKey: .mla) {
+        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self), let name = try? container2.decode(String.self, forKey: .mla) {
             mlaName = name
-        } else {
-            mlaName = ""
-        }
-        
+        } else { mlaName = "" }
         if let party = try? container.decode(String.self, forKey: .politicalParty) {
             politicalParty = party
-        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self),
-                  let party = try? container2.decode(String.self, forKey: .party) {
+        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self), let party = try? container2.decode(String.self, forKey: .party) {
             politicalParty = party
-        } else {
-            politicalParty = ""
-        }
-        
+        } else { politicalParty = "" }
         if let margin = try? container.decode(String.self, forKey: .victoryMargin) {
             victoryMargin = margin
-        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self),
-                  let margin = try? container2.decode(String.self, forKey: .margin) {
+        } else if let container2 = try? decoder.container(keyedBy: AlternativeCodingKeys.self), let margin = try? container2.decode(String.self, forKey: .margin) {
             victoryMargin = margin
-        } else {
-            victoryMargin = ""
-        }
+        } else { victoryMargin = "" }
     }
-    
+
     enum AlternativeCodingKeys: String, CodingKey {
-        case year = "Year"
-        case mla = "MLA"
-        case party = "Party"
-        case margin = "Margin"
+        case year = "Year", mla = "MLA", party = "Party", margin = "Margin"
     }
 }
 
