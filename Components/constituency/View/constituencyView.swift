@@ -75,7 +75,7 @@ struct constituencyView: View {
 
                         // Constituency Information Card
                         VStack(alignment: .leading, spacing: 24) {
-                            SectionHeader(title: "Constituency Details", icon: "building.2")
+                            SectionHeader(title: "Constituency Details".localized(), icon: "building.2")
 
                             // Main Constituency Card
                             VStack(alignment: .leading, spacing: 20) {
@@ -87,7 +87,7 @@ struct constituencyView: View {
                                             .fontWeight(.bold)
                                             .foregroundColor(.primary)
 
-                                        Text("Constituency #\(ConstituencyInfo.constituencyNumber)")
+                                        Text("Constituency #\(ConstituencyInfo.constituencyNumber)".localized())
                                             .font(.subheadline)
                                             .foregroundColor(.secondary)
                                     }
@@ -112,25 +112,25 @@ struct constituencyView: View {
                                 // Detailed Information Grid
                                 VStack(spacing: 16) {
                                     ConstituencyDetailRow(
-                                        title: "District", 
+                                        title: "District".localized(), 
                                         value: ConstituencyInfo.district,
                                         icon: "location.fill"
                                     )
                                     
                                     ConstituencyDetailRow(
-                                        title: "Lok Sabha Constituency", 
+                                        title: "Lok Sabha Constituency".localized(), 
                                         value: ConstituencyInfo.lokSabhaConstituency,
                                         icon: "building.columns"
                                     )
                                     
                                     ConstituencyDetailRow(
-                                        title: "Assembly Term", 
+                                        title: "Assembly Term".localized(), 
                                         value: ConstituencyInfo.assemblyTerm,
                                         icon: "calendar.badge.clock"
                                     )
                                     
                                     ConstituencyDetailRow(
-                                        title: "Reservation Status", 
+                                        title: "Reservation Status".localized(), 
                                         value: ConstituencyInfo.reservationStatus,
                                         icon: "shield.fill"
                                     )
@@ -210,7 +210,7 @@ struct constituencyView: View {
                         ProgressView()
                             .scaleEffect(1.5)
                         
-                        Text("Loading constituency details...")
+                        Text("Loading constituency details...".localized())
                             .font(.headline)
                             .foregroundColor(.secondary)
                     }
@@ -231,7 +231,7 @@ struct constituencyView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "building.2.fill")
                                     .font(.system(size: 18, weight: .semibold))
-                                Text("View Wards")
+                                Text("View Wards".localized())
                                     .font(.system(size: 18, weight: .semibold))
                             }
                             .foregroundColor(.white)
@@ -262,7 +262,7 @@ struct constituencyView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(.system(size: 18, weight: .semibold))
-                            Text("History")
+                            Text("History".localized())
                                 .font(.system(size: 18, weight: .semibold))
                         }
                         .foregroundColor(.white)
@@ -298,11 +298,11 @@ struct constituencyView: View {
                     wards: viewModel.wards,
                     constituencyName: ConstituencyInfo?.constituencyName ?? "Constituency"
                 )
-                .navigationTitle("Wards")
+                .navigationTitle("Wards".localized())
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
+                        Button("Done".localized()) {
                             showWards = false
                         }
                         .fontWeight(.semibold)
@@ -495,12 +495,12 @@ struct MLAHistoryView: View {
                             .foregroundColor(.gray.opacity(0.5))
                         
                         VStack(spacing: 8) {
-                            Text("No History Available")
+                            Text("No History Available".localized())
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("MLA history for this constituency is still not added")
+                            Text("MLA history for this constituency is still not added".localized())
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -547,11 +547,11 @@ struct MLAHistoryView: View {
                     .listStyle(PlainListStyle())
                 }
             }
-            .navigationTitle("MLA History")
+            .navigationTitle("MLA History".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Done".localized()) {
                         dismiss()
                     }
                     .fontWeight(.semibold)

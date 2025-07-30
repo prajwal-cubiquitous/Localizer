@@ -45,7 +45,7 @@ struct NewsFeedView: View {
                                     .frame(width: 80, height: 80)
                                     .foregroundStyle(.secondary)
                                 
-                                Text("Be the first to post!")
+                                Text("Be the first to post!".localized())
                                     .font(.title2)
                                     .fontWeight(.semibold)
                                     .multilineTextAlignment(.center)
@@ -53,7 +53,7 @@ struct NewsFeedView: View {
                                 Button {
                                     showCreatePostSheet = true
                                 } label: {
-                                    Text("Create Post")
+                                    Text("Create Post".localized())
                                         .font(.headline)
                                         .padding(.horizontal, 32)
                                         .padding(.vertical, 12)
@@ -122,7 +122,7 @@ struct NewsFeedView: View {
                     }
                 }
             }
-            .navigationTitle("News Feed")
+            .navigationTitle("News Feed".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

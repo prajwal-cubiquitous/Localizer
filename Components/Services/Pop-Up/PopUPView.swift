@@ -87,7 +87,7 @@ struct PopUPView: View {
                 Button{
                     dismiss()
                 }label: {
-                    Text("Cancel")
+                    Text("Cancel".localized())
                         .foregroundColor(Color("AdaptiveBackgroundColor"))
                 }
             }

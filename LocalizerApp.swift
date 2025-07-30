@@ -23,11 +23,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct LocalizerApp: App {
+    @StateObject private var languageManager = LanguageManager()
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @AppStorage("colorScheme") private var colorScheme: String = "system"
     
     let container: ModelContainer
-
+    
     init() {
         // 🔥 RESET EVERYTHING ON EVERY APP LAUNCH - Enhanced reset
         print(URL.applicationSupportDirectory.path())
@@ -39,7 +40,7 @@ struct LocalizerApp: App {
             let config = ModelConfiguration(
                 "Localizer_v2", // Changed name to force fresh schema
                 isStoredInMemoryOnly: false, allowsSave: true,
-//                allowsCloudEncryption: false
+                //                allowsCloudEncryption: false
             )
             
             
@@ -63,7 +64,7 @@ struct LocalizerApp: App {
             }
         }
     }
-
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -71,9 +72,14 @@ struct LocalizerApp: App {
                 .tint(.accentColor)
                 .dynamicTypeSize(.medium)
                 .modelContainer(container)
+                .environmentObject(languageManager)
+                .id(languageManager.currentLanguage.rawValue)
+                .onAppear {
+                    Bundle.setLanguage(languageManager.currentLanguage.rawValue)
+                }
         }
     }
-
+    
     private var selectedColorScheme: ColorScheme? {
         switch colorScheme {
         case "light": return .light
@@ -81,7 +87,7 @@ struct LocalizerApp: App {
         default: return nil
         }
     }
-
+    
     // Enhanced reset function
     static func resetSwiftDataStore() {
         let fileManager = FileManager.default
@@ -127,7 +133,7 @@ struct LocalizerApp: App {
             "\(storeName).sqlite-shm",
             "\(storeName).sqlite-wal",
             "\(storeName).db",
-            "\(storeName).db-shm", 
+            "\(storeName).db-shm",
             "\(storeName).db-wal",
             "\(storeName).store",
             "\(storeName).store-shm",

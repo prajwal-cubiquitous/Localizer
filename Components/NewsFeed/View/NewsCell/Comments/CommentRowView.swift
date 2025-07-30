@@ -52,11 +52,11 @@ struct CommentRowView: View {
                                 Text(user.username)
                                     .font(.system(size: 14, weight: .semibold))
                             } else if isLoadingUser {
-                                Text("Loading...")
+                                Text("Loading...".localized())
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.gray)
                             } else {
-                                Text("Unknown User")
+                                Text("Unknown User".localized())
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.gray)
                             }
@@ -97,7 +97,7 @@ struct CommentRowView: View {
                         .buttonStyle(.plain)
                         
                         Button(action: onStartReply) {
-                            Text("Reply")
+                            Text("Reply".localized())
                                 .font(.caption.weight(.medium))
                                 .foregroundColor(.gray)
                         }
@@ -118,7 +118,7 @@ struct CommentRowView: View {
                         Rectangle() // Little decorative line
                             .frame(width: 20, height: 1)
                             .foregroundColor(.gray.opacity(0.5))
-                        Text(showReplies ? "Hide replies" : "View \(replies.count) \(replies.count == 1 ? "reply" : "replies")")
+                        Text(showReplies ? "Hide replies".localized() : "View \(replies.count) \(replies.count == 1 ? "reply" : "replies")")
                             .font(.caption.weight(.medium))
                             .foregroundColor(.gray)
                         Spacer()

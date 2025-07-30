@@ -146,11 +146,11 @@ struct ActivityEmptyStateView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("No \(filter.rawValue.lowercased()) yet")
+            Text("No \(filter.rawValue.lowercased()) yet".localized())
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Start engaging with news to see your activity here!")
+            Text("Start engaging with news to see your activity here!".localized())
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

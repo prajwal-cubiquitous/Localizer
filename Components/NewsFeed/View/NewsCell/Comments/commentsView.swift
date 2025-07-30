@@ -42,7 +42,7 @@ struct CommentsView: View {
                 VStack(spacing: 0) {
                     if let targetComment = replyingToComment {
                         HStack {
-                            Text("Replying to")
+                            Text("Replying to".localized())
                                 .font(.caption)
                                 .foregroundColor(.gray)
                             
@@ -51,7 +51,7 @@ struct CommentsView: View {
                                     .font(.caption.bold())
                                     .foregroundColor(.gray)
                             } else {
-                                Text("@Loading...")
+                                Text("@Loading...".localized())
                                     .font(.caption.bold())
                                     .foregroundColor(.gray)
                             }
@@ -75,7 +75,7 @@ struct CommentsView: View {
                         ProfilePictureView(userProfileUrl: currentUser?.profileImageUrl, width: 40, height: 40)
                         
                         TextField(
-                            replyingToComment == nil ? "Add a comment..." : "Write a reply to @\(replyingToUser?.username ?? "user")...", 
+                            replyingToComment == nil ? "Add a comment...".localized() : "Write a reply to @\(replyingToUser?.username ?? "user")...".localized(), 
                             text: $newCommentText, 
                             axis: .vertical
                         )
@@ -119,7 +119,7 @@ struct CommentsView: View {
                                 newCommentText = ""
                             }
                         } label: {
-                            Text(replyingToComment == nil ? "Post" : "Send")
+                            Text(replyingToComment == nil ? "Post".localized() : "Send".localized())
                                 .font(.headline)
                                 .foregroundColor(newCommentText.isEmpty ? .gray : .blue)
                         }
@@ -129,7 +129,7 @@ struct CommentsView: View {
                     .background(.thinMaterial)
                 }
             }
-            .navigationTitle("Comments")
+            .navigationTitle("Comments".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -202,13 +202,13 @@ struct ContentView_CommentDemo: View {
                 .frame(width: 200, height: 200)
                 .padding()
             
-            Text("Tap the button below to view comments.")
+            Text("Tap the button below to view comments.".localized())
                 .padding()
             
             Button {
                 showingCommentsSheet = true
             } label: {
-                Label("View Comments", systemImage: "message.fill")
+                Label("View Comments".localized(), systemImage: "message.fill")
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)

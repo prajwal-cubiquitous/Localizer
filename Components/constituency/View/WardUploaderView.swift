@@ -14,7 +14,7 @@ struct WardUploaderView: View {
 
     var body: some View {
         VStack {
-            Button("Upload Ward Data") {
+            Button("Upload Ward Data".localized()) {
                 uploadWards(for: constituencyId)
             }
             .padding()

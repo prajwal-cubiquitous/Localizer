@@ -45,11 +45,11 @@ struct ReplyRowView: View {
                             Text(user.username)
                                 .font(.system(size: 13, weight: .semibold))
                         } else if isLoadingUser {
-                            Text("Loading...")
+                            Text("Loading...".localized())
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.gray)
                         } else {
-                            Text("Unknown User")
+                            Text("Unknown User".localized())
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.gray)
                         }

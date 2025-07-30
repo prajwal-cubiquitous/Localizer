@@ -35,7 +35,7 @@ struct DataViewCellForPoliceStation: View {
                 Text(policeStation.fullAddress)
                     .font(.subheadline)
                     .lineLimit(2)
-                Text("Phone Number: ").bold() + Text(policeStation.phoneNumber)
+                Text("Phone Number: ".localized()).bold() + Text(policeStation.phoneNumber)
                     .font(.subheadline)
             }
             .padding()
@@ -88,7 +88,7 @@ struct DataViewCellForHospital: View {
                 Text(hospital.fullAddress)
                     .font(.subheadline)
                     .lineLimit(2)
-                Text("Phone Number: ").bold() + Text(hospital.phoneNumber)
+                Text("Phone Number: ".localized()).bold() + Text(hospital.phoneNumber)
                     .font(.subheadline)
             }
             
@@ -140,7 +140,7 @@ struct DataViewCellForSchool: View {
                 Text(school.address)
                     .font(.subheadline)
                     .lineLimit(2)
-                Text("Phone Number: ").bold() + Text(school.pincode)
+                Text("Phone Number: ".localized()).bold() + Text(school.pincode)
                     .font(.subheadline)
             }
             .padding()

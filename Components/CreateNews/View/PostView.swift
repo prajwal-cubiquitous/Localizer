@@ -85,7 +85,7 @@ struct PostView: View {
                             // Caption Input
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Text("What's happening?")
+                                    Text("What's happening?".localized())
                                         .font(.headline)
                                         .foregroundColor(.primary)
                                     Spacer()
@@ -109,7 +109,7 @@ struct PostView: View {
                             // Media Selection
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Add Media")
+                                    Text("Add Media".localized())
                                         .font(.headline)
                                         .foregroundColor(.primary)
                                     
@@ -163,7 +163,7 @@ struct PostView: View {
                                     HStack {
                                         Image(systemName: "info.circle")
                                             .foregroundColor(.orange)
-                                        Text("Media limit reached. Remove items to add more.")
+                                        Text("Media limit reached. Remove items to add more.".localized())
                                             .font(.caption)
                                             .foregroundColor(.orange)
                                     }
@@ -204,7 +204,7 @@ struct PostView: View {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.orange)
-                                Text("Sensitive content detected")
+                                Text("Sensitive content detected".localized())
                                     .font(.caption)
                                     .foregroundColor(.orange)
                                 Spacer()
@@ -252,11 +252,11 @@ struct PostView: View {
                 }
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
-            .navigationTitle("Create Post")
+            .navigationTitle("Create Post".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Cancel".localized()) {
                         presentationMode.wrappedValue.dismiss()
                     }
                     .disabled(viewModel.isPosting)
@@ -326,25 +326,25 @@ struct PostView: View {
                 )
             }
         }
-        .alert("Media Limit Exceeded", isPresented: $showingMediaLimitAlert) {
-            Button("OK") { }
+        .alert("Media Limit Exceeded".localized(), isPresented: $showingMediaLimitAlert) {
+            Button("OK".localized()) { }
         } message: {
             Text(mediaLimitMessage)
         }
-        .alert("Success", isPresented: $viewModel.showSuccessAlert) {
-            Button("OK") {
+        .alert("Success".localized(), isPresented: $viewModel.showSuccessAlert) {
+            Button("OK".localized()) {
                 presentationMode.wrappedValue.dismiss()
             }
         } message: {
-            Text("Your post has been shared successfully!")
+                            Text("Your post has been shared successfully!".localized())
         }
-        .alert("Error", isPresented: $viewModel.showFailureAlert) {
-            Button("OK") { }
+        .alert("Error".localized(), isPresented: $viewModel.showFailureAlert) {
+            Button("OK".localized()) { }
         } message: {
             Text(viewModel.errorMessage)
         }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK") { }
+        .alert("Error".localized(), isPresented: $viewModel.showError) {
+            Button("OK".localized()) { }
         } message: {
             Text(viewModel.errorMessage)
         }
@@ -398,7 +398,7 @@ struct MediaPreviewCard: View {
                     }
                 }
                 .contextMenu {
-                    Button("Edit Image") {
+                    Button("Edit Image".localized()) {
                         onEdit(image)
                     }
                 }
@@ -440,7 +440,7 @@ struct MediaPreviewCard: View {
                     .frame(width: 100, height: 100)
                 }
                 .contextMenu {
-                    Button("Re-trim Video") {
+                    Button("Re-trim Video".localized()) {
                         onRetrim(url)
                     }
                 }
@@ -568,9 +568,9 @@ struct ImageEditorView: View {
                 
                 // Tab selection
                 Picker("Edit Mode", selection: $selectedTab) {
-                    Text("Adjust").tag(0)
-                    Text("Crop").tag(1)
-                    Text("Rotate").tag(2)
+                                            Text("Adjust".localized()).tag(0)
+                        Text("Crop".localized()).tag(1)
+                        Text("Rotate".localized()).tag(2)
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal, 20)
@@ -595,7 +595,7 @@ struct ImageEditorView: View {
                         
                         // Reset button
                         HStack {
-                            Button("Reset All") {
+                            Button("Reset All".localized()) {
                                 resetAll()
                             }
                             .foregroundColor(.red)
@@ -606,7 +606,7 @@ struct ImageEditorView: View {
                             
                             Spacer()
                             
-                            Button("Reset Current") {
+                            Button("Reset Current".localized()) {
                                 resetCurrent()
                             }
                             .foregroundColor(.blue)
@@ -620,18 +620,18 @@ struct ImageEditorView: View {
                     }
                 }
             }
-            .navigationTitle("Edit Image")
+            .navigationTitle("Edit Image".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Cancel".localized()) {
                         onCancel()
                     }
                     .foregroundColor(.red)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    Button("Save".localized()) {
                         let editedImage = applyAllEdits()
                         onSave(editedImage)
                     }
@@ -646,7 +646,7 @@ struct ImageEditorView: View {
     // MARK: - Adjustment Controls
     private var adjustmentControls: some View {
         VStack(spacing: 20) {
-            Text("Color Adjustments")
+                            Text("Color Adjustments".localized())
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
@@ -658,7 +658,7 @@ struct ImageEditorView: View {
                         Image(systemName: "sun.max")
                             .foregroundColor(.orange)
                             .frame(width: 20)
-                        Text("Brightness")
+                        Text("Brightness".localized())
                             .font(.subheadline)
                         Spacer()
                         Text("\(Int(brightness * 100))")
@@ -676,7 +676,7 @@ struct ImageEditorView: View {
                         Image(systemName: "circle.lefthalf.filled")
                             .foregroundColor(.purple)
                             .frame(width: 20)
-                        Text("Contrast")
+                        Text("Contrast".localized())
                             .font(.subheadline)
                         Spacer()
                         Text("\(Int(contrast * 100))")
@@ -694,7 +694,7 @@ struct ImageEditorView: View {
                         Image(systemName: "paintbrush.fill")
                             .foregroundColor(.pink)
                             .frame(width: 20)
-                        Text("Saturation")
+                        Text("Saturation".localized())
                             .font(.subheadline)
                         Spacer()
                         Text("\(Int(saturation * 100))")
@@ -712,7 +712,7 @@ struct ImageEditorView: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.blue)
                             .frame(width: 20)
-                        Text("Zoom")
+                        Text("Zoom".localized())
                             .font(.subheadline)
                         Spacer()
                         Text("\(Int(scale * 100))%")
@@ -735,7 +735,7 @@ struct ImageEditorView: View {
     // MARK: - Crop Controls
     private var cropControls: some View {
         VStack(spacing: 20) {
-            Text("Aspect Ratio")
+                            Text("Aspect Ratio".localized())
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
@@ -763,7 +763,7 @@ struct ImageEditorView: View {
                     }
                 }
                 
-                Button("Apply Crop") {
+                Button("Apply Crop".localized()) {
                     applyCrop()
                 }
                 .foregroundColor(.white)
@@ -783,7 +783,7 @@ struct ImageEditorView: View {
     // MARK: - Rotation Controls
     private var rotationControls: some View {
         VStack(spacing: 20) {
-            Text("Rotation")
+                            Text("Rotation".localized())
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
@@ -795,7 +795,7 @@ struct ImageEditorView: View {
                         Image(systemName: "rotate.right")
                             .foregroundColor(.green)
                             .frame(width: 20)
-                        Text("Angle")
+                        Text("Angle".localized())
                             .font(.subheadline)
                         Spacer()
                         Text("\(Int(rotation))°")
@@ -809,7 +809,7 @@ struct ImageEditorView: View {
                 
                 // Quick rotation buttons
                 HStack(spacing: 20) {
-                    Button("↺ 90°") {
+                    Button("↺ 90°".localized()) {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             rotation -= 90
                             if rotation < -180 { rotation += 360 }
@@ -821,7 +821,7 @@ struct ImageEditorView: View {
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(8)
                     
-                    Button("↻ 90°") {
+                    Button("↻ 90°".localized()) {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             rotation += 90
                             if rotation > 180 { rotation -= 360 }
@@ -833,7 +833,7 @@ struct ImageEditorView: View {
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(8)
                     
-                    Button("180°") {
+                    Button("180°".localized()) {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             rotation += 180
                             if rotation > 180 { rotation -= 360 }

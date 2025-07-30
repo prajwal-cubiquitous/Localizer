@@ -15,7 +15,7 @@ struct StylishPicker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Select Constituency")
+            Text("Select Constituency".localized())
                 .font(.headline)
                 .foregroundColor(.gray)
 
@@ -80,3 +80,4 @@ struct StylishPicker: View {
         .padding()
     }
 }
+

@@ -96,7 +96,7 @@ struct DownloadableVideoPlayer: View {
                                     Image(systemName: "exclamationmark.triangle")
                                         .foregroundColor(.white)
                                         .font(.title2)
-                                    Text("Video Error")
+                                    Text("Video Error".localized())
                                         .foregroundColor(.white)
                                         .font(.caption)
                                 }

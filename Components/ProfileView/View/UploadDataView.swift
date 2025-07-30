@@ -29,7 +29,7 @@ struct UploadDataView: View {
 
                 // The main title text on the screen.
                 // .primary color makes it black in light mode and white in dark mode.
-                Text("Select Data Type")
+                Text("Select Data Type".localized())
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
@@ -37,7 +37,7 @@ struct UploadDataView: View {
                 // Buttons for data selection.
                 // Using a custom style for a consistent look.
                 VStack(spacing: 16) {
-                    Button("Hospital Data") {
+                    Button("Hospital Data".localized()) {
                         showConfirmationDialog(
                             title: "Upload Hospital Data",
                             message: "This will delete all existing hospital data and upload new data from Hospital.json. This action cannot be undone.",
@@ -49,7 +49,7 @@ struct UploadDataView: View {
                     .buttonStyle(CustomButtonStyle())
                     .disabled(isLoading)
                     
-                    Button("School Data") {
+                    Button("School Data".localized()) {
                         showConfirmationDialog(
                             title: "Upload School Data",
                             message: "This will delete all existing school data and upload new data from school.json. This action cannot be undone.",
@@ -61,7 +61,7 @@ struct UploadDataView: View {
                     .buttonStyle(CustomButtonStyle())
                     .disabled(isLoading)
                     
-                    Button("Police Data") {
+                    Button("Police Data".localized()) {
                         showConfirmationDialog(
                             title: "Upload Police Station Data",
                             message: "This will delete all existing police station data and upload new data from PoliceStation.json. This action cannot be undone.",
@@ -73,7 +73,7 @@ struct UploadDataView: View {
                     .buttonStyle(CustomButtonStyle())
                     .disabled(isLoading)
                     
-                    Button("Constituency Data") {
+                    Button("Constituency Data".localized()) {
                         showConfirmationDialog(
                             title: "Upload Constituency Data",
                             message: "This will delete all existing constituency data and upload new data from Karnataka_Complete_Constituency_Details.json. This action cannot be undone.",
@@ -85,7 +85,7 @@ struct UploadDataView: View {
                     .buttonStyle(CustomButtonStyle())
                     .disabled(isLoading)
                     
-                    Button("Clean Profile Images") {
+                    Button("Clean Profile Images".localized()) {
                         showConfirmationDialog(
                             title: "Clean Profile Images",
                             message: "This will permanently delete all profile images from Firebase Storage. This action cannot be undone.",
@@ -97,7 +97,7 @@ struct UploadDataView: View {
                     .buttonStyle(CustomButtonStyle())
                     .disabled(isLoading)
                     
-                    Button("Upload ward detials for one ward 560043") {
+                    Button("Upload ward detials for one ward 560043".localized()) {
                         showUploadward.toggle()
                     }
                     .buttonStyle(CustomButtonStyle())
@@ -131,20 +131,20 @@ struct UploadDataView: View {
             // The back button is automatically included by NavigationView.
         }
         .alert(confirmationTitle, isPresented: $showConfirmationAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Confirm", role: .destructive) {
+            Button("Cancel".localized(), role: .cancel) { }
+            Button("Confirm".localized(), role: .destructive) {
                 pendingUploadAction?()
             }
         } message: {
             Text(confirmationMessage)
         }
-        .alert("Success", isPresented: $showSuccessAlert) {
-            Button("OK") { }
+        .alert("Success".localized(), isPresented: $showSuccessAlert) {
+            Button("OK".localized()) { }
         } message: {
             Text(alertMessage)
         }
-        .alert("Error", isPresented: $showErrorAlert) {
-            Button("OK") { }
+        .alert("Error".localized(), isPresented: $showErrorAlert) {
+            Button("OK".localized()) { }
         } message: {
             Text(alertMessage)
         }

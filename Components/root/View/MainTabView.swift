@@ -127,7 +127,7 @@ struct MainTabView: View {
                 .environmentObject(appState)
                 .tabItem {
                     Label {
-                        Text("News Feed")   
+                        Text("News Feed".localized())   
                             .font(.caption)
                     } icon: {
                         Image(systemName: selectedTab == 0 ? "newspaper.fill" : "newspaper")
@@ -141,7 +141,7 @@ struct MainTabView: View {
                 .environmentObject(appState)
                 .tabItem {
                     Label {
-                        Text("Services")
+                        Text("Services".localized())
                             .font(.caption)
                     } icon: {
                         Image(systemName: selectedTab == 1 ? "house.fill" : "house")
@@ -154,7 +154,7 @@ struct MainTabView: View {
                 .environmentObject(appState)
                 .tabItem {
                     Label {
-                        Text("Constituency")
+                        Text("Constituency".localized())
                             .font(.caption)
                     } icon: {
                         Image(systemName: selectedTab == 2 ? "building.2.fill" : "building.2")
@@ -167,7 +167,7 @@ struct MainTabView: View {
                 .environmentObject(appState)
                 .tabItem {
                     Label {
-                        Text("My Activities")
+                        Text("My Activities".localized())
                             .font(.caption)
                     } icon: {
                         Image(systemName: selectedTab == 3 ? "figure.walk.diamond.fill" : "figure.walk.diamond")
@@ -183,7 +183,7 @@ struct MainTabView: View {
 
                 .tabItem {
                     Label {
-                        Text("Profile")
+                        Text("Profile".localized())
                             .font(.caption)
                     } icon: {
                         Image(systemName: selectedTab == 4 ? "person.fill" : "person")
@@ -253,7 +253,7 @@ struct MainTabView: View {
                     .multilineTextAlignment(.center)
                     .padding()
                 
-                Button("Retry") {
+                Button("Retry".localized()) {
                     locationError = nil
                     fetchPincode()
                 }
@@ -266,10 +266,10 @@ struct MainTabView: View {
                     .scaleEffect(1.5)
                     .padding()
                 
-                Text("Fetching your location...")
+                Text("Fetching your location...".localized())
                     .font(.headline)
                 
-                Text("Please wait while we access your current location")
+                Text("Please wait while we access your current location".localized())
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)

@@ -17,11 +17,11 @@ struct SignupView: View {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 12) {
-                    Text("Create Account")
+                    Text("Create Account".localized())
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("Sign up to get started")
+                    Text("Sign up to get started".localized())
                         .font(.body)
                         .foregroundStyle(.secondary)
                 }
@@ -31,37 +31,37 @@ struct SignupView: View {
                 // Form
                 VStack(spacing: 16) {
                     AuthTextField(
-                        title: "Full Name",
-                        placeholder: "Enter your full name",
+                        title: "Full Name".localized(),
+                        placeholder: "Enter your full name".localized(),
                         systemImage: "person",
                         text: $viewModel.fullName
                     )
                     
                     AuthTextField(
-                        title: "UserName",
-                        placeholder: "Enter your userName",
+                        title: "UserName".localized(),
+                        placeholder: "Enter your userName".localized(),
                         systemImage: "person.circle",
                         text: $viewModel.username
                     )
                     
                     AuthTextField(
-                        title: "Email",
-                        placeholder: "Enter your email",
+                        title: "Email".localized(),
+                        placeholder: "Enter your email".localized(),
                         systemImage: "envelope",
                         text: $viewModel.email
                     )
                     
                     AuthTextField(
-                        title: "Password",
-                        placeholder: "Create a password",
+                        title: "Password".localized(),
+                        placeholder: "Create a password".localized(),
                         systemImage: "lock",
                         text: $viewModel.password,
                         isSecure: true
                     )
                     
                     AuthTextField(
-                        title: "Confirm Password",
-                        placeholder: "Confirm your password",
+                        title: "Confirm Password".localized(),
+                        placeholder: "Confirm your password".localized(),
                         systemImage: "lock.shield",
                         text: $viewModel.confirmPassword,
                         isSecure: true
@@ -70,7 +70,7 @@ struct SignupView: View {
                 
                 // Password validation message
                 if !viewModel.password.isEmpty && viewModel.password.count < 8 {
-                    Text("Password must be at least 8 characters")
+                    Text("Password must be at least 8 characters".localized())
                         .font(.caption)
                         .foregroundStyle(.orange)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -88,14 +88,14 @@ struct SignupView: View {
                 
                 // Terms and Conditions
                 HStack {
-                    Text("By signing up, you agree to our ")
+                    Text("By signing up, you agree to our ".localized())
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     
                     Button(action: {
                         // Handle terms and conditions
                     }) {
-                        Text("Terms & Conditions")
+                        Text("Terms & Conditions".localized())
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundStyle(Color.accentColor)
@@ -106,7 +106,7 @@ struct SignupView: View {
                 // Signup Button
                 VStack(spacing: 16) {
                     PrimaryButton(
-                        title: "Create Account",
+                        title: "Create Account".localized(),
                         isLoading: viewModel.isLoading
                     ) {
                         Task{
@@ -124,7 +124,7 @@ struct SignupView: View {
                         .fill(AppColors.dividerColor)
                         .frame(height: 1)
                     
-                    Text("OR")
+                    Text("OR".localized())
                         .font(.footnote)
                         .fontWeight(.semibold)
                         .foregroundStyle(.secondary)
@@ -167,7 +167,7 @@ struct SignupView: View {
             }
         }
         .alert(item: $viewModel.errorMessage){ error in
-            Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
+            Alert(title: Text("Error".localized()), message: Text(error.localizedDescription), dismissButton: .default(Text("OK".localized())))
         }
     }
 }

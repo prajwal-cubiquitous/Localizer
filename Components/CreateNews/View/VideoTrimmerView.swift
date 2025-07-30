@@ -122,7 +122,7 @@ struct VideoTrimmerView: View {
                     // Trimming Controls Section
                     VStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Select Video Range")
+                            Text("Select Video Range".localized())
                                 .font(.headline)
                                 .bold()
                                 .foregroundStyle(.primary)
@@ -130,7 +130,7 @@ struct VideoTrimmerView: View {
                             // Duration info
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Total Duration")
+                                    Text("Total Duration".localized())
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                     Text(formatTime(totalDuration))
@@ -142,7 +142,7 @@ struct VideoTrimmerView: View {
                                 Spacer()
                                 
                                 VStack(alignment: .trailing, spacing: 4) {
-                                    Text("Selected Duration")
+                                    Text("Selected Duration".localized())
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                     Text(formatTime(endTime - startTime))
@@ -188,7 +188,7 @@ struct VideoTrimmerView: View {
                                 
                                 // Time labels
                                 HStack {
-                                    Text("0:00")
+                                    Text("0:00".localized())
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                     Spacer()
@@ -202,7 +202,7 @@ struct VideoTrimmerView: View {
                             // Start Time Slider
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Text("Start Time")
+                                    Text("Start Time".localized())
                                         .font(.subheadline)
                                         .bold()
                                     Spacer()
@@ -233,7 +233,7 @@ struct VideoTrimmerView: View {
                             // End Time Slider
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Text("End Time")
+                                    Text("End Time".localized())
                                         .font(.subheadline)
                                         .bold()
                                     Spacer()
@@ -268,7 +268,7 @@ struct VideoTrimmerView: View {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundStyle(.orange)
-                                Text("Maximum video duration is 60 seconds")
+                                Text("Maximum video duration is 60 seconds".localized())
                                     .font(.caption)
                                     .foregroundStyle(.orange)
                             }
@@ -293,7 +293,7 @@ struct VideoTrimmerView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "play.rectangle")
-                                Text("Preview")
+                                Text("Preview".localized())
                             }
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(.blue)
@@ -314,7 +314,7 @@ struct VideoTrimmerView: View {
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                         .scaleEffect(0.8)
                                 }
-                                Text(isTrimming ? "Trimming..." : "Trim & Save")
+                                Text(isTrimming ? "Trimming...".localized() : "Trim & Save".localized())
                             }
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.white)
@@ -333,11 +333,11 @@ struct VideoTrimmerView: View {
                 .background(Color(UIColor.systemBackground))
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("Trim Video")
+            .navigationTitle("Trim Video".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Cancel".localized()) {
                         dismiss()
                     }
                     .foregroundStyle(.primary)
@@ -350,10 +350,10 @@ struct VideoTrimmerView: View {
                 player?.pause()
                 player = nil
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
+            .alert("Error".localized(), isPresented: $showError) {
+                Button("OK".localized(), role: .cancel) { }
             } message: {
-                Text(errorMessage ?? "An error occurred")
+                Text(errorMessage ?? "An error occurred".localized())
             }
         }
     }

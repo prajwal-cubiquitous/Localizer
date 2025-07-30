@@ -5,6 +5,8 @@
 //  Created on 5/28/25.
 //
 
+// ProfileView.swift
+
 import SwiftUI
 import SwiftData
 import PhotosUI
@@ -17,14 +19,14 @@ struct ProfileView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var isEditingProfile = false
     @EnvironmentObject var AuthViewModel : AuthViewModel
+    // ADDED: Get the LanguageManager from the environment
+    @EnvironmentObject var languageManager: LanguageManager
     @State private var isRefreshing = false
     @State private var hasFetchedUser = false
     @Binding var constituencies : [ConstituencyDetails]?
-    @Binding var selectedName: String 
-    // ✅ Query to fetch ONLY the current logged-in user from SwiftData
+    @Binding var selectedName: String
     @Query private var localUsers: [LocalUser]
     
-    // ✅ Computed property to get current user - matches with Firebase Auth user
     private var currentUser: LocalUser? {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return nil }
         return localUsers.first { $0.id == currentUserId }
@@ -34,14 +36,11 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if let list = constituencies {
-                        StylishPicker(list: list, selectedName: $selectedName)
-                    }
-                    // ✅ Show current user data or loading/error state
+            // MODIFIED: Replaced ScrollView with Form for better settings layout
+            Form {
+                // Profile Header Section
+                Section {
                     if let user = currentUser {
-                        // Header with profile image
                         VStack {
                             ProfilePictureView(userProfileUrl: user.profileImageUrl, width: 100, height: 100)
                             
@@ -65,7 +64,8 @@ struct ProfileView: View {
                                 VStack {
                                     Text("\(user.postCount)")
                                         .font(.headline)
-                                    Text("Posts")
+                                    // MODIFIED: Localized string
+                                    Text("posts".localized())
                                         .font(.caption)
                                         .foregroundStyle(.gray)
                                 }
@@ -73,7 +73,8 @@ struct ProfileView: View {
                                 VStack {
                                     Text("\(user.likedCount)")
                                         .font(.headline)
-                                    Text("Likes")
+                                    // MODIFIED: Localized string
+                                    Text("likes".localized())
                                         .font(.caption)
                                         .foregroundStyle(.gray)
                                 }
@@ -81,7 +82,8 @@ struct ProfileView: View {
                                 VStack {
                                     Text("\(user.dislikedCount)")
                                         .font(.headline)
-                                    Text("Dislikes")
+                                    // MODIFIED: Localized string
+                                    Text("dislikes".localized())
                                         .font(.caption)
                                         .foregroundStyle(.gray)
                                 }
@@ -89,7 +91,8 @@ struct ProfileView: View {
                                 VStack {
                                     Text("\(user.commentCount)")
                                         .font(.headline)
-                                    Text("Comments")
+                                    // MODIFIED: Localized string
+                                    Text("comments".localized())
                                         .font(.caption)
                                         .foregroundStyle(.gray)
                                 }
@@ -100,64 +103,72 @@ struct ProfileView: View {
                             Button {
                                 isEditingProfile = true
                             } label: {
-                                Text("Edit Profile")
+                                // MODIFIED: Localized string
+                                Text("Edit Profile".localized())
                                     .font(.headline)
                                     .foregroundStyle(colorScheme == .dark ? .white : .black)
-                                    .frame(width: 150, height: 40)
+                                    .frame(maxWidth: .infinity, minHeight: 40) // Make button wider
                                     .background(
-                                        RoundedRectangle(cornerRadius: 20)
+                                        RoundedRectangle(cornerRadius: 10)
                                             .stroke(colorScheme == .dark ? Color.white : Color.black, lineWidth: 1)
                                     )
                             }
-                            .padding(.top, 8)
+                            .padding(.top, 16)
                         }
-                        .padding(.bottom, 20)
-                        
                     } else {
-                        // ✅ Loading state when no current user is found
+                        // Loading state
                         VStack(spacing: 16) {
                             ProgressView()
                                 .scaleEffect(1.2)
-                            Text("Loading profile...")
+                            // MODIFIED: Localized string
+                            Text("Loading Profile...".localized())
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
                         .frame(height: 200)
                     }
-                    
-                    // Settings and more section
-                    VStack(spacing: 0) {
-                        settingsRow(icon: "gearshape", title: "Settings"){
-                            // Settings functionality
-                        }
-                        
-                        // ✅ Admin upload data access
-                        if currentUser?.id == "jWMfJAquzQfxbYLjuMbCxBUEk2q2" {
-                            settingsRow(icon: "square.and.arrow.up.on.square", title: "UploadData"){
-                                path.append("Upload")
-                            }
-                        }
-                        
-                        settingsRow(icon: "arrow.left.square", title: "Logout"){
-                            Task { @MainActor in
-                                // ✅ Improved logout process with proper sequencing
-                                // First clear the local user data
-                                AuthViewModel.clearAllLocalData()
-                                
-                                // Small delay to ensure data is cleared
-                                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
-                                
-                                // Then sign out of Firebase
-                                AppState.shared.signOut()
-                                
-                                print("✅ Logout completed successfully")
-                            }
+                }
+                .listRowBackground(Color.clear) // Make section background transparent
+                
+                // Constituency Picker Section
+                if let list = constituencies {
+                    Section {
+                        StylishPicker(list: list, selectedName: $selectedName)
+                    } header: {
+                        // MODIFIED: Localized string
+                        Text("Select Constituency".localized())
+                    }
+                }
+                
+                // Settings Section
+                Section {
+                    Picker("Language".localized(), selection: $languageManager.currentLanguage) { // "Language" is a key in your file now
+                        ForEach(Language.allCases, id: \.self) { language in
+                            Text(language.title).tag(language)
                         }
                     }
-                    .padding(.top, 10)
+                    
+                    // MODIFIED: Use the keys exactly as they appear in your strings file
+                    settingsRow(icon: "gearshape", title: "Settings".localized()){ // Key is "Settings"
+                        // Settings functionality
+                    }
+                    
+                    if currentUser?.id == "jWMfJAquzQfxbYLjuMbCxBUEk2q2" {
+                        settingsRow(icon: "square.and.arrow.up.on.square", title: "Upload Data".localized()){ // Key is "Upload Data"
+                            path.append("Upload")
+                        }
+                    }
+                    
+                    settingsRow(icon: "arrow.left.square", title: "Logout".localized()){ // Key is "Logout"
+                        Task { @MainActor in
+                            AuthViewModel.clearAllLocalData()
+                            try? await Task.sleep(nanoseconds: 100_000_000)
+                            AppState.shared.signOut()
+                        }
+                    }
                 }
-                .padding(.vertical)
             }
+            .navigationTitle("Profile".localized())
             .task {
                 if !hasFetchedUser {
                     hasFetchedUser = true
@@ -167,11 +178,12 @@ struct ProfileView: View {
             .refreshable {
                 await refreshUserData()
             }
-            .navigationTitle("Profile")
+            // MODIFIED: Localized string
+            .navigationTitle("profile_title".localized())
             .navigationBarTitleDisplayMode(.inline)
-            .background(colorScheme == .dark ? Color.black : Color.white)
             .sheet(isPresented: $isEditingProfile) {
                 if let currentUser = currentUser {
+                    // Remember to localize strings inside EditProfileView as well
                     EditProfileView(isPresented: $isEditingProfile, localUser: currentUser, modelContext: modelContext)
                 }
             }
@@ -188,37 +200,25 @@ struct ProfileView: View {
             HStack {
                 Image(systemName: icon)
                     .frame(width: 24, height: 24)
-                    .foregroundStyle(colorScheme == .dark ? .white : .black)
-                
                 Text(title)
                     .font(.body)
-                    .foregroundStyle(colorScheme == .dark ? .white : .black)
-                
                 Spacer()
-                
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundStyle(.gray)
             }
-            .padding()
-            .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white)
+            .foregroundStyle(colorScheme == .dark ? .white : .black)
         }
-        .buttonStyle(PlainButtonStyle())
     }
     
-    /// ✅ Refreshes ONLY current user data from Firestore and updates SwiftData
     @MainActor
     private func refreshUserData() async {
         guard let userId = AppState.shared.userSession?.uid else {
             print("❌ No current user session for profile refresh")
             return
         }
-        
         isRefreshing = true
-        
-        // Use the injected AuthViewModel instance to refresh ONLY current user data
         await self.AuthViewModel.fetchAndStoreUserAsync(userId: userId)
-        
         isRefreshing = false
     }
 }

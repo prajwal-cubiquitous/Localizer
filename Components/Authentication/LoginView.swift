@@ -16,11 +16,11 @@ struct LoginView: View {
         VStack(spacing: 24) {
             // Header
             VStack(spacing: 12) {
-                Text("Welcome Back")
+                Text("Welcome Back".localized())
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                Text("Sign in to continue")
+                Text("Sign in to continue".localized())
                     .font(.body)
                     .foregroundStyle(.secondary)
             }
@@ -30,15 +30,15 @@ struct LoginView: View {
             // Form
             VStack(spacing: 16) {
                 AuthTextField(
-                    title: "Email",
-                    placeholder: "Enter your email",
+                    title: "Email".localized(),
+                    placeholder: "Enter your email".localized(),
                     systemImage: "envelope",
                     text: $viewModel.email
                 )
                 
                 AuthTextField(
-                    title: "Password",
-                    placeholder: "Enter your password",
+                    title: "Password".localized(),
+                    placeholder: "Enter your password".localized(),
                     systemImage: "lock",
                     text: $viewModel.password,
                     isSecure: true
@@ -54,7 +54,7 @@ struct LoginView: View {
                             try await viewModel.resetPassword()
                         }
                     } label: {
-                        Text("Forgot Password?")
+                        Text("Forgot Password?".localized())
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(Color.accentColor)
@@ -75,7 +75,7 @@ struct LoginView: View {
             // Login Button
             VStack(spacing: 16) {
                 PrimaryButton(
-                    title: "Sign In",
+                    title: "Sign In".localized(),
                     isLoading: viewModel.isLoading
                 ) {
                     Task{
@@ -93,7 +93,7 @@ struct LoginView: View {
                     .fill(AppColors.dividerColor)
                     .frame(height: 1)
                 
-                Text("OR")
+                Text("OR".localized())
                     .font(.footnote)
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
@@ -135,7 +135,7 @@ struct LoginView: View {
             }
         }
         .alert(item: $viewModel.errorMessage){ error in
-            Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
+            Alert(title: Text("Error".localized()), message: Text(error.localizedDescription), dismissButton: .default(Text("OK".localized())))
         }
     }
 }

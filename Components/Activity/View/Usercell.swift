@@ -33,7 +33,7 @@ struct Usercell: View {
             
             // Three Dots
             Menu{
-                Button("Recommend User"){
+                Button("Recommend User".localized()){
                     Task{
                         try await viewModel.removeNOTRecommendUser(userId: user.id)
                     }

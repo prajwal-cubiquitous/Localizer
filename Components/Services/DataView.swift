@@ -204,12 +204,12 @@ struct DataView: View {
                     .foregroundStyle(.secondary)
                 
                 if pincodes.count == 1 {
-                    Text("Current Area: \(pincodes.first ?? "")")
+                    Text("Current Area: \(pincodes.first ?? "")".localized())
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
                 } else {
-                    Text("Constituency Areas: \(pincodes.count) areas")
+                    Text("Constituency Areas: \(pincodes.count) areas".localized())
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
@@ -224,7 +224,7 @@ struct DataView: View {
                     Image(systemName: "building.columns.fill")
                         .foregroundStyle(.blue)
                     
-                    Text("Showing services from all \(ConstituencyName) areas")
+                    Text("Showing services from all \(ConstituencyName) areas".localized())
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     
@@ -408,7 +408,7 @@ struct ModernDataCard: View {
                 Button(action: onInfoTap) {
                     HStack(spacing: 4) {
                         Image(systemName: "info.circle")
-                        Text("Info")
+                        Text("Info".localized())
                     }
                     .font(.caption)
                     .fontWeight(.medium)
@@ -419,7 +419,7 @@ struct ModernDataCard: View {
                 Button(action: onNavigateTap) {
                     HStack(spacing: 4) {
                         Image(systemName: "location.fill")
-                        Text("Navigate")
+                        Text("Navigate".localized())
                     }
                     .font(.caption)
                     .fontWeight(.medium)
@@ -465,7 +465,7 @@ struct EmptyStateView: View {
                 Button{
                     viewModel.fetchData(for: viewModel.postalCodes)
                 }label: {
-                    Text("Try Again")
+                    Text("Try Again".localized())
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(Color(Constants.primaryOppositeColor))
                         .frame(width: 120, height: 32)
@@ -508,11 +508,11 @@ struct InfoDetailView: View {
                 }
                 .padding(16)
             }
-            .navigationTitle("Details")
+            .navigationTitle("Details".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Done".localized()) {
                         dismiss()
                     }
                 }
@@ -535,8 +535,8 @@ struct InfoDetailView: View {
                     .fontWeight(.bold)
                     .lineLimit(2)
                 
-                Text(item.type == .school ? "Educational Institution" : 
-                     item.type == .hospital ? "Healthcare Facility" : "Law Enforcement")
+                Text(item.type == .school ? "Educational Institution".localized() : 
+                     item.type == .hospital ? "Healthcare Facility".localized() : "Law Enforcement".localized())
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -551,7 +551,7 @@ struct InfoDetailView: View {
     
     private var addressSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Address", systemImage: "location.fill")
+            Label("Address".localized(), systemImage: "location.fill")
                 .font(.headline)
                 .foregroundStyle(.primary)
             
@@ -570,7 +570,7 @@ struct InfoDetailView: View {
     
     private var detailsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Information", systemImage: "info.circle.fill")
+            Label("Information".localized(), systemImage: "info.circle.fill")
                 .font(.headline)
                 .foregroundStyle(.primary)
             
@@ -590,7 +590,7 @@ struct InfoDetailView: View {
     
     private var mapSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Location", systemImage: "map.fill")
+            Label("Location".localized(), systemImage: "map.fill")
                 .font(.headline)
                 .foregroundStyle(.primary)
             
@@ -608,7 +608,7 @@ struct InfoDetailView: View {
                                 Image(systemName: "map")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.secondary)
-                                Text("Map Preview")
+                                Text("Map Preview".localized())
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -625,7 +625,7 @@ struct InfoDetailView: View {
                             Image(systemName: "map")
                                 .font(.system(size: 32))
                                 .foregroundStyle(.secondary)
-                            Text("Map not available")
+                            Text("Map not available".localized())
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -645,7 +645,7 @@ struct InfoDetailView: View {
             } label: {
                 HStack {
                     Image(systemName: "location.fill")
-                    Text("Open in Maps")
+                    Text("Open in Maps".localized())
                 }
                 .font(.headline)
                 .foregroundStyle(.white)
@@ -663,7 +663,7 @@ struct InfoDetailView: View {
                 } label: {
                     HStack {
                         Image(systemName: "phone.fill")
-                        Text("Call \(phone)")
+                        Text("Call \(phone)".localized())
                     }
                     .font(.headline)
                     .foregroundStyle(.primary)

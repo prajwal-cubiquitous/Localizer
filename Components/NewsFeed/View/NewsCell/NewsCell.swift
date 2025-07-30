@@ -104,12 +104,12 @@ struct NewsCell: View {
                                 .foregroundColor(.primary)
                                 .lineLimit(1)
                         } else if isLoadingAuthor {
-                            Text("Loading...")
+                            Text("Loading...".localized())
                                 .font(.headline)
                                 .foregroundColor(.gray)
                                 .lineLimit(1)
                         } else {
-                            Text("Unknown User")
+                            Text("Unknown User".localized())
                                 .font(.headline)
                                 .foregroundColor(.gray)
                                 .lineLimit(1)
@@ -136,7 +136,7 @@ struct NewsCell: View {
                             }
                         }
                     } label: {
-                        Label(viewModel.savedByCurrentUser ? "Unsave Post" : "Save Post", systemImage: viewModel.savedByCurrentUser ? "bookmark.slash" :"bookmark")
+                        Label(viewModel.savedByCurrentUser ? "Unsave Post".localized() : "Save Post".localized(), systemImage: viewModel.savedByCurrentUser ? "bookmark.slash" :"bookmark")
                     }
                     
                     // Show maximize option only when media is available
@@ -144,7 +144,7 @@ struct NewsCell: View {
                         Button {
                             showingFullScreenMedia = true
                         } label: {
-                            Label("Maximize", systemImage: "arrow.up.left.and.arrow.down.right")
+                            Label("Maximize".localized(), systemImage: "arrow.up.left.and.arrow.down.right")
                         }
                     }
                     
@@ -158,18 +158,18 @@ struct NewsCell: View {
                         }
                     }else{
                         Menu {
-                            Button("Don't recommend posts from this user") {
+                            Button("Don't recommend posts from this user".localized()) {
                                 Task{
                                     try await viewModel.DontRecommendUsers(newsUserId: localNews.ownerUid)
                                 }
                             }
-                            Button("Don't recommend this post") {
+                            Button("Don't recommend this post".localized()) {
                                 Task{
                                     try await viewModel.DontRecommendNews(postId: localNews.id)
                                 }
                             }
                         } label: {
-                            Label("Don't Recommend", systemImage: "hand.thumbsdown.fill")
+                            Label("Don't Recommend".localized(), systemImage: "hand.thumbsdown.fill")
                         }
 
                     }
@@ -177,7 +177,7 @@ struct NewsCell: View {
                     Button(role: .destructive) {
                         // Report post action
                     } label: {
-                        Label("Report Post", systemImage: "flag")
+                        Label("Report Post".localized(), systemImage: "flag")
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -273,7 +273,7 @@ struct NewsCell: View {
                             .foregroundColor(.secondary)
                             .font(.title3)
                         
-                        Text("Share")
+                        Text("Share".localized())
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }

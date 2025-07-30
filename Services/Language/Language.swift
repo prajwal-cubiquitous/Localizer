@@ -26,19 +26,22 @@ enum Language: String, CaseIterable {
 }
 
 class LanguageManager: ObservableObject {
-    // @Published will notify views when the language changes
     @Published var currentLanguage: Language {
         didSet {
-            // Save the new language selection to UserDefaults
+            // 🟡 1. Check if this block is being called
+            print("🟡 LanguageManager: didSet triggered. New language is \(currentLanguage.rawValue)")
+            
             UserDefaults.standard.set(currentLanguage.rawValue, forKey: "selectedLanguage")
-            // Update the app's bundle to the new language
+            print("🟡 LanguageManager: Saved '\(currentLanguage.rawValue)' to UserDefaults.")
+            
             Bundle.setLanguage(currentLanguage.rawValue)
         }
     }
 
     init() {
-        // Get the saved language from UserDefaults, or default to English
         let savedLangCode = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "en"
         self.currentLanguage = Language(rawValue: savedLangCode) ?? .english
+        // 🔵 Check initial language on app start
+        print("🔵 LanguageManager: Initialized with language '\(currentLanguage.rawValue)'")
     }
 }
