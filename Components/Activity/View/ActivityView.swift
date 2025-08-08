@@ -15,8 +15,8 @@ struct ActivityView: View {
         case news = "News"
         case liked = "Liked"
         case disliked = "Disliked"
-        case commented = "Commented"
-        case saved = "Saved"
+        case commented = "comments"
+        case saved = "Save"
         case NoNews = "No News"
         case NoUser = "No User"
         
@@ -117,7 +117,7 @@ struct FilterTab: View {
                 Image(systemName: filter.iconName)
                     .font(.system(size: 14, weight: .medium))
                 
-                Text(filter.rawValue)
+                Text(filter.rawValue.localized())
                     .font(.system(size: 14, weight: .medium))
             }
             .padding(.horizontal, 16)

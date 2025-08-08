@@ -339,7 +339,7 @@ struct TabButtonforDataView: View {
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .medium))
                 
-                Text(title)
+                Text(title.localized())
                     .font(.system(size: 16, weight: .medium))
             }
             .foregroundStyle(isSelected ? Color(Constants.primaryOppositeColor) : .primary)

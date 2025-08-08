@@ -352,7 +352,7 @@ struct SectionHeader: View {
     
     var body: some View {
         HStack {
-            Label(title, systemImage: icon)
+            Label(title.localized(), systemImage: icon)
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundColor(.primary)

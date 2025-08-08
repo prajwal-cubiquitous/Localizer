@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseStorage
+import Firebase
 
 // Main view that constructs the UI shown in the image.
 struct UploadDataView: View {
@@ -99,6 +100,18 @@ struct UploadDataView: View {
                     
                     Button("Upload ward detials for one ward 560043".localized()) {
                         showUploadward.toggle()
+                    }
+                    .buttonStyle(CustomButtonStyle())
+                    .disabled(isLoading)
+                    
+                    Button("upload temp data 1000") {
+                        showConfirmationDialog(
+                            title: "Upload 1000 temp data to firebase",
+                            message: "just uplaod the data to firebase for testing",
+                            action: {
+                                uploadDummyNews()
+                            }
+                        )
                     }
                     .buttonStyle(CustomButtonStyle())
                     .disabled(isLoading)
@@ -258,6 +271,37 @@ struct UploadDataView: View {
             }
         }
     }
+    
+    private func uploadDummyNews() {
+            let db = Firestore.firestore()
+            let ownerUid = "BvXKrYAFj9dA8XVnF9wpOY157552"
+            let constituencyId = "B723BCD3-E031-4AA7-8CCF-BA32F310943D"
+
+            print("Starting upload of 1000 documents...")
+
+            for i in 1...100 {
+                let postData: [String: Any] = [
+                    "caption": "Dummy Post \(i)",
+                    "commentsCount": 0,
+                    "likesCount": 0,
+                    "ownerUid": ownerUid,
+                    "cosntituencyId": constituencyId, // Note: "constituencyId" is misspelled as in your example
+                    "timestamp": Timestamp(date: Date()) // Uses the current time for each post
+                ]
+
+                // addDocument creates a new document with a random, unique ID
+                db.collection("news").addDocument(data: postData) { error in
+                    if let error = error {
+                        print("Error adding document \(i): \(error.localizedDescription)")
+                    } else {
+                        // To avoid flooding the console, we only print every 100th success message
+                        if i % 100 == 0 {
+                            print("Successfully uploaded document \(i) of 1000.")
+                        }
+                    }
+                }
+            }
+        }
 }
 
 // A reusable custom style for the buttons to match the image.

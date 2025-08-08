@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import FirebaseFirestore
 
 struct User: Identifiable, Codable, Sendable {
     var id : String
@@ -20,7 +21,9 @@ struct User: Identifiable, Codable, Sendable {
     var dislikedCount: Int = 0
     var SavedPostsCount: Int = 0
     var commentsCount: Int = 0
+    @ServerTimestamp var lastUpdated: Date?
 }
+
 
 @Model
 final class LocalUser: @unchecked Sendable {
