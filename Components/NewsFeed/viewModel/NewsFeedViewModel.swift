@@ -20,12 +20,13 @@ final class NewsFeedViewModel: ObservableObject {
     @Published private(set) var isLoadingMore = false
     @Published private(set) var hasMorePages = true
     @Published private(set) var error: String?
+    var count : Int = 0
     
     // MARK: - Private State
     private let pageSize = 20 // Load 20 items per page
     private var lastDocument: DocumentSnapshot?
     private var currentConstituencyId = ""
-    private let maxLocalItems = 50 // Store 50 items locally as per requirements
+    private let maxLocalItems = 60 // Store 50 items locally as per requirements
     private let maxCachedMedia = 30 // Cache media for only 2 items
     
     // MARK: - Public API
@@ -44,6 +45,7 @@ final class NewsFeedViewModel: ObservableObject {
         currentConstituencyId = constituencyId
         lastDocument = nil
         hasMorePages = true
+        count = 0
         
         do {
             let (remoteNews, lastDoc) = try await fetchNewsFromFirestore(
@@ -53,6 +55,8 @@ final class NewsFeedViewModel: ObservableObject {
             
             lastDocument = lastDoc
             hasMorePages = remoteNews.count == pageSize
+            
+            print("Started laoding the page")
             
             await replaceLocalNews(remoteNews, constituencyId: constituencyId, context: context)
             
@@ -78,6 +82,13 @@ final class NewsFeedViewModel: ObservableObject {
             
             lastDocument = lastDoc
             hasMorePages = remoteNews.count == pageSize
+            
+            count += 1
+            print("\(count) times pagesize has hitted")
+            
+            if count >= maxLocalItems/pageSize {
+                await appendToLocalNewsandDeleteFirst(remoteNews, context: context)
+            }
             
             await appendToLocalNews(remoteNews, context: context)
             
@@ -176,6 +187,60 @@ final class NewsFeedViewModel: ObservableObject {
                 }
             } catch {
                 // Silently handle local items limit errors
+            }
+        }
+    }
+    
+    // Assuming 'pageSize' is a property available in this scope, e.g., self.pageSize
+    private func appendToLocalNewsandDeleteFirst(_ items: [News], context: ModelContext) async {
+        let constituencyId = self.currentConstituencyId
+
+        // 1. NEW: Remove the oldest 'pageSize' items first
+        await MainActor.run {
+            do {
+                // Create a descriptor to fetch the OLDEST items by sorting with .forward
+                var oldItemsDescriptor = FetchDescriptor<LocalNews>(
+                    predicate: #Predicate<LocalNews> { $0.constituencyId == constituencyId },
+                    sortBy: [SortDescriptor(\.timestamp, order: .reverse)] // .forward gets oldest first
+                )
+                // Limit the fetch to only the number of items you want to remove
+                oldItemsDescriptor.fetchLimit = self.pageSize
+
+                let itemsToRemove = try context.fetch(oldItemsDescriptor)
+                for item in itemsToRemove {
+                    context.delete(item)
+                }
+            } catch {
+                // It's good practice to log this error, even if you don't show it to the user
+                print("Failed to remove the oldest page of news items: \(error.localizedDescription)")
+            }
+        }
+
+        // 2. Insert the new items (your original code)
+        await insertLocalNews(items, context: context)
+        
+        // 3. Maintain the overall max limit and save all changes
+        await MainActor.run {
+            do {
+                // This descriptor gets the newest items first to trim any excess from the end
+                let allItemsDescriptor = FetchDescriptor<LocalNews>(
+                    predicate: #Predicate<LocalNews> { $0.constituencyId == constituencyId },
+                    sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+                )
+                let allItems = try context.fetch(allItemsDescriptor)
+                
+                // This check remains as a safety net to enforce the hard limit
+                if allItems.count > maxLocalItems {
+                    let excessItems = allItems.suffix(allItems.count - maxLocalItems)
+                    for item in excessItems {
+                        context.delete(item)
+                    }
+                }
+                
+                // Save all changes (new deletions and new insertions) in one transaction
+                try context.save()
+            } catch {
+                // Silently handle final limit enforcement and save errors
             }
         }
     }
