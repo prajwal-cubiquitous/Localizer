@@ -75,7 +75,7 @@ struct MainTabView: View {
         Group {
             // Using a completely different view structure based on state
             // This forces SwiftUI to completely rebuild rather than just update
-            if isLocationReady && !pincode.isEmpty {
+            if isLocationReady && !pincode.isEmpty && selectedName != ""{
                 // Show main content only when truly ready
                 mainContentView
             } else {

@@ -19,6 +19,7 @@ final class NewsFeedViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var isLoadingMore = false
     @Published private(set) var hasMorePages = true
+    @Published private(set) var hasMorePagesTrue = true
     @Published private(set) var error: String?
     @Published var count : Int = 0
     
@@ -94,6 +95,7 @@ final class NewsFeedViewModel: ObservableObject {
             
             if count >= maxLocalItems/pageSize {
                 await appendToLocalNewsandDeleteFirst(remoteNews, context: context)
+                hasMorePagesTrue = true
             }
             
             await appendToLocalNews(remoteNews, context: context)
@@ -108,7 +110,7 @@ final class NewsFeedViewModel: ObservableObject {
     }
     
     func loadMoreReverse(context: ModelContext) async {
-        guard !isLoadingMore && hasMorePages && !currentConstituencyId.isEmpty else { return }
+        guard !isLoadingMore && hasMorePagesTrue && !currentConstituencyId.isEmpty else { return }
         print("starting reverse")
         isLoadingMore = true
         error = nil
@@ -121,13 +123,14 @@ final class NewsFeedViewModel: ObservableObject {
             )
             
             firstDocument = firstDoc
-            hasMorePages = remoteNews.count == pageSize
+            hasMorePagesTrue = remoteNews.count == pageSize
             
             count -= 1
             print("\(count) times pagesize has hitted")
             
             if count >= maxLocalItems/pageSize {
                 await addToLocalNewsandDeleteLast(remoteNews, context: context)
+                hasMorePages = true
             }
             
             await appendToLocalNews(remoteNews, context: context)
