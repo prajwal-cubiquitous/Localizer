@@ -93,7 +93,14 @@ struct NewsFeedView: View {
                         }
                         .scrollIndicators(.hidden) // Clean modern look
                         .refreshable {
-                            await viewModel.refresh(for: constituencyId, context: modelContext)
+                                if viewModel.count >= viewModel.maxLocalItems/viewModel.pageSize{
+                                    print("revserse is working fine ")
+                                    Task{
+                                        await viewModel.loadMoreReverse(context: modelContext)
+                                    }
+                                }else{
+                                    await viewModel.refresh(for: constituencyId, context: modelContext)
+                                }
                         }
                     }
                 }

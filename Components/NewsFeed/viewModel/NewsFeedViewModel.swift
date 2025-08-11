@@ -20,13 +20,14 @@ final class NewsFeedViewModel: ObservableObject {
     @Published private(set) var isLoadingMore = false
     @Published private(set) var hasMorePages = true
     @Published private(set) var error: String?
-    var count : Int = 0
+    @Published var count : Int = 0
     
     // MARK: - Private State
-    private let pageSize = 20 // Load 20 items per page
+    let pageSize = 10 // Load 20 items per page
     private var lastDocument: DocumentSnapshot?
+    private var firstDocument: DocumentSnapshot?
     private var currentConstituencyId = ""
-    private let maxLocalItems = 60 // Store 50 items locally as per requirements
+    let maxLocalItems = 20 // Store 50 items locally as per requirements
     private let maxCachedMedia = 30 // Cache media for only 2 items
     
     // MARK: - Public API
@@ -50,7 +51,8 @@ final class NewsFeedViewModel: ObservableObject {
         do {
             let (remoteNews, lastDoc) = try await fetchNewsFromFirestore(
                 constituencyId: constituencyId, 
-                startAfter: nil
+                startAfter: nil,
+                Descending: true
             )
             
             lastDocument = lastDoc
@@ -59,6 +61,9 @@ final class NewsFeedViewModel: ObservableObject {
             print("Started laoding the page")
             
             await replaceLocalNews(remoteNews, constituencyId: constituencyId, context: context)
+            
+            await fetchNewestDocumentSnapshot(context: context)
+            
             
         } catch {
             self.error = "Failed to load news: \(error.localizedDescription)"
@@ -77,7 +82,8 @@ final class NewsFeedViewModel: ObservableObject {
         do {
             let (remoteNews, lastDoc) = try await fetchNewsFromFirestore(
                 constituencyId: currentConstituencyId,
-                startAfter: lastDocument
+                startAfter: lastDocument,
+                Descending: true
             )
             
             lastDocument = lastDoc
@@ -91,6 +97,43 @@ final class NewsFeedViewModel: ObservableObject {
             }
             
             await appendToLocalNews(remoteNews, context: context)
+            
+            await fetchNewestDocumentSnapshot(context: context)
+            
+        } catch {
+            self.error = "Failed to load more news: \(error.localizedDescription)"
+        }
+        
+        isLoadingMore = false
+    }
+    
+    func loadMoreReverse(context: ModelContext) async {
+        guard !isLoadingMore && hasMorePages && !currentConstituencyId.isEmpty else { return }
+        print("starting reverse")
+        isLoadingMore = true
+        error = nil
+        
+        do {
+            let (remoteNews, firstDoc) = try await fetchNewsFromFirestore(
+                constituencyId: currentConstituencyId,
+                startAfter: firstDocument,
+                Descending: false
+            )
+            
+            firstDocument = firstDoc
+            hasMorePages = remoteNews.count == pageSize
+            
+            count -= 1
+            print("\(count) times pagesize has hitted")
+            
+            if count >= maxLocalItems/pageSize {
+                await addToLocalNewsandDeleteLast(remoteNews, context: context)
+            }
+            
+            await appendToLocalNews(remoteNews, context: context)
+            
+            await fetchNewestDocumentSnapshot(context: context, reverse: true)
+            
             
         } catch {
             self.error = "Failed to load more news: \(error.localizedDescription)"
@@ -108,12 +151,13 @@ final class NewsFeedViewModel: ObservableObject {
     
     private func fetchNewsFromFirestore(
         constituencyId: String, 
-        startAfter: DocumentSnapshot?
+        startAfter: DocumentSnapshot?,
+        Descending: Bool
     ) async throws -> ([News], DocumentSnapshot?) {
         let db = Firestore.firestore()
         var query = db.collection("news")
             .whereField("cosntituencyId", isEqualTo: constituencyId)
-            .order(by: "timestamp", descending: true)
+            .order(by: "timestamp", descending: Descending)
             .limit(to: pageSize)
         
         // Add pagination cursor if provided
@@ -202,6 +246,59 @@ final class NewsFeedViewModel: ObservableObject {
                 var oldItemsDescriptor = FetchDescriptor<LocalNews>(
                     predicate: #Predicate<LocalNews> { $0.constituencyId == constituencyId },
                     sortBy: [SortDescriptor(\.timestamp, order: .reverse)] // .forward gets oldest first
+                )
+                // Limit the fetch to only the number of items you want to remove
+                oldItemsDescriptor.fetchLimit = self.pageSize
+
+                let itemsToRemove = try context.fetch(oldItemsDescriptor)
+                for item in itemsToRemove {
+                    context.delete(item)
+                }
+            } catch {
+                // It's good practice to log this error, even if you don't show it to the user
+                print("Failed to remove the oldest page of news items: \(error.localizedDescription)")
+            }
+        }
+
+        // 2. Insert the new items (your original code)
+        await insertLocalNews(items, context: context)
+        
+        // 3. Maintain the overall max limit and save all changes
+        await MainActor.run {
+            do {
+                // This descriptor gets the newest items first to trim any excess from the end
+                let allItemsDescriptor = FetchDescriptor<LocalNews>(
+                    predicate: #Predicate<LocalNews> { $0.constituencyId == constituencyId },
+                    sortBy: [SortDescriptor(\.timestamp, order: .forward)]
+                )
+                let allItems = try context.fetch(allItemsDescriptor)
+                
+                // This check remains as a safety net to enforce the hard limit
+                if allItems.count > maxLocalItems {
+                    let excessItems = allItems.suffix(allItems.count - maxLocalItems)
+                    for item in excessItems {
+                        context.delete(item)
+                    }
+                }
+                
+                // Save all changes (new deletions and new insertions) in one transaction
+                try context.save()
+            } catch {
+                // Silently handle final limit enforcement and save errors
+            }
+        }
+    }
+    
+    private func addToLocalNewsandDeleteLast(_ items: [News], context: ModelContext) async {
+        let constituencyId = self.currentConstituencyId
+
+        // 1. NEW: Remove the oldest 'pageSize' items first
+        await MainActor.run {
+            do {
+                // Create a descriptor to fetch the OLDEST items by sorting with .forward
+                var oldItemsDescriptor = FetchDescriptor<LocalNews>(
+                    predicate: #Predicate<LocalNews> { $0.constituencyId == constituencyId },
+                    sortBy: [SortDescriptor(\.timestamp, order: .forward)] // .forward gets oldest first
                 )
                 // Limit the fetch to only the number of items you want to remove
                 oldItemsDescriptor.fetchLimit = self.pageSize
@@ -385,5 +482,47 @@ final class NewsFeedViewModel: ObservableObject {
         // Cache the user for UI display
         UserCache.shared.cacheUser(userId: user.id, cachedUser: cachedUser)
     }
-} 
+    
+    func getNewestLocalNews(context: ModelContext, reverse: Bool) throws -> LocalNews? {
+        // 1. Define the query using a FetchDescriptor.
+        var fetchDescriptor = FetchDescriptor<LocalNews>()
+        
+        // 2. Set the sort order to place the newest item first.
+        fetchDescriptor.sortBy = [SortDescriptor(\.timestamp, order: .reverse)]
+        
+        // 3. IMPORTANT: Set the fetch limit to 1 for maximum efficiency.
+        // This tells the database to stop searching after finding the first item.
+        fetchDescriptor.fetchLimit = maxLocalItems
+        
+        // 4. Execute the fetch and return the first item from the resulting array.
+        // The array will contain either one item or be empty.
+        let results = try context.fetch(fetchDescriptor)
+        return reverse ? results.last : results.first
+    }
+    
+    func fetchNewestDocumentSnapshot(context: ModelContext, reverse : Bool = false) async {
+        // Assuming 'modelContext' is available in this scope
+        
+        do {
+            // 1. Safely get the ID of your newest local news item
+            guard let newestNewsId = try getNewestLocalNews(context: context, reverse: reverse)?.id else {
+                print("No local news found. Cannot fetch snapshot.")
+                return
+            }
+            
+            // 2. Create the reference to the document in Firestore
+            let documentRef = Firestore.firestore().collection("news").document(newestNewsId)
+            
+            // 3. Asynchronously fetch the DocumentSnapshot using the reference
+            if reverse{
+                self.lastDocument = try await documentRef.getDocument()
+            }else{
+                self.firstDocument = try await documentRef.getDocument()
+            }
+                        
+        } catch {
+            print("Failed to get document snapshot: \(error.localizedDescription)")
+        }
+    }
+}
 
