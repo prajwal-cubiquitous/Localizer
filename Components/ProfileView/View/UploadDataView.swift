@@ -275,7 +275,7 @@ struct UploadDataView: View {
     private func uploadDummyNews() {
             let db = Firestore.firestore()
             let ownerUid = "BvXKrYAFj9dA8XVnF9wpOY157552"
-            let constituencyId = "B723BCD3-E031-4AA7-8CCF-BA32F310943D"
+            let constituencyId = "B8B05F79-8F68-4492-8C9A-300EAB6861FE"
 
             print("Starting upload of 1000 documents...")
 
