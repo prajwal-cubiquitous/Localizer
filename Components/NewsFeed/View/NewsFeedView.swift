@@ -17,6 +17,25 @@ struct NewsFeedView: View {
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
     @State private var hasFetched = false
+    @State private var selectedTab: NewsTab = .latest
+    
+    enum NewsTab: String, CaseIterable {
+        case latest = "Latest"
+        case trending = "Trending"
+        
+        var localizedTitle: String {
+            return self.rawValue.localized()
+        }
+        
+        var icon: String {
+            switch self {
+            case .latest:
+                return "clock"
+            case .trending:
+                return "flame"
+            }
+        }
+    }
     
     init(ConstituencyInfo: ConstituencyDetails?) {
         self.ConstituencyInfo = ConstituencyInfo
@@ -33,103 +52,24 @@ struct NewsFeedView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
+            VStack(spacing: 0) {
+                // Custom Segmented Control
+                customSegmentedControl
+                
+                // Content based on selected tab
                 Group {
                     if newsItems.isEmpty {
-                        // Empty State
-                        ScrollView{
-                            VStack(spacing: 24) {
-                                Image(systemName: "square.and.pencil")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 80, height: 80)
-                                    .foregroundStyle(.secondary)
-                                
-                                Text("Be the first to post!".localized())
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .multilineTextAlignment(.center)
-                                
-                                Button {
-                                    showCreatePostSheet = true
-                                } label: {
-                                    Text("Create Post".localized())
-                                        .font(.headline)
-                                        .padding(.horizontal, 32)
-                                        .padding(.vertical, 12)
-                                        .background(Color.blue)
-                                        .foregroundColor(.white)
-                                        .clipShape(Capsule())
-                                }
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 16)
-                            .containerRelativeFrame(.vertical, alignment: .center)
-                        }
-                        .refreshable {
-                            await viewModel.refresh(for: constituencyId, context: modelContext)
-                        }
+                        emptyStateView
                     } else {
-                        // News Feed Content
-                        ScrollView {
-                            LazyVStack(spacing: 0) {
-                                ForEach(newsItems) { item in
-                                    NewsCell(localNews: item)
-                                        .padding(.horizontal, 0) // NewsCell handles its own horizontal padding
-                                        .padding(.bottom, 8) // Space between news items
-                                        .onAppear {
-                                            // Load more when this is one of the last items
-                                            if item == newsItems.last {
-                                                Task {
-                                                    await viewModel.loadMore(context: modelContext)
-                                                }
-                                            }
-                                        }
-                                }
-                            }
-                            .padding(.top, 8) // Top spacing from navigation
-                            .padding(.bottom, 20) // Bottom spacing for safe area
-                        }
-                        .scrollIndicators(.hidden) // Clean modern look
-                        .refreshable {
-                                if viewModel.count >= viewModel.maxLocalItems/viewModel.pageSize{
-                                    print("revserse is working fine ")
-                                    Task{
-                                        await viewModel.loadMoreReverse(context: modelContext)
-                                    }
-                                }else{
-                                    await viewModel.refresh(for: constituencyId, context: modelContext)
-                                }
-                        }
+                        newsFeedContent
                     }
                 }
                 
-                // Floating Action Button (Plus Button)
+                // Floating Action Button
                 if !newsItems.isEmpty {
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Button {
-                                showCreatePostSheet = true
-                            } label: {
-                                Image(systemName: "plus")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .frame(width: 56, height: 56)
-                                    .background(Color.blue)
-                                    .clipShape(Circle())
-                                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
-                            }
-                            .padding(.trailing, 20)
-                            .padding(.bottom, 20)
-                        }
-                    }
+                    floatingActionButton
                 }
             }
-            .navigationTitle("News Feed".localized())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -138,6 +78,7 @@ struct NewsFeedView: View {
                     } label: {
                         Image(systemName: "line.3.horizontal")
                             .foregroundStyle(colorScheme == .dark ? .white : .black)
+                            .font(.system(size: 18, weight: .medium))
                     }
                 }
                 
@@ -147,10 +88,11 @@ struct NewsFeedView: View {
                     } label: {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(colorScheme == .dark ? .white : .black)
+                            .font(.system(size: 18, weight: .medium))
                     }
                 }
             }
-            .background(colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground))
+            .background(backgroundColor)
         }
         .task {
             if !hasFetched {
@@ -163,6 +105,193 @@ struct NewsFeedView: View {
                 PostView(ConstituencyId: id)
             }
         }
+    }
+    
+    // MARK: - Custom Segmented Control
+    private var customSegmentedControl: some View {
+        ZStack {
+            // Background container
+            RoundedRectangle(cornerRadius: 16)
+                .fill(colorScheme == .dark ? Color(UIColor.secondarySystemBackground) : Color(UIColor.systemBackground))
+                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 3)
+            
+            // Selection indicator
+            GeometryReader { geometry in
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.accentColor)
+                    .frame(width: geometry.size.width / 2)
+                    .offset(x: selectedTab == .latest ? 0 : geometry.size.width / 2)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedTab)
+            }
+            .frame(height: 36)
+            .padding(.horizontal, 2)
+            .padding(.vertical, 2)
+            
+            // Tab buttons
+            HStack(spacing: 0) {
+                ForEach(NewsTab.allCases, id: \.self) { tab in
+                    Button(action: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            selectedTab = tab
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: tab.icon)
+                                .font(.system(size: 14, weight: .medium))
+                                .scaleEffect(selectedTab == tab ? 1.1 : 1.0)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTab)
+                            
+                            Text(tab.localizedTitle)
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .foregroundColor(selectedTab == tab ? .white : .primary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+        }
+        .frame(height: 40)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+    }
+    
+    // MARK: - Empty State View
+    private var emptyStateView: some View {
+        ScrollView {
+            VStack(spacing: 32) {
+                Spacer(minLength: 60)
+                
+                // Icon and Title
+                VStack(spacing: 20) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentColor.opacity(0.1))
+                            .frame(width: 120, height: 120)
+                        
+                        Image(systemName: selectedTab.icon)
+                            .font(.system(size: 48, weight: .medium))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    
+                    VStack(spacing: 8) {
+                        Text(selectedTab == .latest ? "No Recent Posts".localized() : "No Trending Posts".localized())
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .multilineTextAlignment(.center)
+                        
+                        Text(selectedTab == .latest ? "Be the first to share what's happening in your constituency!".localized() : "Posts with high engagement will appear here!".localized())
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                    }
+                }
+                
+                // Action Button
+                Button {
+                    showCreatePostSheet = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                        
+                        Text("Create Post".localized())
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.accentColor, Color.accentColor.opacity(0.8)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: Color.accentColor.opacity(0.3), radius: 12, x: 0, y: 6)
+                }
+                
+                Spacer(minLength: 60)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .padding(.horizontal, 20)
+        }
+        .refreshable {
+            await viewModel.refresh(for: constituencyId, context: modelContext)
+        }
+    }
+    
+    // MARK: - News Feed Content
+    private var newsFeedContent: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(newsItems) { item in
+                    NewsCell(localNews: item)
+                        .padding(.horizontal, 0)
+                        .padding(.bottom, 8)
+                        .onAppear {
+                            if item == newsItems.last {
+                                Task {
+                                    await viewModel.loadMore(context: modelContext)
+                                }
+                            }
+                        }
+                }
+            }
+            .padding(.top, 8)
+            .padding(.bottom, 20)
+        }
+        .scrollIndicators(.hidden)
+        .refreshable {
+            if viewModel.count >= viewModel.maxLocalItems/viewModel.pageSize {
+                print("reverse is working fine")
+                Task {
+                    await viewModel.loadMoreReverse(context: modelContext)
+                }
+            } else {
+                await viewModel.refresh(for: constituencyId, context: modelContext)
+            }
+        }
+    }
+    
+    // MARK: - Floating Action Button
+    private var floatingActionButton: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button {
+                    showCreatePostSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 60, height: 60)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.accentColor, Color.accentColor.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
+                }
+                .padding(.trailing, 24)
+                .padding(.bottom, 24)
+            }
+        }
+    }
+    
+    // MARK: - Computed Properties
+    private var backgroundColor: Color {
+        colorScheme == .dark ? Color.black : Color(UIColor.systemGroupedBackground)
     }
 }
 
