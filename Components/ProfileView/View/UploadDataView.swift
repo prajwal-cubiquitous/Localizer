@@ -183,7 +183,7 @@ struct UploadDataView: View {
         
         Task {
             await MainActor.run {
-                UploadData.uploadHospitalsAsync()
+                UploadData.uploadHospitalsToFirestore()
                 isLoading = false
             }
         }
@@ -195,7 +195,7 @@ struct UploadDataView: View {
         
         Task {
             await MainActor.run {
-                UploadData.uploadSchoolsAsync()
+                UploadData.uploadSchoolsToFirestore()
                 isLoading = false
             }
         }
@@ -207,7 +207,7 @@ struct UploadDataView: View {
         
         Task {
             await MainActor.run {
-                UploadData.uploadPoliceStationsAsync()
+                UploadData.uploadPoliceStationsToFirestore()
                 isLoading = false
             }
         }    }

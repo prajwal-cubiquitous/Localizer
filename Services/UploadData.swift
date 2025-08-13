@@ -69,6 +69,100 @@ struct UploadData {
         }
     }
     
+    static func uploadSchoolsToFirestore() {
+        guard let url = Bundle.main.url(forResource: "school", withExtension: "json") else {
+            print("❌ school.json not found in bundle")
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            let schools = try decoder.decode([School].self, from: data)
+
+            let db = Firestore.firestore()
+
+            for school in schools {
+                // Query constituencies containing this school's pincode
+                db.collection("constituencies")
+                    .whereField("Associated Pincodes (Compiled, Non-Official)", arrayContains: school.pincode)
+                    .getDocuments { (snapshot, error) in
+                        
+                        if let error = error {
+                            print("❌ Error finding constituency for \(school.schoolName): \(error.localizedDescription)")
+                            return
+                        }
+                        
+                        guard let documents = snapshot?.documents, !documents.isEmpty else {
+                            print("⚠️ No constituency found for pincode \(school.pincode) - \(school.schoolName)")
+                            return
+                        }
+                        
+                        for doc in documents {
+                            let constituencyRef = db.collection("constituencies").document(doc.documentID)
+                            let schoolRef = constituencyRef.collection("schools").document(school.diseID) // Using DISE ID as doc ID
+                            
+                            do {
+                                try schoolRef.setData(from: school) { error in
+                                    if let error = error {
+                                        print("❌ Error uploading \(school.schoolName): \(error.localizedDescription)")
+                                    } else {
+                                        print("✅ Uploaded \(school.schoolName) to constituency \(doc.documentID)")
+                                    }
+                                }
+                            } catch {
+                                print("❌ Encoding error for \(school.schoolName): \(error)")
+                            }
+                        }
+                    }
+            }
+
+        } catch {
+            print("❌ Decoding error: \(error.localizedDescription)")
+        }
+    }
+
+    
+    static func deleteAllSchools() {
+            let constituenciesRef = db.collection("constituencies")
+            
+            constituenciesRef.getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching constituencies: \(error)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else { return }
+                
+                for constituencyDoc in documents {
+                    let schoolsRef = constituencyDoc.reference.collection("schools")
+                    
+                    schoolsRef.getDocuments { schoolSnapshot, error in
+                        if let error = error {
+                            print("Error fetching schools for \(constituencyDoc.documentID): \(error)")
+                            return
+                        }
+                        
+                        guard let schoolDocs = schoolSnapshot?.documents else { return }
+                        
+                        let batch = db.batch()
+                        
+                        for schoolDoc in schoolDocs {
+                            batch.deleteDocument(schoolDoc.reference)
+                        }
+                        
+                        batch.commit { error in
+                            if let error = error {
+                                print("Error deleting schools for \(constituencyDoc.documentID): \(error)")
+                            } else {
+                                print("Deleted all schools for \(constituencyDoc.documentID)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
     static func uploadPoliceStationsAsync() {
         // First delete existing data
         dbsqlite.clearAllPoliceStations()
@@ -94,6 +188,59 @@ struct UploadData {
             
         } catch {
             print(error.localizedDescription)
+        }
+    }
+    
+    static func uploadPoliceStationsToFirestore() {
+        guard let url = Bundle.main.url(forResource: "PoliceStation", withExtension: "json") else {
+            print("❌ PoliceStation.json not found in bundle")
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            let policeStations = try decoder.decode([PoliceStation].self, from: data)
+
+            let db = Firestore.firestore()
+
+            for station in policeStations {
+                // Find the constituency that matches the pincode
+                db.collection("constituencies")
+                    .whereField("Associated Pincodes (Compiled, Non-Official)", arrayContains: station.pincode)
+                    .getDocuments { (snapshot, error) in
+                        
+                        if let error = error {
+                            print("❌ Error finding constituency for \(station.name): \(error.localizedDescription)")
+                            return
+                        }
+                        
+                        guard let documents = snapshot?.documents, !documents.isEmpty else {
+                            print("⚠️ No constituency found for pincode \(station.pincode) - \(station.name)")
+                            return
+                        }
+                        
+                        for doc in documents {
+                            let constituencyRef = db.collection("constituencies").document(doc.documentID)
+                            let stationRef = constituencyRef.collection("policeStations").document(station.id) // or station.name
+
+                            do {
+                                try stationRef.setData(from: station) { error in
+                                    if let error = error {
+                                        print("❌ Error uploading \(station.name): \(error.localizedDescription)")
+                                    } else {
+                                        print("✅ Uploaded \(station.name) to constituency \(doc.documentID)")
+                                    }
+                                }
+                            } catch {
+                                print("❌ Encoding error for \(station.name): \(error)")
+                            }
+                        }
+                    }
+            }
+
+        } catch {
+            print("❌ Decoding error: \(error.localizedDescription)")
         }
     }
     
@@ -202,6 +349,58 @@ struct UploadData {
             } catch {
                 print("❌ Error decoding Karnataka_Complete_Constituency_Details.json: \(error)")
             }
+        }
+    }
+    
+    static func uploadHospitalsToFirestore() {
+        guard let url = Bundle.main.url(forResource: "Hospital", withExtension: "json") else {
+            print("❌ Hospital.json not found in bundle")
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            let hospitals = try decoder.decode([Hospital].self, from: data)
+
+            let db = Firestore.firestore()
+
+            for hospital in hospitals {
+                db.collection("constituencies")
+                    .whereField("Associated Pincodes (Compiled, Non-Official)", arrayContains: hospital.pincode)
+                    .getDocuments { (snapshot, error) in
+                        
+                        if let error = error {
+                            print("❌ Error finding constituency for \(hospital.name): \(error.localizedDescription)")
+                            return
+                        }
+                        
+                        guard let documents = snapshot?.documents, !documents.isEmpty else {
+                            print("⚠️ No constituency found for pincode \(hospital.pincode) - \(hospital.name)")
+                            return
+                        }
+                        
+                        for doc in documents {
+                            let constituencyRef = db.collection("constituencies").document(doc.documentID)
+                            let hospitalRef = constituencyRef.collection("hospitals").document(hospital.id)
+
+                            do {
+                                try hospitalRef.setData(from: hospital) { error in
+                                    if let error = error {
+                                        print("❌ Error uploading \(hospital.name): \(error.localizedDescription)")
+                                    } else {
+                                        print("✅ Uploaded \(hospital.name) to constituency \(doc.documentID)")
+                                    }
+                                }
+                            } catch {
+                                print("❌ Encoding error for \(hospital.name): \(error)")
+                            }
+                        }
+                    }
+            }
+
+        } catch {
+            print("❌ Decoding error: \(error.localizedDescription)")
         }
     }
 }
