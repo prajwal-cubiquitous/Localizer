@@ -18,24 +18,8 @@ struct NewsFeedView: View {
     @State private var showCreatePostSheet = false
     @State private var hasFetched = false
     @State private var selectedTab: NewsTab = .latest
+        
     
-    enum NewsTab: String, CaseIterable {
-        case latest = "Latest"
-        case trending = "Trending"
-        
-        var localizedTitle: String {
-            return self.rawValue.localized()
-        }
-        
-        var icon: String {
-            switch self {
-            case .latest:
-                return "clock"
-            case .trending:
-                return "flame"
-            }
-        }
-    }
     
     init(ConstituencyInfo: ConstituencyDetails?) {
         self.ConstituencyInfo = ConstituencyInfo
@@ -56,26 +40,35 @@ struct NewsFeedView: View {
                 // Custom Segmented Control
                 customSegmentedControl
                 
-                // Content based on selected tab
-                Group {
-                    if newsItems.isEmpty {
-                        emptyStateView
-                    } else {
-                        newsFeedContent
+                // Content & Floating Button Overlay
+                ZStack(alignment: .bottomTrailing) {
+                    ScrollView {
+                        if newsItems.isEmpty {
+                            emptyStateView
+                        } else {
+                            newsFeedContent
+                        }
                     }
-                }
-                
-                // Floating Action Button
-                if !newsItems.isEmpty {
-                    floatingActionButton
+                    .scrollIndicators(.hidden)
+                    .refreshable {
+                        if viewModel.count >= viewModel.maxLocalItems/viewModel.pageSize {
+                            await viewModel.loadMoreReverse(context: modelContext, category: selectedTab)
+                        } else {
+                            await viewModel.refresh(for: constituencyId, context: modelContext, category: selectedTab)
+                        }
+                    }
+                    
+                    if !newsItems.isEmpty {
+                        floatingActionButton
+                            .padding(.trailing, 24)
+                            .padding(.bottom, 24)
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        // Menu action
-                    } label: {
+                    Button { } label: {
                         Image(systemName: "line.3.horizontal")
                             .foregroundStyle(colorScheme == .dark ? .white : .black)
                             .font(.system(size: 18, weight: .medium))
@@ -83,9 +76,7 @@ struct NewsFeedView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        // Search action
-                    } label: {
+                    Button { } label: {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(colorScheme == .dark ? .white : .black)
                             .font(.system(size: 18, weight: .medium))
@@ -94,10 +85,16 @@ struct NewsFeedView: View {
             }
             .background(backgroundColor)
         }
+
         .task {
             if !hasFetched {
                 hasFetched = true
-                await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext)
+                await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
+            }
+        }
+        .onChange(of: selectedTab) {
+            Task{
+                await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
@@ -111,21 +108,21 @@ struct NewsFeedView: View {
     private var customSegmentedControl: some View {
         ZStack {
             // Background container
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(colorScheme == .dark ? Color(UIColor.secondarySystemBackground) : Color(UIColor.systemBackground))
-                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 3)
+                .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
             
             // Selection indicator
             GeometryReader { geometry in
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: 10)
                     .fill(Color.accentColor)
                     .frame(width: geometry.size.width / 2)
                     .offset(x: selectedTab == .latest ? 0 : geometry.size.width / 2)
                     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedTab)
             }
-            .frame(height: 36)
-            .padding(.horizontal, 2)
-            .padding(.vertical, 2)
+            .frame(height: 28)
+            .padding(.horizontal, 1)
+            .padding(.vertical, 1)
             
             // Tab buttons
             HStack(spacing: 0) {
@@ -135,28 +132,28 @@ struct NewsFeedView: View {
                             selectedTab = tab
                         }
                     }) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 4) {
                             Image(systemName: tab.icon)
-                                .font(.system(size: 14, weight: .medium))
-                                .scaleEffect(selectedTab == tab ? 1.1 : 1.0)
+                                .font(.system(size: 12, weight: .medium))
+                                .scaleEffect(selectedTab == tab ? 1.05 : 1.0)
                                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTab)
                             
                             Text(tab.localizedTitle)
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                         }
                         .foregroundColor(selectedTab == tab ? .white : .primary)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 36)
+                        .frame(height: 28)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
             }
         }
-        .frame(height: 40)
+        .frame(height: 30)
         .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 4)
+        .padding(.top, 2)
+        .padding(.bottom, 1)
     }
     
     // MARK: - Empty State View
@@ -223,69 +220,48 @@ struct NewsFeedView: View {
             .padding(.horizontal, 20)
         }
         .refreshable {
-            await viewModel.refresh(for: constituencyId, context: modelContext)
+            await viewModel.refresh(for: constituencyId, context: modelContext, category: selectedTab)
         }
     }
     
     // MARK: - News Feed Content
     private var newsFeedContent: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(newsItems) { item in
-                    NewsCell(localNews: item)
-                        .padding(.horizontal, 0)
-                        .padding(.bottom, 8)
-                        .onAppear {
-                            if item == newsItems.last {
-                                Task {
-                                    await viewModel.loadMore(context: modelContext)
-                                }
+        LazyVStack(spacing: 0) {
+            ForEach(newsItems) { item in
+                NewsCell(localNews: item)
+                    .padding(.horizontal, 0)
+                    .padding(.bottom, 8)
+                    .onAppear {
+                        if item == newsItems.last {
+                            Task {
+                                await viewModel.loadMore(context: modelContext, category: selectedTab)
                             }
                         }
-                }
-            }
-            .padding(.top, 8)
-            .padding(.bottom, 20)
-        }
-        .scrollIndicators(.hidden)
-        .refreshable {
-            if viewModel.count >= viewModel.maxLocalItems/viewModel.pageSize {
-                print("reverse is working fine")
-                Task {
-                    await viewModel.loadMoreReverse(context: modelContext)
-                }
-            } else {
-                await viewModel.refresh(for: constituencyId, context: modelContext)
+                    }
             }
         }
+        .padding(.top, 4)
+        .padding(.bottom, 20)
     }
     
     // MARK: - Floating Action Button
     private var floatingActionButton: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Button {
-                    showCreatePostSheet = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 60, height: 60)
-                        .background(
-                            LinearGradient(
-                                colors: [Color.accentColor, Color.accentColor.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
-                }
-                .padding(.trailing, 24)
-                .padding(.bottom, 24)
-            }
+        Button {
+            showCreatePostSheet = true
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(width: 60, height: 60)
+                .background(
+                    LinearGradient(
+                        colors: [Color.accentColor, Color.accentColor.opacity(0.8)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .clipShape(Circle())
+                .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
         }
     }
     

@@ -11,6 +11,8 @@ import SwiftData
 import FirebaseFirestore
 import FirebaseAuth
 
+/// I am `Prajwal S S Reddy` is the greatest of all time
+
 /// View-model responsible for keeping `LocalNews` in-sync with the latest items
 /// from Firestore for the currently selected constituency with pagination support.
 @MainActor
@@ -32,14 +34,15 @@ final class NewsFeedViewModel: ObservableObject {
     private let maxCachedMedia = 30 // Cache media for only 2 items
     
     // MARK: - Public API
+
     
     /// Legacy method for backward compatibility
-    func fetchAndCacheNews(for constituencyId: String, context: ModelContext) async {
-        await loadInitial(for: constituencyId, context: context)
+    func fetchAndCacheNews(for constituencyId: String, context: ModelContext, category: NewsTab) async {
+        await loadInitial(for: constituencyId, context: context, category: category)
     }
     
     /// Initial load of news for a constituency - replaces existing data
-    func loadInitial(for constituencyId: String, context: ModelContext) async {
+    func loadInitial(for constituencyId: String, context: ModelContext, category: NewsTab) async {
         guard !constituencyId.isEmpty else { return }
         
         isLoading = true
@@ -53,7 +56,8 @@ final class NewsFeedViewModel: ObservableObject {
             let (remoteNews, lastDoc) = try await fetchNewsFromFirestore(
                 constituencyId: constituencyId, 
                 startAfter: nil,
-                Descending: true
+                Descending: true,
+                category: category
             )
             
             lastDocument = lastDoc
@@ -74,7 +78,7 @@ final class NewsFeedViewModel: ObservableObject {
     }
     
     /// Load more news items for infinite scroll
-    func loadMore(context: ModelContext) async {
+    func loadMore(context: ModelContext, category: NewsTab) async {
         guard !isLoadingMore && hasMorePages && !currentConstituencyId.isEmpty else { return }
         
         isLoadingMore = true
@@ -84,7 +88,7 @@ final class NewsFeedViewModel: ObservableObject {
             let (remoteNews, lastDoc) = try await fetchNewsFromFirestore(
                 constituencyId: currentConstituencyId,
                 startAfter: lastDocument,
-                Descending: true
+                Descending: true, category: category
             )
             
             lastDocument = lastDoc
@@ -109,7 +113,7 @@ final class NewsFeedViewModel: ObservableObject {
         isLoadingMore = false
     }
     
-    func loadMoreReverse(context: ModelContext) async {
+    func loadMoreReverse(context: ModelContext, category: NewsTab) async {
         guard !isLoadingMore && hasMorePagesTrue && !currentConstituencyId.isEmpty else { return }
         print("starting reverse")
         isLoadingMore = true
@@ -119,7 +123,7 @@ final class NewsFeedViewModel: ObservableObject {
             let (remoteNews, firstDoc) = try await fetchNewsFromFirestore(
                 constituencyId: currentConstituencyId,
                 startAfter: firstDocument,
-                Descending: false
+                Descending: false, category: category
             )
             
             firstDocument = firstDoc
@@ -146,8 +150,8 @@ final class NewsFeedViewModel: ObservableObject {
     }
     
     /// Convenience wrapper for pull-to-refresh
-    func refresh(for constituencyId: String, context: ModelContext) async {
-        await loadInitial(for: constituencyId, context: context)
+    func refresh(for constituencyId: String, context: ModelContext, category: NewsTab) async {
+        await loadInitial(for: constituencyId, context: context, category: category)
     }
     
     // MARK: - Firestore Operations
@@ -155,13 +159,21 @@ final class NewsFeedViewModel: ObservableObject {
     private func fetchNewsFromFirestore(
         constituencyId: String, 
         startAfter: DocumentSnapshot?,
-        Descending: Bool
+        Descending: Bool, category: NewsTab
     ) async throws -> ([News], DocumentSnapshot?) {
         let db = Firestore.firestore()
-        var query = db.collection("news")
-            .whereField("cosntituencyId", isEqualTo: constituencyId)
-            .order(by: "timestamp", descending: Descending)
-            .limit(to: pageSize)
+        var query: Query
+        if category == .trending{
+            query = db.collection("news")
+                .whereField("cosntituencyId", isEqualTo: constituencyId)
+                .order(by: "likesCount", descending: Descending)
+                .limit(to: pageSize)
+        }else{
+            query = db.collection("news")
+                .whereField("cosntituencyId", isEqualTo: constituencyId)
+                .order(by: "timestamp", descending: Descending)
+                .limit(to: pageSize)
+        }
         
         // Add pagination cursor if provided
         if let startAfter = startAfter {
