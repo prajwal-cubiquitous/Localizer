@@ -26,10 +26,10 @@ class NewsCellViewModel: ObservableObject{
     
     
     /// Saves or updates a vote in the subcollection `votes` under the specific `news` document
-    func saveVote(postId: String, voteType: Int, PostLikeCount: Int) async throws {
+    func saveVote(postId: String, voteType: Int, PostLikeCount: Int, constituencyId: String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let docRef = db.collection("news")
+        let docRef = db.collection("constituencies").document(constituencyId).collection("news")
             .document(postId)
             .collection("votes")
             .document(uid) // Use userId as document ID to ensure uniqueness
@@ -48,12 +48,12 @@ class NewsCellViewModel: ObservableObject{
         }
         
         // Update the likes count on the main news document
-        try await incrementLikesCount(forPostId: postId, by: PostLikeCount)
+        try await incrementLikesCount(forPostId: postId, by: PostLikeCount, constituencyId: constituencyId)
     }
     
-    func fetchVotesStatus(postId: String) async {
+    func fetchVotesStatus(postId: String, constituencyId: String) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let docRef = db.collection("news")
+        let docRef = db.collection("constituencies").document(constituencyId).collection("news")
             .document(postId)
         
         do {
@@ -94,15 +94,15 @@ class NewsCellViewModel: ObservableObject{
     }
     
     
-    func incrementLikesCount(forPostId postId: String, by amount: Int) async throws {
-        try await db.collection("news")
+    func incrementLikesCount(forPostId postId: String, by amount: Int, constituencyId: String) async throws {
+        try await db.collection("constituencies").document(constituencyId).collection("news")
             .document(postId)
             .updateData([
                 "likesCount": FieldValue.increment(Int64(amount))
             ])
     }
     
-    func handleUpvote(postId: String) async {
+    func handleUpvote(postId: String, constituencyId: String) async {
         // Scale animation
         
         withAnimation(.easeInOut(duration: 0.1)) {
@@ -121,7 +121,7 @@ class NewsCellViewModel: ObservableObject{
             voteState = .upvoted
             likesCount += 1
             do{
-                try await saveVote(postId: postId, voteType: 1, PostLikeCount: 1)
+                try await saveVote(postId: postId, voteType: 1, PostLikeCount: 1, constituencyId: constituencyId)
                 Task{ try await AddLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
@@ -130,7 +130,7 @@ class NewsCellViewModel: ObservableObject{
             voteState = .none
             likesCount -= 1
             do{
-                try await saveVote(postId: postId, voteType: 0, PostLikeCount: -1)
+                try await saveVote(postId: postId, voteType: 0, PostLikeCount: -1, constituencyId: constituencyId)
                 Task{ try await removeLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
@@ -139,7 +139,7 @@ class NewsCellViewModel: ObservableObject{
             voteState = .upvoted
             likesCount += 2
             do{
-                try await saveVote(postId: postId, voteType: 1, PostLikeCount: 2)
+                try await saveVote(postId: postId, voteType: 1, PostLikeCount: 2, constituencyId: constituencyId)
                 Task{ try await removeDisLikedNews(postId: postId) }
                 Task{ try await AddLikedNews(postId: postId) }
             }catch{
@@ -148,7 +148,7 @@ class NewsCellViewModel: ObservableObject{
         }
     }
     
-    func handleDownvote(postId: String) async {
+    func handleDownvote(postId: String, constituencyId: String) async {
         // Scale animation
         withAnimation(.easeInOut(duration: 0.1)) {
             downvoteScale = 1.3
@@ -166,7 +166,7 @@ class NewsCellViewModel: ObservableObject{
             voteState = .downvoted
             likesCount -= 1
             do{
-                try await saveVote(postId: postId, voteType: -1, PostLikeCount: -1)
+                try await saveVote(postId: postId, voteType: -1, PostLikeCount: -1, constituencyId: constituencyId)
                 Task{ try await AddDisLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
@@ -175,7 +175,7 @@ class NewsCellViewModel: ObservableObject{
             voteState = .none
             likesCount += 1
             do{
-                try await saveVote(postId: postId, voteType: 0, PostLikeCount: 1)
+                try await saveVote(postId: postId, voteType: 0, PostLikeCount: 1, constituencyId: constituencyId)
                 Task{ try await removeDisLikedNews(postId: postId) }
             }catch{
                 print(error.localizedDescription)
@@ -184,7 +184,7 @@ class NewsCellViewModel: ObservableObject{
             voteState = .downvoted
             likesCount -= 2 // Remove upvote (+1) and add downvote (-1) = -2
             do{
-                try await saveVote(postId: postId, voteType: -1, PostLikeCount: -2)
+                try await saveVote(postId: postId, voteType: -1, PostLikeCount: -2, constituencyId: constituencyId)
                 Task{ try await removeLikedNews(postId: postId) }
                 Task{ try await AddDisLikedNews(postId: postId) }
             }catch{

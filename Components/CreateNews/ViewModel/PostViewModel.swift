@@ -69,7 +69,7 @@ class PostViewModel: ObservableObject {
     
     // MARK: - Post Creation
     
-    func createPost(constituencyId: String) async {
+    func createPost(constituencyId: String, pincode: String) async {
         await MainActor.run {
             isPosting = true
         }
@@ -77,10 +77,10 @@ class PostViewModel: ObservableObject {
         do {
             if !mediaItems.isEmpty {
                 // Upload media and create post with media
-                try await uploadMultipleImages(caption: caption, constituencyId: constituencyId)
+                try await uploadMultipleImages(caption: caption, constituencyId: constituencyId, pincode: pincode)
             } else {
                 // Create text-only post
-                try await uploadNews(caption: caption, cosntituencyId: constituencyId)
+                try await uploadNews(caption: caption, cosntituencyId: constituencyId, pincode: pincode)
             }
             
             await MainActor.run {
@@ -100,7 +100,7 @@ class PostViewModel: ObservableObject {
     }
     
     @MainActor
-    func uploadMultipleImages(caption: String, constituencyId: String) async throws {
+    func uploadMultipleImages(caption: String, constituencyId: String, pincode: String) async throws {
         urls.removeAll()
         
         // MARK: - COMMENTED OUT - Firebase Storage Upload
@@ -129,10 +129,10 @@ class PostViewModel: ObservableObject {
             }
         }
         
-        try await uploadNewsimages(caption: caption, imageURLS: urls, constituencyId: constituencyId)
+        try await uploadNewsimages(caption: caption, imageURLS: urls, constituencyId: constituencyId, pincode: pincode)
     }
     
-    func uploadNews(caption: String, cosntituencyId : String) async throws {
+    func uploadNews(caption: String, cosntituencyId : String, pincode: String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         let news = News(ownerUid: uid,
@@ -140,16 +140,16 @@ class PostViewModel: ObservableObject {
                         timestamp: Timestamp(),
                         likesCount: 0,
                         commentsCount: 0,
-                        cosntituencyId: cosntituencyId)
+                        cosntituencyId: pincode)
         
-        let documentId = try await NewsService.uploadNews(news)
+        let documentId = try await NewsService.uploadNews(news, constituencyID: cosntituencyId)
                     // News uploaded successfully
         
         // Increment post count in Firestore & SwiftData
         try await incrementPostCount(for: uid)
     }
     
-    func uploadNewsimages(caption: String, imageURLS: [String]?, constituencyId: String) async throws {
+    func uploadNewsimages(caption: String, imageURLS: [String]?, constituencyId: String, pincode: String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         let news = News(ownerUid: uid,
@@ -157,10 +157,10 @@ class PostViewModel: ObservableObject {
                         timestamp: Timestamp(),
                         likesCount: 0,
                         commentsCount: 0,
-                        cosntituencyId: constituencyId,
+                        cosntituencyId: pincode,
                         newsImageURLs: imageURLS)
         
-        let documentId = try await NewsService.uploadNews(news)
+        let documentId = try await NewsService.uploadNews(news, constituencyID: constituencyId)
                     // News with images uploaded successfully
         
         // Increment post count

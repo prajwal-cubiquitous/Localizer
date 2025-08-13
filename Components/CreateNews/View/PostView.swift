@@ -21,6 +21,7 @@ import AVKit
 
 struct PostView: View {
     let ConstituencyId: String
+    let pincode : String
     let onNavigationRequested: ((Bool) -> Void)?
     @Environment(\.presentationMode) private var presentationMode
     @StateObject var viewModel = PostViewModel()
@@ -31,8 +32,9 @@ struct PostView: View {
     @State private var editingImageIndex: Int?
     @State private var keyboardHeight: CGFloat = 0
     
-    init(ConstituencyId: String, onNavigationRequested: ((Bool) -> Void)? = nil) {
+    init(ConstituencyId: String, pincode: String,onNavigationRequested: ((Bool) -> Void)? = nil) {
         self.ConstituencyId = ConstituencyId
+        self.pincode = pincode
         self.onNavigationRequested = onNavigationRequested
     }
     
@@ -217,7 +219,7 @@ struct PostView: View {
                         // Post Button
                         Button {
                             Task {
-                                await viewModel.createPost(constituencyId: ConstituencyId)
+                                await viewModel.createPost(constituencyId: ConstituencyId, pincode: pincode)
                             }
                         } label: {
                             HStack {
@@ -1038,5 +1040,5 @@ struct CropOverlayView: View {
 }
 
 #Preview {
-    PostView(ConstituencyId: DummyConstituencyDetials.detials1.id ?? "test")
+    PostView(ConstituencyId: DummyConstituencyDetials.detials1.id ?? "test", pincode: "560041")
 }

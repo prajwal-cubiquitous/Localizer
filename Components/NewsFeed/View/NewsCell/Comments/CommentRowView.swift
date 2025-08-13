@@ -8,6 +8,7 @@ import SwiftUI
 
 // 3. View for a Single Comment Row
 struct CommentRowView: View {
+    let constituencyId: String
     @State var islikedBYCurrentUser: Bool = false
     @ObservedObject var viewModel: CommentsViewModel
     let newsId: String
@@ -77,7 +78,7 @@ struct CommentRowView: View {
                         Button {
                             Task {
                                 islikedBYCurrentUser.toggle()
-                                await viewModel.toggleLike(for: comment, inNews: newsId)
+                                await viewModel.toggleLike(for: comment, inNews: newsId, constituencyId: constituencyId)
                             }
                         } label: {
                             HStack(spacing: 4) {
@@ -92,7 +93,7 @@ struct CommentRowView: View {
                             }
                         }
                         .task {
-                            islikedBYCurrentUser = await viewModel.checkIfLiked(comment: comment, newsId: newsId)
+                            islikedBYCurrentUser = await viewModel.checkIfLiked(comment: comment, newsId: newsId, constituencyId: constituencyId)
                         }
                         .buttonStyle(.plain)
                         
@@ -147,7 +148,7 @@ struct CommentRowView: View {
             // Load replies
             if let commentId = comment.actualId {
                 do {
-                    replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: commentId)
+                    replies = try await viewModel.fetchReplies(forNewsId: newsId, commentId: commentId, constituencyId: constituencyId)
                 } catch {
                     // Silently handle error - replies will remain empty
                 }

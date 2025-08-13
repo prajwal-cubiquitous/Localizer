@@ -10,6 +10,7 @@ import SwiftData
 
 struct NewsFeedView: View {
     let ConstituencyInfo: ConstituencyDetails?
+    let pincode: String
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var appState: AppState
     @Environment(\.modelContext) private var modelContext
@@ -17,17 +18,17 @@ struct NewsFeedView: View {
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
     @State private var hasFetched = false
-    @State private var selectedTab: NewsTab = .latest
+    @State private var selectedTab: NewsTab = .trending
+    @State private var sortDescriptors: [SortDescriptor<LocalNews>] = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
         
     
     
-    init(ConstituencyInfo: ConstituencyDetails?) {
+    init(ConstituencyInfo: ConstituencyDetails?, pincode: String) {
         self.ConstituencyInfo = ConstituencyInfo
+        self.pincode = pincode
         // Use constituencyId for filtering local news instead of pincode
         let constituencyId = ConstituencyInfo?.id ?? ""
-        _newsItems = Query(filter: #Predicate<LocalNews> { news in
-            news.constituencyId == constituencyId
-        }, sort: [SortDescriptor(\LocalNews.timestamp, order: .reverse)])
+        self._newsItems = Query(sort: sortDescriptors)
     }
     
     private var constituencyId: String {
@@ -93,13 +94,20 @@ struct NewsFeedView: View {
             }
         }
         .onChange(of: selectedTab) {
+            
+            if selectedTab == .trending {
+                            sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
+                        } else {
+                            sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
+                        }
             Task{
                 await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
+
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
             if let constituency = ConstituencyInfo, let id = constituency.id {
-                PostView(ConstituencyId: id)
+                PostView(ConstituencyId: id, pincode: pincode)
             }
         }
     }
@@ -228,7 +236,7 @@ struct NewsFeedView: View {
     private var newsFeedContent: some View {
         LazyVStack(spacing: 0) {
             ForEach(newsItems) { item in
-                NewsCell(localNews: item)
+                NewsCell(constituencyId: constituencyId, localNews: item)
                     .padding(.horizontal, 0)
                     .padding(.bottom, 8)
                     .onAppear {
@@ -272,5 +280,5 @@ struct NewsFeedView: View {
 }
 
 #Preview {
-    NewsFeedView(ConstituencyInfo: DummyConstituencyDetials.detials1)
+    NewsFeedView(ConstituencyInfo: DummyConstituencyDetials.detials1, pincode: "110001")
 }

@@ -15,11 +15,13 @@ class CommentsViewModel: ObservableObject {
     private let db = Firestore.firestore()
     
     
-    func addComment(toNewsId newsId: String, commentText: String) async throws {
+    func addComment(toNewsId newsId: String, commentText: String, constituencyId: String) async throws {
         
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         let commentRef = Firestore.firestore()
+            .collection("constituencies")
+            .document(constituencyId)
             .collection("news")
             .document(newsId)
             .collection("comments")
@@ -37,22 +39,25 @@ class CommentsViewModel: ObservableObject {
         }
         
         // Refresh comments instead of manually appending
-        try await fetchComments(forNewsId: newsId)
+        try await fetchComments(forNewsId: newsId, constituencyId: constituencyId)
         
-        try await incrementLikesCount(forPostId: newsId, by: 1)
+        try await incrementLikesCount(forPostId: newsId, by: 1, constituencyId: constituencyId)
     }
     
-    func incrementLikesCount(forPostId postId: String, by amount: Int) async throws {
-        try await db.collection("news")
+    func incrementLikesCount(forPostId postId: String, by amount: Int, constituencyId: String) async throws {
+        try await db.collection("constituencies")
+            .document(constituencyId).collection("news")
             .document(postId)
             .updateData([
                 "commentsCount": FieldValue.increment(Int64(amount))
             ])
     }
     
-    func fetchComments(forNewsId newsId: String) async throws {
+    func fetchComments(forNewsId newsId: String, constituencyId: String) async throws {
         do {
             let snapshot = try await Firestore.firestore()
+                .collection("constituencies")
+                .document(constituencyId)
                 .collection("news")
                 .document(newsId)
                 .collection("comments")
@@ -98,11 +103,13 @@ class CommentsViewModel: ObservableObject {
         }
     }
     
-    func toggleLike(for comment: Comment, inNews newsId: String) async  {
+    func toggleLike(for comment: Comment, inNews newsId: String, constituencyId: String) async  {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         guard let commentId = comment.actualId else { return }
 
         let commentRef = Firestore.firestore()
+            .collection("constituencies")
+            .document(constituencyId)
             .collection("news")
             .document(newsId)
             .collection("comments")
@@ -148,11 +155,13 @@ class CommentsViewModel: ObservableObject {
         }
     }
 
-    func checkIfLiked(comment: Comment, newsId: String) async -> Bool {
+    func checkIfLiked(comment: Comment, newsId: String, constituencyId: String) async -> Bool {
         guard let uid = Auth.auth().currentUser?.uid else { return false }
         guard let commentId = comment.actualId else { return false }
 
         let likeRef = Firestore.firestore()
+            .collection("constituencies")
+            .document(constituencyId)
             .collection("news")
             .document(newsId)
             .collection("comments")
@@ -168,11 +177,13 @@ class CommentsViewModel: ObservableObject {
         }
     }
     
-    func addReply(toNewsId newsId: String, commentId: String, replyText: String) async throws {
+    func addReply(toNewsId newsId: String, commentId: String, replyText: String, constituencyId: String) async throws {
         guard let currentUser = Auth.auth().currentUser else { return }
 
         let db = Firestore.firestore()
         let replyRef = db
+            .collection("constituencies")
+            .document(constituencyId)
             .collection("news")
             .document(newsId)
             .collection("comments")
@@ -187,12 +198,14 @@ class CommentsViewModel: ObservableObject {
         ])
         
         // Refresh comments to show the new reply
-        try await fetchComments(forNewsId: newsId)
+        try await fetchComments(forNewsId: newsId, constituencyId: constituencyId)
     }
 
 
-    func fetchReplies(forNewsId newsId: String, commentId: String) async throws -> [Reply] {
+    func fetchReplies(forNewsId newsId: String, commentId: String, constituencyId: String) async throws -> [Reply] {
         let snapshot = try await Firestore.firestore()
+            .collection("constituencies")
+            .document(constituencyId)
             .collection("news")
             .document(newsId)
             .collection("comments")

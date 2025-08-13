@@ -3,6 +3,7 @@ import FirebaseAuth
 
 // 4. Main Comments View (Pop-up)
 struct CommentsView: View {
+    let constituencyId: String
     @StateObject var viewModel = CommentsViewModel()
     @State private var newCommentText: String = ""
     @State private var replyingToComment: Comment? = nil
@@ -12,7 +13,8 @@ struct CommentsView: View {
     let localNews: LocalNews
     @State var currentUser: User?
     
-    init(localNews: LocalNews) {
+    init(constituencyId: String, localNews: LocalNews) {
+        self.constituencyId = constituencyId
         self.localNews = localNews
     }
     
@@ -24,6 +26,7 @@ struct CommentsView: View {
                 List {
                     ForEach(viewModel.comments, id: \.actualId) { comment in
                         CommentRowView(
+                            constituencyId: constituencyId,
                             viewModel: viewModel,
                             newsId: localNews.id,
                             comment: comment,
@@ -96,7 +99,8 @@ struct CommentsView: View {
                                         try await viewModel.addReply(
                                             toNewsId: localNews.id,
                                             commentId: commentId,
-                                            replyText: trimmedText
+                                            replyText: trimmedText,
+                                            constituencyId: constituencyId
                                         )
                                         replyingToComment = nil
                                         replyingToUser = nil
@@ -108,7 +112,7 @@ struct CommentsView: View {
                                     }
                                 } else {
                                     do {
-                                        try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText)
+                                        try await viewModel.addComment(toNewsId: localNews.id, commentText: trimmedText, constituencyId: constituencyId)
                                     } catch {
                                         await MainActor.run {
                                             errorMessage = "Failed to add comment. Please try again."
@@ -154,7 +158,7 @@ struct CommentsView: View {
                             return 
                         }
                         let fetchedUser = try await viewModel.fetchCurrentUser(uid)
-                        try await viewModel.fetchComments(forNewsId: localNews.id)
+                        try await viewModel.fetchComments(forNewsId: localNews.id, constituencyId: constituencyId)
                         
                         // Ensure assignment happens on main actor
                         await MainActor.run {
@@ -193,7 +197,7 @@ struct CommentsView: View {
 // 5. Main Content View
 struct ContentView_CommentDemo: View {
     @State private var showingCommentsSheet = false
-    
+    @State var constituencyId = "346C4917-471E-4AB7-AB0A-485C3CB59545"
     var body: some View {
         VStack {
             Image(systemName: "photo.artframe")
@@ -216,7 +220,7 @@ struct ContentView_CommentDemo: View {
             }
         }
         .sheet(isPresented: $showingCommentsSheet) {
-            CommentsView(localNews: DummyLocalNews.News1)
+            CommentsView(constituencyId: constituencyId, localNews: DummyLocalNews.News1)
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
     }

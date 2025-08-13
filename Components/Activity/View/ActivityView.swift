@@ -68,7 +68,7 @@ struct ActivityView: View {
                 if shouldShowEmptyState {
                     ActivityEmptyStateView(filter: selectedFilter)
                 } else {
-                    LocalNewsActivityListView(newsItems: viewModel.newsItems, selectedFilter: selectedFilter, userItems: viewModel.UserItems)
+                    LocalNewsActivityListView(constituencyId: constituencyId, newsItems: viewModel.newsItems, selectedFilter: selectedFilter, userItems: viewModel.UserItems)
                 }
             }
             .navigationTitle("My Activities")
@@ -161,6 +161,7 @@ struct ActivityEmptyStateView: View {
 }
 
 struct LocalNewsActivityListView: View {
+    let constituencyId: String
     let newsItems: [LocalNews]
     var selectedFilter: ActivityView.FilterType
     let userItems: [User]
@@ -191,10 +192,10 @@ struct LocalNewsActivityListView: View {
                 LazyVStack(spacing: 8) {
                     ForEach(Array(uniqueNewsItems.enumerated()), id: \.offset) { index, item in
                         if selectedFilter == .NoNews {
-                            NewsCell(localNews: item, recommendText: "Recommend")
+                            NewsCell(constituencyId: constituencyId, localNews: item, recommendText: "Recommend")
                                 .padding(.horizontal, 0)
                         } else {
-                            NewsCell(localNews: item)
+                            NewsCell(constituencyId: constituencyId, localNews: item)
                                 .padding(.horizontal, 0)
                         }
                     }

@@ -16,6 +16,7 @@ import Kingfisher
 import FirebaseStorage
 
 struct NewsCell: View {
+    let constituencyId : String
     @State private var showingCommentsSheet = false
     @State private var showingFullScreenMedia = false
     @StateObject private var viewModel = NewsCellViewModel()
@@ -25,7 +26,8 @@ struct NewsCell: View {
     @State private var newsAuthor: CachedUser?
     @State private var isLoadingAuthor = false
     
-    init(localNews: LocalNews, recommendText: String? = nil) {
+    init(constituencyId : String,localNews: LocalNews, recommendText: String? = nil) {
+        self.constituencyId = constituencyId
         self.localNews = localNews
         self.recommendText = recommendText
     }
@@ -214,7 +216,7 @@ struct NewsCell: View {
                     // Upvote Button
                     Button {
                         Task{
-                            await viewModel.handleUpvote(postId: localNews.id)
+                            await viewModel.handleUpvote(postId: localNews.id, constituencyId: constituencyId)
                         }
                     } label: {
                         Image(systemName: viewModel.voteState == .upvoted ? "arrowshape.up.fill" : "arrowshape.up")
@@ -234,7 +236,7 @@ struct NewsCell: View {
                     // Downvote Button
                     Button {
                         Task{
-                            await viewModel.handleDownvote(postId: localNews.id)
+                            await viewModel.handleDownvote(postId: localNews.id, constituencyId: constituencyId)
                         }
                     } label: {
                         Image(systemName: viewModel.voteState == .downvoted ? "arrowshape.down.fill" : "arrowshape.down")
@@ -291,7 +293,7 @@ struct NewsCell: View {
         )
         .padding(.horizontal, 16) // Outer margin from screen edges
         .task {
-            await viewModel.fetchVotesStatus(postId: localNews.id)
+            await viewModel.fetchVotesStatus(postId: localNews.id, constituencyId: constituencyId)
             await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
             
             // Load author data if not current user's news
@@ -300,7 +302,7 @@ struct NewsCell: View {
             }
         }
         .sheet(isPresented: $showingCommentsSheet) {
-            CommentsView(localNews: localNews)
+            CommentsView(constituencyId: constituencyId, localNews: localNews)
                 .presentationDetents([.fraction(0.5),.fraction(0.7), .fraction(0.9)])
         }
         .fullScreenCover(isPresented: $showingFullScreenMedia) {
@@ -553,7 +555,7 @@ struct FullScreenMediaItem: View {
 
 #Preview {
     VStack(spacing: 20) {
-        NewsCell(localNews: DummyLocalNews.News3)
+        NewsCell(constituencyId: "346C4917-471E-4AB7-AB0A-485C3CB59545", localNews: DummyLocalNews.News3)
     }
     .background(Color(UIColor.systemGroupedBackground))
 }

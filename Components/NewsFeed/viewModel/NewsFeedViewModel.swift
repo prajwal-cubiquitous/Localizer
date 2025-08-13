@@ -45,6 +45,7 @@ final class NewsFeedViewModel: ObservableObject {
     func loadInitial(for constituencyId: String, context: ModelContext, category: NewsTab) async {
         guard !constituencyId.isEmpty else { return }
         
+        await clearAllLocalNews(context: context)
         isLoading = true
         error = nil
         currentConstituencyId = constituencyId
@@ -162,15 +163,14 @@ final class NewsFeedViewModel: ObservableObject {
         Descending: Bool, category: NewsTab
     ) async throws -> ([News], DocumentSnapshot?) {
         let db = Firestore.firestore()
+        print(constituencyId)
         var query: Query
         if category == .trending{
-            query = db.collection("news")
-                .whereField("cosntituencyId", isEqualTo: constituencyId)
+            query = db.collection("constituencies").document(constituencyId).collection("news")
                 .order(by: "likesCount", descending: Descending)
                 .limit(to: pageSize)
         }else{
-            query = db.collection("news")
-                .whereField("cosntituencyId", isEqualTo: constituencyId)
+            query = db.collection("constituencies").document(constituencyId).collection("news")
                 .order(by: "timestamp", descending: Descending)
                 .limit(to: pageSize)
         }
@@ -371,6 +371,19 @@ final class NewsFeedViewModel: ObservableObject {
             // Silent error handling for cleanup operations
         }
     }
+    
+    private func clearAllLocalNews(context: ModelContext) async {
+        do {
+            let fetchDescriptor = FetchDescriptor<LocalNews>() // no predicate = fetch all
+            let allNews = try context.fetch(fetchDescriptor)
+            for item in allNews {
+                context.delete(item)
+            }
+        } catch {
+            // Silent error handling for cleanup
+        }
+    }
+
     
     /// Insert news items into local storage
     private func insertLocalNews(_ items: [News], context: ModelContext) async {
