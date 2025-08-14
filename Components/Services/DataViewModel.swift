@@ -17,12 +17,15 @@ class DataViewModel: ObservableObject {
     @Published var policeStations: [PoliceStation] = []
     
     @Published var postalCodes: [String] = []
+    @Published var ConstituencyId: String = ""
     
     private var locationManager = LocationManager.shared
     private var db = Firestore.firestore()
 
-    init(postalCodes: [String]) {
+    init(postalCodes: [String], ConstituencyId: String) {
         self.postalCodes = postalCodes
+        self.ConstituencyId = ConstituencyId
+        fetchFromFirebaseandStoreinSQLite()
     }
     
     let DBsqlite = DBManager.shared
@@ -65,5 +68,11 @@ class DataViewModel: ObservableObject {
         DispatchQueue.main.async {
             self.policeStations = self.DBsqlite.fetchPoliceStations(forPincodes: pincodes)
         }
+    }
+    
+    private func fetchFromFirebaseandStoreinSQLite(){
+        UploadData.uploadSchoolsAsync(ConstituencyId: ConstituencyId)
+        UploadData.uploadHospitalsAsync(ConstituencyId: ConstituencyId)
+        UploadData.uploadPoliceStationsAsync(ConstituencyId: ConstituencyId)
     }
 }

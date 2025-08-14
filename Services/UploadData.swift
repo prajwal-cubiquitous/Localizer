@@ -15,57 +15,73 @@ struct UploadData {
     
     // MARK: - Async versions with completion handlers for UI
     
-    static func uploadHospitalsAsync() {
+    static func uploadHospitalsAsync(ConstituencyId: String) {
         // First delete existing data
         dbsqlite.clearAllHospitals()
         
-        // After deletion, proceed with upload
-        guard let url = Bundle.main.url(forResource: "Hospital", withExtension: "json") else {
-            let error = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Hospital.json file not found."])
-            print(error.localizedDescription)
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            let hospitals = try decoder.decode([Hospital].self, from: data)
-            
-            for hospital in hospitals {
-                dbsqlite.insert(hospital: hospital)
-                print("Hospital \(hospital.name) uploaded successfully to the sqlite database")
+        db.collection("constituencies").document(ConstituencyId).collection("hospitals").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching hospitals: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("No hospital documents found.")
+                    return
+                }
+                
+                do {
+                    let hospitals: [Hospital] = try documents.compactMap { doc in
+                        try doc.data(as: Hospital.self)
+                    }
+                    
+                    for hospital in hospitals {
+                        dbsqlite.insert(hospital: hospital)
+                        print("Hospital \(hospital.phoneNumber) uploaded successfully to SQLite database")
+                    }
+                    
+                    print("All hospital data uploaded successfully to SQLite database")
+                    
+                } catch {
+                    print("Decoding error: \(error.localizedDescription)")
+                }
             }
-            print("Hospital data uploaded successfully to the sqlite database")
-        } catch {
-            print(error.localizedDescription)
-        }
         
     }
     
-    static func uploadSchoolsAsync() {
+    static func uploadSchoolsAsync(ConstituencyId: String) {
         // First delete existing data
         dbsqlite.clearAllSchools()
         
         // After deletion, proceed with upload
-        guard let url = Bundle.main.url(forResource: "school", withExtension: "json") else {
-            let error = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "school.json file not found."])
-            print(error.localizedDescription)
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            let schools = try decoder.decode([School].self, from: data)
-            
-            for school in schools {
-                dbsqlite.insert(school: school)
-                print("School \(school.schoolName) uploaded successfully to the sqlite database")
+        db.collection("constituencies").document(ConstituencyId).collection("schools").getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching schools: \(error.localizedDescription)")
+                return
             }
-            print("School data uploaded successfully to the sqlite database")
             
-        } catch {
-            print(error.localizedDescription)
+            guard let documents = snapshot?.documents else {
+                print("No school documents found.")
+                return
+            }
+            
+            do {
+                // Decode each document into a School model
+                let schools: [School] = try documents.compactMap { doc in
+                    try doc.data(as: School.self)
+                }
+                
+                // Store each school in local SQLite DB
+                for school in schools {
+                    dbsqlite.insert(school: school)
+                    print("School \(school.schoolName) uploaded successfully to SQLite database")
+                }
+                
+                print("All school data uploaded successfully to SQLite database")
+                
+            } catch {
+                print("Decoding error: \(error.localizedDescription)")
+            }
         }
     }
     
@@ -74,14 +90,14 @@ struct UploadData {
             print("❌ school.json not found in bundle")
             return
         }
-
+        
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
             let schools = try decoder.decode([School].self, from: data)
-
+            
             let db = Firestore.firestore()
-
+            
             for school in schools {
                 // Query constituencies containing this school's pincode
                 db.collection("constituencies")
@@ -116,79 +132,85 @@ struct UploadData {
                         }
                     }
             }
-
+            
         } catch {
             print("❌ Decoding error: \(error.localizedDescription)")
         }
     }
-
     
-    static func deleteAllSchools() {
-            let constituenciesRef = db.collection("constituencies")
+    
+    static func deleteAllSchoolsDataFromFirebase() {
+        let constituenciesRef = db.collection("constituencies")
+        
+        constituenciesRef.getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching constituencies: \(error)")
+                return
+            }
             
-            constituenciesRef.getDocuments { snapshot, error in
-                if let error = error {
-                    print("Error fetching constituencies: \(error)")
-                    return
-                }
+            guard let documents = snapshot?.documents else { return }
+            
+            for constituencyDoc in documents {
+                let schoolsRef = constituencyDoc.reference.collection("schools")
                 
-                guard let documents = snapshot?.documents else { return }
-                
-                for constituencyDoc in documents {
-                    let schoolsRef = constituencyDoc.reference.collection("schools")
+                schoolsRef.getDocuments { schoolSnapshot, error in
+                    if let error = error {
+                        print("Error fetching schools for \(constituencyDoc.documentID): \(error)")
+                        return
+                    }
                     
-                    schoolsRef.getDocuments { schoolSnapshot, error in
+                    guard let schoolDocs = schoolSnapshot?.documents else { return }
+                    
+                    let batch = db.batch()
+                    
+                    for schoolDoc in schoolDocs {
+                        batch.deleteDocument(schoolDoc.reference)
+                    }
+                    
+                    batch.commit { error in
                         if let error = error {
-                            print("Error fetching schools for \(constituencyDoc.documentID): \(error)")
-                            return
-                        }
-                        
-                        guard let schoolDocs = schoolSnapshot?.documents else { return }
-                        
-                        let batch = db.batch()
-                        
-                        for schoolDoc in schoolDocs {
-                            batch.deleteDocument(schoolDoc.reference)
-                        }
-                        
-                        batch.commit { error in
-                            if let error = error {
-                                print("Error deleting schools for \(constituencyDoc.documentID): \(error)")
-                            } else {
-                                print("Deleted all schools for \(constituencyDoc.documentID)")
-                            }
+                            print("Error deleting schools for \(constituencyDoc.documentID): \(error)")
+                        } else {
+                            print("Deleted all schools for \(constituencyDoc.documentID)")
                         }
                     }
                 }
             }
         }
+    }
     
-    static func uploadPoliceStationsAsync() {
+    static func uploadPoliceStationsAsync(ConstituencyId: String) {
         // First delete existing data
         dbsqlite.clearAllPoliceStations()
         
         // After deletion, proceed with upload
-        guard let url = Bundle.main.url(forResource: "PoliceStation", withExtension: "json") else {
-            let error = NSError(domain: "UploadData", code: -1, userInfo: [NSLocalizedDescriptionKey: "PoliceStation.json file not found."])
-            print(error.localizedDescription)
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            let policeStations = try decoder.decode([PoliceStation].self, from: data)
-            var successCount = 0
-            
-            for policeStation in policeStations {
-                dbsqlite.insert(station: policeStation)
-                print("Police Station \(policeStation.name) uploaded successfully to the sqlite database")
+        db.collection("constituencies").document(ConstituencyId).collection("policeStations").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching police stations: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("No police station documents found.")
+                    return
+                }
+                
+                do {
+                    let policeStations: [PoliceStation] = try documents.compactMap { doc in
+                        try doc.data(as: PoliceStation.self)
+                    }
+                    
+                    for station in policeStations {
+                        dbsqlite.insert(station: station)
+                        print("Police Station \(station.name) uploaded successfully to SQLite database")
+                    }
+                    
+                    print("All police station data uploaded successfully to SQLite database")
+                    
+                } catch {
+                    print("Decoding error: \(error.localizedDescription)")
+                }
             }
-            print("Police Station data uploaded successfully to the sqlite database")
-            
-        } catch {
-            print(error.localizedDescription)
-        }
     }
     
     static func uploadPoliceStationsToFirestore() {
@@ -196,14 +218,14 @@ struct UploadData {
             print("❌ PoliceStation.json not found in bundle")
             return
         }
-
+        
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
             let policeStations = try decoder.decode([PoliceStation].self, from: data)
-
+            
             let db = Firestore.firestore()
-
+            
             for station in policeStations {
                 // Find the constituency that matches the pincode
                 db.collection("constituencies")
@@ -223,7 +245,7 @@ struct UploadData {
                         for doc in documents {
                             let constituencyRef = db.collection("constituencies").document(doc.documentID)
                             let stationRef = constituencyRef.collection("policeStations").document(station.id) // or station.name
-
+                            
                             do {
                                 try stationRef.setData(from: station) { error in
                                     if let error = error {
@@ -238,7 +260,7 @@ struct UploadData {
                         }
                     }
             }
-
+            
         } catch {
             print("❌ Decoding error: \(error.localizedDescription)")
         }
@@ -357,14 +379,14 @@ struct UploadData {
             print("❌ Hospital.json not found in bundle")
             return
         }
-
+        
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
             let hospitals = try decoder.decode([Hospital].self, from: data)
-
+            
             let db = Firestore.firestore()
-
+            
             for hospital in hospitals {
                 db.collection("constituencies")
                     .whereField("Associated Pincodes (Compiled, Non-Official)", arrayContains: hospital.pincode)
@@ -383,7 +405,7 @@ struct UploadData {
                         for doc in documents {
                             let constituencyRef = db.collection("constituencies").document(doc.documentID)
                             let hospitalRef = constituencyRef.collection("hospitals").document(hospital.id)
-
+                            
                             do {
                                 try hospitalRef.setData(from: hospital) { error in
                                     if let error = error {
@@ -398,7 +420,7 @@ struct UploadData {
                         }
                     }
             }
-
+            
         } catch {
             print("❌ Decoding error: \(error.localizedDescription)")
         }

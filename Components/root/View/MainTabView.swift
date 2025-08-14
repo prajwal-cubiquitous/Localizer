@@ -136,7 +136,7 @@ struct MainTabView: View {
                 .tag(0)
             
             // Services Tab
-            DataView(pincodes: allPincodes, ConstituencyName: selectedConstituency?.constituencyName ?? "")
+            DataView(ConstituencyInfo: selectedConstituency , pincodes: allPincodes/*, ConstituencyName: selectedConstituency?.constituencyName ?? ""*/)
                 .id("dataview-\(selectedConstituency?.constituencyName ?? pincode)")
                 .environmentObject(appState)
                 .tabItem {

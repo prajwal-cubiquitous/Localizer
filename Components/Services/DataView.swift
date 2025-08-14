@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DataView: View {
     @StateObject private var viewModel : DataViewModel
-    
+    let ConstituencyInfo: ConstituencyDetails?
     let tabs = ["Schools", "Hospitals", "Police Stations"]
     let tabImages = ["graduationcap.fill", "cross.case.fill", "shield.fill"]
     @State private var hasLoaded = false
@@ -20,7 +20,7 @@ struct DataView: View {
     
     // Store the pincodes for display
     private let pincodes: [String]
-    private let ConstituencyName: String
+//    private let ConstituencyName: String
     
     // MARK: - Info Item Model
     struct InfoItem {
@@ -62,10 +62,15 @@ struct DataView: View {
         static let cardSpacing: CGFloat = 16
     }
     
-    init(pincodes: [String], ConstituencyName : String) {
-        _viewModel = StateObject(wrappedValue: DataViewModel(postalCodes: pincodes))
+    init(ConstituencyInfo: ConstituencyDetails?,pincodes: [String]) {
+        _viewModel = StateObject(wrappedValue: DataViewModel(postalCodes: pincodes, ConstituencyId: ConstituencyInfo?.id ?? ""))
+        self.ConstituencyInfo = ConstituencyInfo
         self.pincodes = pincodes
-        self.ConstituencyName = ConstituencyName
+//        self.ConstituencyName = ConstituencyName
+    }
+    
+    private var ConstituencyName: String {
+        ConstituencyInfo?.constituencyName ?? ""
     }
     
     var body: some View {
@@ -706,6 +711,6 @@ struct DetailRow: View {
 
 #Preview {
     NavigationView {
-        DataView(pincodes: [/*"560043", "560044"*/], ConstituencyName: "Shivaji Nagar")
+        DataView(ConstituencyInfo: DummyConstituencyDetials.detials1, pincodes: [/*"560043", "560044"*/]/*, ConstituencyName: "Shivaji Nagar"*/)
     }
 } 
