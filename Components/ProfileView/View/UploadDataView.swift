@@ -191,7 +191,7 @@ struct UploadDataView: View {
     
     private func uploadSchoolData() {
         isLoading = true
-        loadingMessage = "Deleting existing hospital data..."
+//        loadingMessage = "Deleting existing hospital data..."
         
         Task {
             await MainActor.run {

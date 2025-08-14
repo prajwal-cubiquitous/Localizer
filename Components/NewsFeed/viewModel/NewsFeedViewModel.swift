@@ -169,6 +169,10 @@ final class NewsFeedViewModel: ObservableObject {
             query = db.collection("constituencies").document(constituencyId).collection("news")
                 .order(by: "likesCount", descending: Descending)
                 .limit(to: pageSize)
+        }else if category == .latest{
+            query = db.collection("constituencies").document(constituencyId).collection("news")
+                .order(by: "timestamp", descending: Descending)
+                .limit(to: pageSize)
         }else{
             query = db.collection("constituencies").document(constituencyId).collection("news")
                 .order(by: "timestamp", descending: Descending)

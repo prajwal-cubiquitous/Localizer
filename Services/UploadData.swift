@@ -37,7 +37,6 @@ struct UploadData {
                     
                     for hospital in hospitals {
                         dbsqlite.insert(hospital: hospital)
-                        print("Hospital \(hospital.phoneNumber) uploaded successfully to SQLite database")
                     }
                     
                     print("All hospital data uploaded successfully to SQLite database")
@@ -74,7 +73,6 @@ struct UploadData {
                 // Store each school in local SQLite DB
                 for school in schools {
                     dbsqlite.insert(school: school)
-                    print("School \(school.schoolName) uploaded successfully to SQLite database")
                 }
                 
                 print("All school data uploaded successfully to SQLite database")
@@ -202,7 +200,6 @@ struct UploadData {
                     
                     for station in policeStations {
                         dbsqlite.insert(station: station)
-                        print("Police Station \(station.name) uploaded successfully to SQLite database")
                     }
                     
                     print("All police station data uploaded successfully to SQLite database")

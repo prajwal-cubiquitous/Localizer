@@ -30,6 +30,10 @@ struct MainTabView: View {
     @State var constituencies : [ConstituencyDetails]?
     @State private var selectedName: String = ""
     
+    // Add state to track constituency loading
+    @State private var isConstituencyLoading: Bool = false
+    @State private var constituencyError: String? = nil
+    
     // Improved selectedConstituency computation with better fallback
     var selectedConstituency: ConstituencyDetails? {
         // First try to find by selectedName
@@ -38,6 +42,15 @@ struct MainTabView: View {
         }
         // Fallback to first constituency if selectedName doesn't match
         return constituencies?.first
+    }
+    
+    // Computed property to check if we're ready to show main content
+    private var isReadyToShowMainContent: Bool {
+        return isLocationReady && 
+               !pincode.isEmpty && 
+               selectedName != "" && 
+               selectedConstituency != nil &&
+               !isConstituencyLoading
     }
     
     // Computed property to get all pincodes for the DataView
@@ -75,7 +88,7 @@ struct MainTabView: View {
         Group {
             // Using a completely different view structure based on state
             // This forces SwiftUI to completely rebuild rather than just update
-            if isLocationReady && !pincode.isEmpty && selectedName != ""{
+            if isReadyToShowMainContent {
                 // Show main content only when truly ready
                 mainContentView
             } else {
@@ -110,9 +123,8 @@ struct MainTabView: View {
             }
         }
         .task(id: pincode){
-            constituencies = await ConstituencyViewModel.fetchConstituency(forPincode: pincode)
-            if let first = constituencies?.first {
-                selectedName = first.constituencyName
+            if !pincode.isEmpty {
+                await fetchConstituencyData()
             }
         }
     }
@@ -261,19 +273,53 @@ struct MainTabView: View {
                 .background(Color.blue)
                 .foregroundColor(.white)
                 .cornerRadius(8)
+            } else if constituencyError != nil {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.orange)
+                    .padding()
+                
+                Text(constituencyError ?? "Unknown error")
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
+                Button("Retry".localized()) {
+                    constituencyError = nil
+                    if !pincode.isEmpty {
+                        Task {
+                            await fetchConstituencyData()
+                        }
+                    }
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
             } else {
                 ProgressView()
                     .scaleEffect(1.5)
                     .padding()
                 
-                Text("Fetching your location...".localized())
-                    .font(.headline)
-                
-                Text("Please wait while we access your current location".localized())
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+                if isConstituencyLoading {
+                    Text("Loading constituency data...".localized())
+                        .font(.headline)
+                    
+                    Text("Please wait while we fetch your constituency information".localized())
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                } else {
+                    Text("Fetching your location...".localized())
+                        .font(.headline)
+                    
+                    Text("Please wait while we access your current location".localized())
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -320,6 +366,36 @@ struct MainTabView: View {
                     
                     self.isLocationReady = false
                 }
+            }
+        }
+    }
+    
+    /// Enhanced constituency data fetching with proper state management
+    private func fetchConstituencyData() async {
+        guard !pincode.isEmpty else { return }
+        
+        isConstituencyLoading = true
+        constituencyError = nil
+        
+        do {
+            let fetchedConstituencies = await ConstituencyViewModel.fetchConstituency(forPincode: pincode)
+            
+            await MainActor.run {
+                self.constituencies = fetchedConstituencies
+                
+                if let first = fetchedConstituencies.first {
+                    self.selectedName = first.constituencyName
+                } else {
+                    // No constituencies found for this pincode
+                    self.constituencyError = "No constituency found for your location. Please try again or contact support."
+                }
+                
+                self.isConstituencyLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.constituencyError = "Failed to load constituency data: \(error.localizedDescription)"
+                self.isConstituencyLoading = false
             }
         }
     }

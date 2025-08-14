@@ -10,6 +10,7 @@ import SwiftUI
 enum NewsTab: String, Identifiable, CaseIterable {
     case latest = "Latest"
     case trending = "Trending"
+    case City = "City"
     
     var id: String { rawValue }  // ✅ Required for Identifiable
     
@@ -23,6 +24,8 @@ enum NewsTab: String, Identifiable, CaseIterable {
             return "clock"
         case .trending:
             return "flame"
+        case .City:
+            return "map"
         }
     }
 }

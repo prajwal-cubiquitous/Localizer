@@ -38,8 +38,8 @@ struct NewsFeedView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Custom Segmented Control
-                customSegmentedControl
+                // Modern Segmented Control
+                modernSegmentedControl
                 
                 // Content & Floating Button Overlay
                 ZStack(alignment: .bottomTrailing) {
@@ -94,15 +94,19 @@ struct NewsFeedView: View {
             }
         }
         .onChange(of: selectedTab) {
-            
+            // Update sort descriptors based on selected tab
             if selectedTab == .trending {
-                            sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
-                        } else {
-                            sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
-                        }
-            Task{
+                sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
+            } else if selectedTab == .City {
+                // For city tab, sort by timestamp (most recent first)
+                sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
+            } else {
+                // For latest tab, sort by timestamp (most recent first)
+                sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
+            }
+            
+            Task {
                 await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
-
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
@@ -112,27 +116,31 @@ struct NewsFeedView: View {
         }
     }
     
-    // MARK: - Custom Segmented Control
-    private var customSegmentedControl: some View {
+    // MARK: - Modern Segmented Control
+    private var modernSegmentedControl: some View {
         ZStack {
-            // Background container
-            RoundedRectangle(cornerRadius: 12)
+            // Background container with subtle shadow
+            RoundedRectangle(cornerRadius: 10)
                 .fill(colorScheme == .dark ? Color(UIColor.secondarySystemBackground) : Color(UIColor.systemBackground))
-                .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(UIColor.separator).opacity(0.3), lineWidth: 0.5)
+                )
             
-            // Selection indicator
+            // Selection indicator (behind the text)
             GeometryReader { geometry in
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(Color.accentColor)
-                    .frame(width: geometry.size.width / 2)
-                    .offset(x: selectedTab == .latest ? 0 : geometry.size.width / 2)
+                    .frame(width: geometry.size.width / 3)
+                    .offset(x: getSelectionOffset(for: selectedTab, in: geometry.size.width))
                     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedTab)
             }
-            .frame(height: 28)
-            .padding(.horizontal, 1)
-            .padding(.vertical, 1)
+            .frame(height: 32)
+            .padding(.horizontal, 2)
+            .padding(.vertical, 2)
             
-            // Tab buttons
+            // Tab buttons (on top of the indicator)
             HStack(spacing: 0) {
                 ForEach(NewsTab.allCases, id: \.self) { tab in
                     Button(action: {
@@ -140,28 +148,40 @@ struct NewsFeedView: View {
                             selectedTab = tab
                         }
                     }) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 6) {
                             Image(systemName: tab.icon)
-                                .font(.system(size: 12, weight: .medium))
-                                .scaleEffect(selectedTab == tab ? 1.05 : 1.0)
+                                .font(.system(size: 13, weight: .medium))
+                                .scaleEffect(selectedTab == tab ? 1.1 : 1.0)
                                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTab)
                             
                             Text(tab.localizedTitle)
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundColor(selectedTab == tab ? .white : .primary)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 28)
+                        .frame(height: 32)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
             }
         }
-        .frame(height: 30)
+        .frame(height: 36)
         .padding(.horizontal, 20)
-        .padding(.top, 2)
-        .padding(.bottom, 1)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+    }
+    
+    // Helper function to calculate selection offset for 3 tabs
+    private func getSelectionOffset(for tab: NewsTab, in width: CGFloat) -> CGFloat {
+        switch tab {
+        case .latest:
+            return 0
+        case .trending:
+            return width / 3
+        case .City:
+            return (width / 3) * 2
+        }
     }
     
     // MARK: - Empty State View
@@ -183,12 +203,12 @@ struct NewsFeedView: View {
                     }
                     
                     VStack(spacing: 8) {
-                        Text(selectedTab == .latest ? "No Recent Posts".localized() : "No Trending Posts".localized())
+                        Text(getEmptyStateTitle())
                             .font(.title2)
                             .fontWeight(.semibold)
                             .multilineTextAlignment(.center)
                         
-                        Text(selectedTab == .latest ? "Be the first to share what's happening in your constituency!".localized() : "Posts with high engagement will appear here!".localized())
+                        Text(getEmptyStateMessage())
                             .font(.body)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -232,6 +252,29 @@ struct NewsFeedView: View {
         }
     }
     
+    // Helper functions for empty state content
+    private func getEmptyStateTitle() -> String {
+        switch selectedTab {
+        case .latest:
+            return "No Recent Posts".localized()
+        case .trending:
+            return "No Trending Posts".localized()
+        case .City:
+            return "No City Posts".localized()
+        }
+    }
+    
+    private func getEmptyStateMessage() -> String {
+        switch selectedTab {
+        case .latest:
+            return "Be the first to share what's happening in your constituency!".localized()
+        case .trending:
+            return "Posts with high engagement will appear here!".localized()
+        case .City:
+            return "Share news and updates about your city!".localized()
+        }
+    }
+    
     // MARK: - News Feed Content
     private var newsFeedContent: some View {
         LazyVStack(spacing: 0) {
@@ -260,7 +303,7 @@ struct NewsFeedView: View {
             Image(systemName: "plus")
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(.white)
-                .frame(width: 60, height: 60)
+                .frame(width: 56, height: 56)
                 .background(
                     LinearGradient(
                         colors: [Color.accentColor, Color.accentColor.opacity(0.8)],
@@ -269,8 +312,10 @@ struct NewsFeedView: View {
                     )
                 )
                 .clipShape(Circle())
-                .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
+                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
         }
+        .scaleEffect(showCreatePostSheet ? 0.9 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showCreatePostSheet)
     }
     
     // MARK: - Computed Properties
