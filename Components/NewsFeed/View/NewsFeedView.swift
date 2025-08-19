@@ -18,7 +18,7 @@ struct NewsFeedView: View {
     @Query private var newsItems: [LocalNews]
     @State private var showCreatePostSheet = false
     @State private var hasFetched = false
-    @State private var selectedTab: NewsTab = .trending
+    @State private var selectedTab: NewsTab = .latest
     @State private var sortDescriptors: [SortDescriptor<LocalNews>] = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
         
     

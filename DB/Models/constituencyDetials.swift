@@ -61,6 +61,7 @@ struct MLAHistory: Codable {
 struct ConstituencyDetails: Codable, Identifiable {
     var id: String?  // Firestore doc ID
     var documentId: String?  // Firestore document ID stored as field
+    var constituencyId: String?  // New field for constituency ID
     var constituencyNumber: Int
     var constituencyName: String
     var district: String
@@ -77,9 +78,10 @@ struct ConstituencyDetails: Codable, Identifiable {
     var mlaHistory: [MLAHistory]?
     
     // Standard memberwise initializer
-    init(id: String? = nil, documentId: String? = nil, constituencyNumber: Int, constituencyName: String, district: String, currentMLAName: String, politicalParty: String, gender: String, electionYear: String, assemblyTerm: String, associatedPincodes: [String], lokSabhaConstituency: String, reservationStatus: String, previousMLA: String, victoryMargin: String, mlaHistory: [MLAHistory]? = nil) {
+    init(id: String? = nil, documentId: String? = nil, constituencyId: String? = nil, constituencyNumber: Int, constituencyName: String, district: String, currentMLAName: String, politicalParty: String, gender: String, electionYear: String, assemblyTerm: String, associatedPincodes: [String], lokSabhaConstituency: String, reservationStatus: String, previousMLA: String, victoryMargin: String, mlaHistory: [MLAHistory]? = nil) {
         self.id = id
         self.documentId = documentId
+        self.constituencyId = constituencyId
         self.constituencyNumber = constituencyNumber
         self.constituencyName = constituencyName
         self.district = district
@@ -99,6 +101,7 @@ struct ConstituencyDetails: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id = "id"
         case documentId = "documentId"
+        case constituencyId = "constituencyId"
         case constituencyNumber = "Constituency Number"
         case constituencyName = "Constituency Name"
         case district = "District"
@@ -121,6 +124,7 @@ struct ConstituencyDetails: Codable, Identifiable {
         // Handle optional fields that might not exist in JSON
         id = try? container.decode(String.self, forKey: .id)
         documentId = try? container.decode(String.self, forKey: .documentId)
+        constituencyId = try? container.decode(String.self, forKey: .constituencyId)
         
         constituencyNumber = try container.decode(Int.self, forKey: .constituencyNumber)
         constituencyName = try container.decode(String.self, forKey: .constituencyName)
@@ -151,9 +155,10 @@ struct ConstituencyDetails: Codable, Identifiable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        // Encode all fields including id and documentId
+        // Encode all fields including id, documentId, and constituencyId
         try container.encodeIfPresent(id, forKey: .id)
         try container.encodeIfPresent(documentId, forKey: .documentId)
+        try container.encodeIfPresent(constituencyId, forKey: .constituencyId)
         try container.encode(constituencyNumber, forKey: .constituencyNumber)
         try container.encode(constituencyName, forKey: .constituencyName)
         try container.encode(district, forKey: .district)
@@ -188,6 +193,7 @@ struct RawConstituency: Codable {
 
 struct DummyConstituencyDetials{
      static var detials1 = ConstituencyDetails(
+        constituencyId: "dummy_id_1",
         constituencyNumber: 1,
         constituencyName: "Adilabad",
         district: "Adilabad",

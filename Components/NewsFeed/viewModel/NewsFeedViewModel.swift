@@ -24,6 +24,7 @@ final class NewsFeedViewModel: ObservableObject {
     @Published private(set) var hasMorePagesTrue = true
     @Published private(set) var error: String?
     @Published var count : Int = 0
+    @Published var CityID: String = ""
     
     // MARK: - Private State
     let pageSize = 10 // Load 20 items per page
@@ -34,7 +35,7 @@ final class NewsFeedViewModel: ObservableObject {
     private let maxCachedMedia = 30 // Cache media for only 2 items
     
     // MARK: - Public API
-
+    
     
     /// Legacy method for backward compatibility
     func fetchAndCacheNews(for constituencyId: String, context: ModelContext, category: NewsTab) async {
@@ -55,7 +56,7 @@ final class NewsFeedViewModel: ObservableObject {
         
         do {
             let (remoteNews, lastDoc) = try await fetchNewsFromFirestore(
-                constituencyId: constituencyId, 
+                constituencyId: constituencyId,
                 startAfter: nil,
                 Descending: true,
                 category: category
@@ -158,42 +159,96 @@ final class NewsFeedViewModel: ObservableObject {
     // MARK: - Firestore Operations
     
     private func fetchNewsFromFirestore(
-        constituencyId: String, 
+        constituencyId: String,
         startAfter: DocumentSnapshot?,
-        Descending: Bool, category: NewsTab
+        Descending: Bool,
+        category: NewsTab
     ) async throws -> ([News], DocumentSnapshot?) {
+        
         let db = Firestore.firestore()
-        print(constituencyId)
+        var news: [News] = []
+        var lastDoc: DocumentSnapshot? = nil
         var query: Query
-        if category == .trending{
-            query = db.collection("constituencies").document(constituencyId).collection("news")
+        
+        switch category {
+        case .trending:
+            query = db.collection("constituencies").document(constituencyId)
+                .collection("news")
                 .order(by: "likesCount", descending: Descending)
                 .limit(to: pageSize)
-        }else if category == .latest{
-            query = db.collection("constituencies").document(constituencyId).collection("news")
-                .order(by: "timestamp", descending: Descending)
-                .limit(to: pageSize)
-        }else{
-            query = db.collection("constituencies").document(constituencyId).collection("news")
+            
+        case .City:
+            // Fetch the city asynchronously
+            await fetchConstituencyId(for: constituencyId)
+            let citySnapshot = try await db.collection("city").document(CityID).getDocument()
+            let city = try citySnapshot.data(as: City.self)
+            
+            // Loop through constituencyIds and fetch news
+            for cid in city.constituencyIds {
+                query = db.collection("constituencies").document(cid)
+                    .collection("news")
+                    .order(by: "timestamp", descending: Descending)
+                    .limit(to: pageSize)
+                
+                if let startAfter = startAfter {
+                    query = query.start(afterDocument: startAfter)
+                }
+                
+                let snapshot = try await query.getDocuments()
+                
+                let fetchedNews = snapshot.documents.compactMap { doc -> News? in
+                    do {
+                        var newsItem = try doc.data(as: News.self)
+                        if newsItem.documentId == nil && newsItem.newsId == nil {
+                            newsItem = News(
+                                newsId: nil,
+                                documentId: doc.documentID,
+                                ownerUid: newsItem.ownerUid,
+                                caption: newsItem.caption,
+                                timestamp: newsItem.timestamp,
+                                likesCount: newsItem.likesCount,
+                                commentsCount: newsItem.commentsCount,
+                                cosntituencyId: newsItem.cosntituencyId,
+                                user: newsItem.user,
+                                newsImageURLs: newsItem.newsImageURLs
+                            )
+                        }
+                        return newsItem
+                    } catch {
+                        return nil
+                    }
+                }
+                
+                news.append(contentsOf: fetchedNews)
+                
+                // Update the lastDoc for pagination
+                if let last = snapshot.documents.last {
+                    lastDoc = last
+                }
+            }
+            
+            return (news, lastDoc)
+            
+        default:
+            query = db.collection("constituencies").document(constituencyId)
+                .collection("news")
                 .order(by: "timestamp", descending: Descending)
                 .limit(to: pageSize)
         }
         
-        // Add pagination cursor if provided
+        // Pagination for non-city categories
         if let startAfter = startAfter {
             query = query.start(afterDocument: startAfter)
         }
         
         let snapshot = try await query.getDocuments()
-        let news = snapshot.documents.compactMap { doc in
+        let fetchedNews = snapshot.documents.compactMap { doc -> News? in
             do {
                 var newsItem = try doc.data(as: News.self)
-                // Set the regular documentId field if it's not already set
                 if newsItem.documentId == nil && newsItem.newsId == nil {
-                    // Create a new News instance with the document ID in the regular field
                     newsItem = News(
-                        newsId: nil, // Don't set @DocumentID manually
-                        documentId: doc.documentID, // Use regular field
+                        newsId: nil,
+                        documentId: doc.documentID,
                         ownerUid: newsItem.ownerUid,
                         caption: newsItem.caption,
                         timestamp: newsItem.timestamp,
@@ -205,15 +260,16 @@ final class NewsFeedViewModel: ObservableObject {
                     )
                 }
                 return newsItem
-                            } catch {
-                    // Silently handle decoding errors
-                    return nil
-                }
+            } catch {
+                return nil
+            }
         }
         
-        let lastDoc = snapshot.documents.last
-        return (news, lastDoc)
+        let lastNonCityDoc = snapshot.documents.last
+        return (fetchedNews, lastNonCityDoc)
     }
+
+    
     
     // MARK: - SwiftData Operations
     
@@ -257,7 +313,7 @@ final class NewsFeedViewModel: ObservableObject {
     // Assuming 'pageSize' is a property available in this scope, e.g., self.pageSize
     private func appendToLocalNewsandDeleteFirst(_ items: [News], context: ModelContext) async {
         let constituencyId = self.currentConstituencyId
-
+        
         // 1. NEW: Remove the oldest 'pageSize' items first
         await MainActor.run {
             do {
@@ -268,7 +324,7 @@ final class NewsFeedViewModel: ObservableObject {
                 )
                 // Limit the fetch to only the number of items you want to remove
                 oldItemsDescriptor.fetchLimit = self.pageSize
-
+                
                 let itemsToRemove = try context.fetch(oldItemsDescriptor)
                 for item in itemsToRemove {
                     context.delete(item)
@@ -278,7 +334,7 @@ final class NewsFeedViewModel: ObservableObject {
                 print("Failed to remove the oldest page of news items: \(error.localizedDescription)")
             }
         }
-
+        
         // 2. Insert the new items (your original code)
         await insertLocalNews(items, context: context)
         
@@ -310,7 +366,7 @@ final class NewsFeedViewModel: ObservableObject {
     
     private func addToLocalNewsandDeleteLast(_ items: [News], context: ModelContext) async {
         let constituencyId = self.currentConstituencyId
-
+        
         // 1. NEW: Remove the oldest 'pageSize' items first
         await MainActor.run {
             do {
@@ -321,7 +377,7 @@ final class NewsFeedViewModel: ObservableObject {
                 )
                 // Limit the fetch to only the number of items you want to remove
                 oldItemsDescriptor.fetchLimit = self.pageSize
-
+                
                 let itemsToRemove = try context.fetch(oldItemsDescriptor)
                 for item in itemsToRemove {
                     context.delete(item)
@@ -331,7 +387,7 @@ final class NewsFeedViewModel: ObservableObject {
                 print("Failed to remove the oldest page of news items: \(error.localizedDescription)")
             }
         }
-
+        
         // 2. Insert the new items (your original code)
         await insertLocalNews(items, context: context)
         
@@ -387,7 +443,7 @@ final class NewsFeedViewModel: ObservableObject {
             // Silent error handling for cleanup
         }
     }
-
+    
     
     /// Insert news items into local storage
     private func insertLocalNews(_ items: [News], context: ModelContext) async {
@@ -418,9 +474,9 @@ final class NewsFeedViewModel: ObservableObject {
                 
                 // Save context
                 try context.save()
-                            } catch {
-                    // Silently handle local news insertion errors
-                }
+            } catch {
+                // Silently handle local news insertion errors
+            }
         }
     }
     
@@ -551,9 +607,29 @@ final class NewsFeedViewModel: ObservableObject {
             }else{
                 self.firstDocument = try await documentRef.getDocument()
             }
-                        
+            
         } catch {
             print("Failed to get document snapshot: \(error.localizedDescription)")
+        }
+    }
+    
+    func fetchConstituencyId(for documentId: String) async {
+        let db = Firestore.firestore()
+        
+        do {
+            let snapshot = try await db.collection("constituencies")
+                .document(documentId)
+                .getDocument()
+            
+            if let id = snapshot.data()?["constituencyId"] as? String {
+                await MainActor.run {
+                    self.CityID = id
+                }
+            } else {
+                print("constituencyId not found")
+            }
+        } catch {
+            print("Error fetching document: \(error.localizedDescription)")
         }
     }
 }
