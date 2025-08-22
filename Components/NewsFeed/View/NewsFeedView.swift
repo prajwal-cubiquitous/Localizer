@@ -21,8 +21,7 @@ struct NewsFeedView: View {
     @State private var selectedTab: NewsTab = .latest
     @State private var sortDescriptors: [SortDescriptor<LocalNews>] = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
         
-    
-    
+     
     init(ConstituencyInfo: ConstituencyDetails?, pincode: String) {
         self.ConstituencyInfo = ConstituencyInfo
         self.pincode = pincode
@@ -279,7 +278,7 @@ struct NewsFeedView: View {
     private var newsFeedContent: some View {
         LazyVStack(spacing: 0) {
             ForEach(newsItems) { item in
-                NewsCell(constituencyId: constituencyId, localNews: item)
+                NewsCell(constituencyId: constituencyId, localNews: item, selectedTab: selectedTab)
                     .padding(.horizontal, 0)
                     .padding(.bottom, 8)
                     .onAppear {

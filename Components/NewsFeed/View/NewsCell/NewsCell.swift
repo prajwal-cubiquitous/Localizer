@@ -22,14 +22,16 @@ struct NewsCell: View {
     @StateObject private var viewModel = NewsCellViewModel()
     let localNews: LocalNews
     let recommendText : String?
+    let seledtedTab: NewsTab?
     // User state management for non-current users
     @State private var newsAuthor: CachedUser?
     @State private var isLoadingAuthor = false
     
-    init(constituencyId : String,localNews: LocalNews, recommendText: String? = nil) {
+    init(constituencyId : String,localNews: LocalNews, recommendText: String? = nil, selectedTab: NewsTab? = .latest) {
         self.constituencyId = constituencyId
         self.localNews = localNews
         self.recommendText = recommendText
+        self.seledtedTab = selectedTab
     }
     
     // MARK: - Computed Properties
@@ -210,79 +212,81 @@ struct NewsCell: View {
             }
             
             // Interaction Buttons
-            HStack(spacing: 24) {
-                // Reddit-style Voting System
-                HStack(spacing: 12) {
-                    // Upvote Button
-                    Button {
-                        Task{
-                            await viewModel.handleUpvote(postId: localNews.id, constituencyId: constituencyId)
+            if seledtedTab != .City{
+                HStack(spacing: 24) {
+                    // Reddit-style Voting System
+                    HStack(spacing: 12) {
+                        // Upvote Button
+                        Button {
+                            Task{
+                                await viewModel.handleUpvote(postId: localNews.id, constituencyId: constituencyId)
+                            }
+                        } label: {
+                            Image(systemName: viewModel.voteState == .upvoted ? "arrowshape.up.fill" : "arrowshape.up")
+                                .foregroundColor(viewModel.voteState == .upvoted ? .red : .secondary)
+                                .font(.title3)
+                                .scaleEffect(viewModel.upvoteScale)
                         }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // Vote Count
+                        Text("\(viewModel.likesCount)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                            .monospacedDigit() // Prevents layout jumping
+                        
+                        // Downvote Button
+                        Button {
+                            Task{
+                                await viewModel.handleDownvote(postId: localNews.id, constituencyId: constituencyId)
+                            }
+                        } label: {
+                            Image(systemName: viewModel.voteState == .downvoted ? "arrowshape.down.fill" : "arrowshape.down")
+                                .foregroundColor(viewModel.voteState == .downvoted ? .purple : .secondary)
+                                .font(.title3)
+                                .scaleEffect(viewModel.downvoteScale)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    // Comment Button
+                    Button {
+                        showingCommentsSheet = true
                     } label: {
-                        Image(systemName: viewModel.voteState == .upvoted ? "arrowshape.up.fill" : "arrowshape.up")
-                            .foregroundColor(viewModel.voteState == .upvoted ? .red : .secondary)
-                            .font(.title3)
-                            .scaleEffect(viewModel.upvoteScale)
+                        HStack(spacing: 8) {
+                            Image(systemName: "message")
+                                .foregroundColor(.secondary)
+                                .font(.title3)
+                            
+                            Text("\(localNews.commentsCount)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .monospacedDigit()
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     
-                    // Vote Count
-                    Text("\(viewModel.likesCount)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
-                        .monospacedDigit() // Prevents layout jumping
+                    Spacer()
                     
-                    // Downvote Button
+                    // Share Button
                     Button {
-                        Task{
-                            await viewModel.handleDownvote(postId: localNews.id, constituencyId: constituencyId)
-                        }
+                        // Share action
                     } label: {
-                        Image(systemName: viewModel.voteState == .downvoted ? "arrowshape.down.fill" : "arrowshape.down")
-                            .foregroundColor(viewModel.voteState == .downvoted ? .purple : .secondary)
-                            .font(.title3)
-                            .scaleEffect(viewModel.downvoteScale)
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrowshape.turn.up.right")
+                                .foregroundColor(.secondary)
+                                .font(.title3)
+                            
+                            Text("Share".localized())
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
-                
-                // Comment Button
-                Button {
-                    showingCommentsSheet = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "message")
-                            .foregroundColor(.secondary)
-                            .font(.title3)
-                        
-                        Text("\(localNews.commentsCount)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .monospacedDigit()
-                    }
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                Spacer()
-                
-                // Share Button
-                Button {
-                    // Share action
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrowshape.turn.up.right")
-                            .foregroundColor(.secondary)
-                            .font(.title3)
-                        
-                        Text("Share".localized())
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .buttonStyle(PlainButtonStyle())
+                .padding(.top, 4)
             }
-            .padding(.top, 4)
         }
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, 16)
