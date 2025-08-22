@@ -104,9 +104,9 @@ final class NewsFeedViewModel: ObservableObject {
                 hasMorePagesTrue = true
             }
             
-            await appendToLocalNews(remoteNews, context: context)
+//            await appendToLocalNews(remoteNews, context: context)
             
-            await fetchNewestDocumentSnapshot(context: context)
+//            await fetchNewestDocumentSnapshot(context: context)
             
         } catch {
             self.error = "Failed to load more news: \(error.localizedDescription)"
@@ -298,11 +298,13 @@ final class NewsFeedViewModel: ObservableObject {
                 )
                 let allItems = try context.fetch(fetchDescriptor)
                 if allItems.count > maxLocalItems {
+                    print("Deleting the ecxtra oldest news items")
                     let itemsToRemove = Array(allItems.suffix(allItems.count - maxLocalItems))
                     for item in itemsToRemove {
                         context.delete(item)
                     }
                     try context.save()
+                    print("Done deleting")
                 }
             } catch {
                 // Silently handle local items limit errors

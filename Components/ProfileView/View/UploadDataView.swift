@@ -275,7 +275,8 @@ struct UploadDataView: View {
     private func uploadDummyNews() {
             let db = Firestore.firestore()
             let ownerUid = "BvXKrYAFj9dA8XVnF9wpOY157552"
-            let constituencyId = "B8B05F79-8F68-4492-8C9A-300EAB6861FE"
+            let constituencyId = "346C4917-471E-4AB7-AB0A-485C3CB59545"
+            let pincode = "560001"
 
             print("Starting upload of 1000 documents...")
 
@@ -285,12 +286,12 @@ struct UploadDataView: View {
                     "commentsCount": 0,
                     "likesCount": 0,
                     "ownerUid": ownerUid,
-                    "cosntituencyId": constituencyId, // Note: "constituencyId" is misspelled as in your example
+                    "cosntituencyId": pincode, // Note: "constituencyId" is misspelled as in your example
                     "timestamp": Timestamp(date: Date()) // Uses the current time for each post
                 ]
 
                 // addDocument creates a new document with a random, unique ID
-                db.collection("news").addDocument(data: postData) { error in
+                db.collection("constituencies").document(constituencyId).collection("news").addDocument(data: postData) { error in
                     if let error = error {
                         print("Error adding document \(i): \(error.localizedDescription)")
                     } else {

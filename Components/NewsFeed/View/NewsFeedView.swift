@@ -15,19 +15,15 @@ struct NewsFeedView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.modelContext) private var modelContext
     @StateObject private var viewModel = NewsFeedViewModel()
-    @Query private var newsItems: [LocalNews]
+    
+    @State private var newsItems: [LocalNews] = []
     @State private var showCreatePostSheet = false
     @State private var hasFetched = false
     @State private var selectedTab: NewsTab = .latest
-    @State private var sortDescriptors: [SortDescriptor<LocalNews>] = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
-        
-     
+    
     init(ConstituencyInfo: ConstituencyDetails?, pincode: String) {
         self.ConstituencyInfo = ConstituencyInfo
         self.pincode = pincode
-        // Use constituencyId for filtering local news instead of pincode
-        let constituencyId = ConstituencyInfo?.id ?? ""
-        self._newsItems = Query(sort: sortDescriptors)
     }
     
     private var constituencyId: String {
@@ -52,7 +48,7 @@ struct NewsFeedView: View {
                     .scrollIndicators(.hidden)
                     .refreshable {
                         if viewModel.count >= viewModel.maxLocalItems/viewModel.pageSize {
-                            await viewModel.loadMoreReverse(context: modelContext, category: selectedTab)
+//                            await viewModel.loadMoreReverse(context: modelContext, category: selectedTab)
                         } else {
                             await viewModel.refresh(for: constituencyId, context: modelContext, category: selectedTab)
                         }
@@ -90,22 +86,13 @@ struct NewsFeedView: View {
             if !hasFetched {
                 hasFetched = true
                 await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
+                fetchNewsItems()
             }
         }
         .onChange(of: selectedTab) {
-            // Update sort descriptors based on selected tab
-            if selectedTab == .trending {
-                sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
-            } else if selectedTab == .City {
-                // For city tab, sort by timestamp (most recent first)
-                sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
-            } else {
-                // For latest tab, sort by timestamp (most recent first)
-                sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
-            }
-            
             Task {
                 await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
+                fetchNewsItems()
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
@@ -114,6 +101,30 @@ struct NewsFeedView: View {
             }
         }
     }
+    
+    private func fetchNewsItems() {
+            let sortDescriptors: [SortDescriptor<LocalNews>]
+            
+            switch selectedTab {
+            case .latest:
+                sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
+            case .trending:
+                sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
+            case .City:
+                sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
+            }
+            
+            let fetchDescriptor = FetchDescriptor<LocalNews>(sortBy: sortDescriptors)
+            
+            do {
+                newsItems = []
+                newsItems = try modelContext.fetch(fetchDescriptor)
+
+            } catch {
+                print("Failed to fetch news items: \(error)")
+                newsItems = []
+            }
+        }
     
     // MARK: - Modern Segmented Control
     private var modernSegmentedControl: some View {
@@ -285,7 +296,9 @@ struct NewsFeedView: View {
                         if item == newsItems.last {
                             Task {
                                 await viewModel.loadMore(context: modelContext, category: selectedTab)
+                                fetchNewsItems()
                             }
+
                         }
                     }
             }
