@@ -428,7 +428,7 @@ final class NewsFeedViewModel: ObservableObject {
     
     /// Cache user data for UI display
     private func cacheUser(_ user: User) async {
-        let cachedUser = CachedUser(username: user.username, profilePictureUrl: user.profileImageUrl)
+        let cachedUser = CachedUser(username: user.username, profilePictureUrl: user.profileImageUrl, role: user.role.rawValue)
         // Cache the user for UI display
         UserCache.shared.cacheUser(userId: user.id, cachedUser: cachedUser)
     }

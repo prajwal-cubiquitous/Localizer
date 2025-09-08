@@ -96,7 +96,7 @@ class CommentsViewModel: ObservableObject {
             for comment in comments {
                 let FetchedUser = try await fetchCurrentUser(comment.userId)
 
-                UserCache.shared.cacheusers[comment.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl)
+                UserCache.shared.cacheusers[comment.userId] = CachedUser(username: FetchedUser.username, profilePictureUrl: FetchedUser.profileImageUrl, role: FetchedUser.role.rawValue)
             }
         } catch {
             throw error

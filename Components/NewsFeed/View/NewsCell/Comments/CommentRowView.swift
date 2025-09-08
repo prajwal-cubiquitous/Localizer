@@ -173,7 +173,7 @@ struct CommentRowView: View {
         // If not in cache, fetch from Firestore
         do {
             let fetchedUser = try await viewModel.fetchCurrentUser(comment.userId)
-            let cachedUser = CachedUser(username: fetchedUser.username, profilePictureUrl: fetchedUser.profileImageUrl)
+            let cachedUser = CachedUser(username: fetchedUser.username, profilePictureUrl: fetchedUser.profileImageUrl, role: fetchedUser.role.rawValue)
             
             await MainActor.run {
                 self.commentUser = cachedUser
