@@ -27,6 +27,9 @@ struct NewsCell: View {
     @State private var newsAuthor: CachedUser?
     @State private var isLoadingAuthor = false
     
+    // Performance optimization: cache computed values
+    @State private var cachedTimeAgo: String = ""
+    
     init(constituencyId : String,localNews: LocalNews, recommendText: String? = nil, selectedTab: NewsTab? = .latest) {
         self.constituencyId = constituencyId
         self.localNews = localNews
@@ -120,7 +123,7 @@ struct NewsCell: View {
                         }
                     }
                     
-                    Text(timeAgo)
+                    Text(cachedTimeAgo)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -297,6 +300,9 @@ struct NewsCell: View {
         )
         .padding(.horizontal, 16) // Outer margin from screen edges
         .task {
+            // Cache time ago calculation
+            cachedTimeAgo = timeAgo
+            
             await viewModel.fetchVotesStatus(postId: localNews.id, constituencyId: constituencyId)
             await viewModel.checkIfNewsIsSaved1(postId: localNews.id)
             

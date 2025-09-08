@@ -16,10 +16,12 @@ struct NewsFeedView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var viewModel = NewsFeedViewModel()
     
-    @State private var newsItems: [LocalNews] = []
     @State private var showCreatePostSheet = false
     @State private var hasFetched = false
     @State private var selectedTab: NewsTab = .latest
+    
+    // SwiftData query for reactive updates
+    @Query private var allNews: [LocalNews]
     
     init(ConstituencyInfo: ConstituencyDetails?, pincode: String) {
         self.ConstituencyInfo = ConstituencyInfo
@@ -28,6 +30,22 @@ struct NewsFeedView: View {
     
     private var constituencyId: String {
         ConstituencyInfo?.id ?? ""
+    }
+    
+    // Computed property for filtered and sorted news
+    private var filteredNews: [LocalNews] {
+        let sortedNews: [LocalNews]
+        
+        switch selectedTab {
+        case .latest:
+            sortedNews = allNews.sorted { $0.timestamp > $1.timestamp }
+        case .trending:
+            sortedNews = allNews.sorted { $0.likesCount > $1.likesCount }
+        case .City:
+            sortedNews = allNews.sorted { $0.likesCount > $1.likesCount }
+        }
+        
+        return sortedNews
     }
     
     var body: some View {
@@ -39,7 +57,7 @@ struct NewsFeedView: View {
                 // Content & Floating Button Overlay
                 ZStack(alignment: .bottomTrailing) {
                     ScrollView {
-                        if newsItems.isEmpty {
+                        if filteredNews.isEmpty && !viewModel.isLoading {
                             emptyStateView
                         } else {
                             newsFeedContent
@@ -47,14 +65,10 @@ struct NewsFeedView: View {
                     }
                     .scrollIndicators(.hidden)
                     .refreshable {
-                        if viewModel.count >= viewModel.maxLocalItems/viewModel.pageSize {
-//                            await viewModel.loadMoreReverse(context: modelContext, category: selectedTab)
-                        } else {
-                            await viewModel.refresh(for: constituencyId, context: modelContext, category: selectedTab)
-                        }
+                        await viewModel.refresh(context: modelContext, category: selectedTab)
                     }
                     
-                    if !newsItems.isEmpty {
+                    if !filteredNews.isEmpty {
                         floatingActionButton
                             .padding(.trailing, 24)
                             .padding(.bottom, 24)
@@ -81,18 +95,15 @@ struct NewsFeedView: View {
             }
             .background(backgroundColor)
         }
-
         .task {
             if !hasFetched {
                 hasFetched = true
-                await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
-                fetchNewsItems()
+                await viewModel.loadInitial(for: constituencyId, context: modelContext, category: selectedTab)
             }
         }
         .onChange(of: selectedTab) {
             Task {
-                await viewModel.fetchAndCacheNews(for: constituencyId, context: modelContext, category: selectedTab)
-                fetchNewsItems()
+                await viewModel.loadInitial(for: constituencyId, context: modelContext, category: selectedTab)
             }
         }
         .sheet(isPresented: $showCreatePostSheet) {
@@ -102,29 +113,7 @@ struct NewsFeedView: View {
         }
     }
     
-    private func fetchNewsItems() {
-            let sortDescriptors: [SortDescriptor<LocalNews>]
-            
-            switch selectedTab {
-            case .latest:
-                sortDescriptors = [SortDescriptor(\LocalNews.timestamp, order: .reverse)]
-            case .trending:
-                sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
-            case .City:
-                sortDescriptors = [SortDescriptor(\LocalNews.likesCount, order: .reverse)]
-            }
-            
-            let fetchDescriptor = FetchDescriptor<LocalNews>(sortBy: sortDescriptors)
-            
-            do {
-                newsItems = []
-                newsItems = try modelContext.fetch(fetchDescriptor)
 
-            } catch {
-                print("Failed to fetch news items: \(error)")
-                newsItems = []
-            }
-        }
     
     // MARK: - Modern Segmented Control
     private var modernSegmentedControl: some View {
@@ -258,7 +247,7 @@ struct NewsFeedView: View {
             .padding(.horizontal, 20)
         }
         .refreshable {
-            await viewModel.refresh(for: constituencyId, context: modelContext, category: selectedTab)
+            await viewModel.refresh( context: modelContext, category: selectedTab)
         }
     }
     
@@ -288,19 +277,29 @@ struct NewsFeedView: View {
     // MARK: - News Feed Content
     private var newsFeedContent: some View {
         LazyVStack(spacing: 0) {
-            ForEach(newsItems) { item in
+            ForEach(filteredNews) { item in
                 NewsCell(constituencyId: constituencyId, localNews: item, selectedTab: selectedTab)
                     .padding(.horizontal, 0)
                     .padding(.bottom, 8)
                     .onAppear {
-                        if item == newsItems.last {
+                        // Load more when reaching the last item
+                        if item == filteredNews.last && viewModel.hasMorePages && !viewModel.isLoadingMore {
                             Task {
                                 await viewModel.loadMore(context: modelContext, category: selectedTab)
-                                fetchNewsItems()
                             }
-
                         }
                     }
+            }
+            
+            // Loading indicator at the bottom
+            if viewModel.isLoadingMore {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Spacer()
+                }
+                .padding(.vertical, 16)
             }
         }
         .padding(.top, 4)
