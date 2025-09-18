@@ -32,11 +32,12 @@ struct News: Identifiable, Codable, Sendable {
     var likesCount: Int
     var commentsCount: Int
     let cosntituencyId: String
+    var category: String?
     var user: User?
     var newsImageURLs: [String]?
     
     // Simplified initializer
-    init(newsId: String? = nil, documentId: String? = nil, ownerUid: String, caption: String, timestamp: Timestamp, likesCount: Int, commentsCount: Int, cosntituencyId: String, user: User? = nil, newsImageURLs: [String]? = nil) {
+    init(newsId: String? = nil, documentId: String? = nil, ownerUid: String, caption: String, timestamp: Timestamp, likesCount: Int, commentsCount: Int, cosntituencyId: String, category: String? = nil, user: User? = nil, newsImageURLs: [String]? = nil) {
         self.newsId = newsId
         self.documentId = documentId
         self.ownerUid = ownerUid
@@ -45,6 +46,7 @@ struct News: Identifiable, Codable, Sendable {
         self.likesCount = likesCount
         self.commentsCount = commentsCount
         self.cosntituencyId = cosntituencyId
+        self.category = category
         self.user = user
         self.newsImageURLs = newsImageURLs
     }
@@ -58,6 +60,7 @@ struct News: Identifiable, Codable, Sendable {
         case likesCount
         case commentsCount
         case cosntituencyId
+        case category
         case user
         case newsImageURLs
     }
@@ -72,6 +75,7 @@ struct News: Identifiable, Codable, Sendable {
         try container.encode(likesCount, forKey: .likesCount)
         try container.encode(commentsCount, forKey: .commentsCount)
         try container.encode(cosntituencyId, forKey: .cosntituencyId)
+        try container.encodeIfPresent(category, forKey: .category)
         try container.encodeIfPresent(user, forKey: .user)
         try container.encodeIfPresent(newsImageURLs, forKey: .newsImageURLs)
     }
@@ -85,6 +89,7 @@ struct News: Identifiable, Codable, Sendable {
         likesCount = try container.decode(Int.self, forKey: .likesCount)
         commentsCount = try container.decode(Int.self, forKey: .commentsCount)
         cosntituencyId = try container.decode(String.self, forKey: .cosntituencyId)
+        category = try container.decodeIfPresent(String.self, forKey: .category)
         user = try container.decodeIfPresent(User.self, forKey: .user)
         newsImageURLs = try container.decodeIfPresent([String].self, forKey: .newsImageURLs)
         
@@ -102,6 +107,7 @@ final class LocalNews: @unchecked Sendable {
     var likesCount: Int
     var commentsCount: Int
     var constituencyId: String
+    var category: String?
     
     // Store image URLs as JSON string to avoid CoreData array compatibility issues
     private var newsImageURLsData: String?
@@ -132,6 +138,7 @@ final class LocalNews: @unchecked Sendable {
         likesCount: Int,
         commentsCount: Int,
         constituencyId: String,
+        category: String?,
         newsImageURLs: [String]?,
         user: LocalUser?
     ) {
@@ -142,6 +149,7 @@ final class LocalNews: @unchecked Sendable {
         self.likesCount = likesCount
         self.commentsCount = commentsCount
         self.constituencyId = constituencyId
+        self.category = category
         self.user = user
         
         // Set the image URLs using the computed property
@@ -163,6 +171,7 @@ extension LocalNews {
             likesCount: news.likesCount,
             commentsCount: news.commentsCount,
             constituencyId: news.cosntituencyId,
+            category: news.category,
             newsImageURLs: news.newsImageURLs, // ✅ Use original URLs first
             user: user
         )
@@ -195,7 +204,6 @@ extension LocalNews {
                 }
             }
         }
-
         return localNews
     }
 
@@ -209,6 +217,7 @@ extension LocalNews {
             likesCount: self.likesCount,
             commentsCount: self.commentsCount,
             cosntituencyId: self.constituencyId,
+            category: self.category,
             user: self.user?.toUser(),
             newsImageURLs: self.newsImageURLs
         )
@@ -218,9 +227,9 @@ extension LocalNews {
 
 struct DummyLocalNews{
     // ✅ Fixed: Each news item now has a unique ID
-    static var News1 = LocalNews(id: "news_1_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is commented news", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f"], user: DummylocalUser.user1)
+    static var News1 = LocalNews(id: "news_1_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is commented news", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", category: "General", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f", "https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_images%2F61085B46-E378-4B6A-A9FB-9C96AAFB55D0?alt=media&token=b18ae060-8171-414a-8c17-ddc2319b461f"], user: DummylocalUser.user1)
     
-    static var News2 = LocalNews(id: "news_2_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "this is liked news", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", newsImageURLs: ["https://media.licdn.com/dms/image/v2/D5603AQGTVPt9xIZ9YA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1711892894038?e=2147483647&v=beta&t=GF7yHb1bFs0wKm4NNo1fPa7skJNXDrBT-dUdeqy8Pfs"], user: DummylocalUser.user1)
+    static var News2 = LocalNews(id: "news_2_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "this is liked news", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", category: "Politics", newsImageURLs: ["https://media.licdn.com/dms/image/v2/D5603AQGTVPt9xIZ9YA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1711892894038?e=2147483647&v=beta&t=GF7yHb1bFs0wKm4NNo1fPa7skJNXDrBT-dUdeqy8Pfs"], user: DummylocalUser.user1)
     
-    static var News3 = LocalNews(id: "news_3_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is SavedNews", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d"], user: DummylocalUser.user1)
+    static var News3 = LocalNews(id: "news_3_unique_id", ownerUid: "lsdfjoasjjdwowjh", caption: "This is SavedNews", timestamp: Date.now, likesCount: 20, commentsCount: 10, constituencyId: "560043", category: "Community", newsImageURLs: ["https://firebasestorage.googleapis.com:443/v0/b/localizer-5c786.firebasestorage.app/o/news_videos%2F652730B9-3B96-4082-A77D-F427596E48BC.mov?alt=media&token=ec63c602-29e5-4b73-8e1d-95237993f35d"], user: DummylocalUser.user1)
 }

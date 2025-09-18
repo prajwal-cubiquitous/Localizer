@@ -68,6 +68,7 @@ class PostViewModel: ObservableObject {
     @Published var videoBeingRetrimmed: URL?
     
     // MARK: - Post Creation
+    let classifier = ZeroShotClassifier()
     
     func createPost(constituencyId: String, pincode: String) async {
         await MainActor.run {
@@ -135,12 +136,15 @@ class PostViewModel: ObservableObject {
     func uploadNews(caption: String, cosntituencyId : String, pincode: String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
+        let res = classifier.classify(text: caption)
+        
         let news = News(ownerUid: uid,
                         caption: caption,
                         timestamp: Timestamp(),
                         likesCount: 0,
                         commentsCount: 0,
-                        cosntituencyId: pincode)
+                        cosntituencyId: pincode,
+                        category: res)
         
         let documentId = try await NewsService.uploadNews(news, constituencyID: cosntituencyId)
                     // News uploaded successfully
@@ -158,6 +162,7 @@ class PostViewModel: ObservableObject {
                         likesCount: 0,
                         commentsCount: 0,
                         cosntituencyId: pincode,
+                        category: nil,
                         newsImageURLs: imageURLS)
         
         let documentId = try await NewsService.uploadNews(news, constituencyID: constituencyId)

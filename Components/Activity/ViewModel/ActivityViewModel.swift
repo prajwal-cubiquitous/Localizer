@@ -56,6 +56,7 @@ class ActivityViewModel : ObservableObject{
                         likesCount: newsItem.likesCount,
                         commentsCount: newsItem.commentsCount,
                         cosntituencyId: newsItem.cosntituencyId,
+                        category: newsItem.category,
                         user: newsItem.user,
                         newsImageURLs: newsItem.newsImageURLs
                     )
@@ -108,6 +109,7 @@ class ActivityViewModel : ObservableObject{
                             likesCount: SavedNewsFromFirestore.likesCount,
                             commentsCount: SavedNewsFromFirestore.commentsCount,
                             cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            category: SavedNewsFromFirestore.category,
                             user: SavedNewsFromFirestore.user,
                             newsImageURLs: SavedNewsFromFirestore.newsImageURLs
                         )
@@ -161,6 +163,7 @@ class ActivityViewModel : ObservableObject{
                             likesCount: SavedNewsFromFirestore.likesCount,
                             commentsCount: SavedNewsFromFirestore.commentsCount,
                             cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            category: SavedNewsFromFirestore.category,
                             user: SavedNewsFromFirestore.user,
                             newsImageURLs: SavedNewsFromFirestore.newsImageURLs
                         )
@@ -213,6 +216,7 @@ class ActivityViewModel : ObservableObject{
                             likesCount: SavedNewsFromFirestore.likesCount,
                             commentsCount: SavedNewsFromFirestore.commentsCount,
                             cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            category: SavedNewsFromFirestore.category,
                             user: SavedNewsFromFirestore.user,
                             newsImageURLs: SavedNewsFromFirestore.newsImageURLs
                         )
@@ -264,6 +268,7 @@ class ActivityViewModel : ObservableObject{
                             likesCount: SavedNewsFromFirestore.likesCount,
                             commentsCount: SavedNewsFromFirestore.commentsCount,
                             cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            category: SavedNewsFromFirestore.category,
                             user: SavedNewsFromFirestore.user,
                             newsImageURLs: SavedNewsFromFirestore.newsImageURLs
                         )
@@ -316,6 +321,7 @@ class ActivityViewModel : ObservableObject{
                             likesCount: SavedNewsFromFirestore.likesCount,
                             commentsCount: SavedNewsFromFirestore.commentsCount,
                             cosntituencyId: SavedNewsFromFirestore.cosntituencyId,
+                            category: SavedNewsFromFirestore.category,
                             user: SavedNewsFromFirestore.user,
                             newsImageURLs: SavedNewsFromFirestore.newsImageURLs
                         )
