@@ -28,6 +28,7 @@ struct User: Identifiable, Codable, Sendable {
     var SavedPostsCount: Int = 0
     var commentsCount: Int = 0
     var role: UserRole = .endUser
+    var constituencyIDs: [String]? = nil
     @ServerTimestamp var lastUpdated: Date?
 }
 
@@ -46,12 +47,13 @@ final class LocalUser: @unchecked Sendable {
     var SavedPostsCount: Int
     var commentCount: Int
     var role: String
+    var constituencyIDs: [String]?
     
     // Inverse relationship to LocalNews - this will help with cascade delete
     @Relationship(deleteRule: .cascade, inverse: \LocalNews.user) 
     var newsItems: [LocalNews] = []
     
-    init(id: String, name: String,username: String, email: String, bio: String, profileImageUrl: String, postCount: Int, likedCount: Int,dislikedCount: Int, SavedPostsCount: Int, commentCount: Int, role: String = UserRole.endUser.rawValue) {
+    init(id: String, name: String,username: String, email: String, bio: String, profileImageUrl: String, postCount: Int, likedCount: Int,dislikedCount: Int, SavedPostsCount: Int, commentCount: Int, role: String = UserRole.endUser.rawValue, constituencyIDs: [String]? = nil) {
         self.id = id
         self.name = name
         self.email = email
@@ -64,6 +66,7 @@ final class LocalUser: @unchecked Sendable {
         self.SavedPostsCount = SavedPostsCount
         self.commentCount = commentCount
         self.role = role
+        self.constituencyIDs = constituencyIDs
     }
 }
 
@@ -87,7 +90,8 @@ extension LocalUser {
             dislikedCount: user.dislikedCount, 
             SavedPostsCount: user.SavedPostsCount,
             commentCount: user.commentsCount,
-            role: user.role.rawValue
+            role: user.role.rawValue,
+            constituencyIDs: user.constituencyIDs
         )
     }
     
@@ -105,7 +109,8 @@ extension LocalUser {
             dislikedCount: user.dislikedCount, 
             SavedPostsCount: user.SavedPostsCount,
             commentCount: user.commentsCount,
-            role: user.role.rawValue
+            role: user.role.rawValue,
+            constituencyIDs: user.constituencyIDs
         )
     }
     
@@ -121,13 +126,14 @@ extension LocalUser {
             likedCount: self.likedCount,
             SavedPostsCount: self.SavedPostsCount,
             commentsCount: self.commentCount,
-            role: UserRole(rawValue: self.role) ?? .endUser
+            role: UserRole(rawValue: self.role) ?? .endUser,
+            constituencyIDs: self.constituencyIDs
         )
     }
 }
 
 struct DummylocalUser{
-    static var user1 = LocalUser(id: "kfjiehoi342", name: "Parthik", username: "padda", email: "padda@gmail.com", bio: "i am padda", profileImageUrl: "klodsfjlds", postCount: 20, likedCount: 10, dislikedCount: 10, SavedPostsCount: 0, commentCount: 5, role: UserRole.endUser.rawValue)
+    static var user1 = LocalUser(id: "kfjiehoi342", name: "Parthik", username: "padda", email: "padda@gmail.com", bio: "i am padda", profileImageUrl: "klodsfjlds", postCount: 20, likedCount: 10, dislikedCount: 10, SavedPostsCount: 0, commentCount: 5, role: UserRole.endUser.rawValue, constituencyIDs: ["560043", "560001"])
 }
 
 

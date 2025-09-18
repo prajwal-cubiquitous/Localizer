@@ -90,7 +90,7 @@ class AuthViewModel: ObservableObject {
         
         do{
             try await AppState.shared.signUp(name: fullName, email: email, password: password) { success in
-                self.uploadUserData(user: User(id: success, name: self.fullName, email: self.email, username: self.username, role: .endUser))
+                self.uploadUserData(user: User(id: success, name: self.fullName, email: self.email, username: self.username, role: .endUser, constituencyIDs: nil))
                 self.authState = .login
             }
         }catch let error as AuthError{
@@ -140,7 +140,7 @@ class AuthViewModel: ObservableObject {
                 firestoreUser = data
             } else {
                 // Create fallback user if data is missing
-                firestoreUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser", role: .endUser)
+                firestoreUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser", role: .endUser, constituencyIDs: nil)
             }
             
             // Store user locally on main thread
@@ -150,7 +150,7 @@ class AuthViewModel: ObservableObject {
             errorMessage = AuthError.custom(message: error.localizedDescription)
             
             // Create mock user as fallback
-            let mockUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser", role: .endUser)
+            let mockUser = User(id: userId, name: "Demo User", email: "demo@example.com", username: "demouser", role: .endUser, constituencyIDs: nil)
             await storeUserLocallyAsync(firestoreUser: mockUser)
         }
     }
@@ -195,6 +195,7 @@ class AuthViewModel: ObservableObject {
                 existingUser.SavedPostsCount = firestoreUser.SavedPostsCount
                 existingUser.commentCount = firestoreUser.commentsCount
                 existingUser.role = firestoreUser.role.rawValue
+                existingUser.constituencyIDs = firestoreUser.constituencyIDs
                 
                 print("✅ Updated existing current user locally: \(firestoreUser.name)")
             } else {
@@ -219,7 +220,8 @@ class AuthViewModel: ObservableObject {
                     dislikedCount: firestoreUser.dislikedCount,
                     SavedPostsCount: firestoreUser.SavedPostsCount,
                     commentCount: firestoreUser.commentsCount,
-                    role: firestoreUser.role.rawValue
+                    role: firestoreUser.role.rawValue,
+                    constituencyIDs: firestoreUser.constituencyIDs
                 )
                 
                 modelContext.insert(localUser)

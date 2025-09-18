@@ -26,6 +26,7 @@ struct ProfileView: View {
     @Binding var constituencies : [ConstituencyDetails]?
     @Binding var selectedName: String
     @Query private var localUsers: [LocalUser]
+    @State private var showSettings = false
     
     private var currentUser: LocalUser? {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return nil }
@@ -151,6 +152,7 @@ struct ProfileView: View {
                     // MODIFIED: Use the keys exactly as they appear in your strings file
                     settingsRow(icon: "gearshape", title: "Settings".localized()){ // Key is "Settings"
                         // Settings functionality
+                        showSettings = true
                     }
                     
                     if currentUser?.id == "jWMfJAquzQfxbYLjuMbCxBUEk2q2" {
@@ -192,6 +194,10 @@ struct ProfileView: View {
                     UploadDataView()
                 }
             }
+            .sheet(isPresented: $showSettings) {
+                    SettingsView()
+            }
+            .presentationDetents([.fraction(0.8)])
         }
     }
     
