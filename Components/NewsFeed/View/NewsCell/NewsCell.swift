@@ -30,6 +30,11 @@ struct NewsCell: View {
     // Performance optimization: cache computed values
     @State private var cachedTimeAgo: String = ""
     
+    // Read More functionality
+    @State private var isExpanded = false
+    @State private var needsTruncation = false
+    private let maxLines = 3 // Maximum lines before showing "Read More"
+    
     init(constituencyId : String,localNews: LocalNews, recommendText: String? = nil, selectedTab: NewsTab? = .latest) {
         self.constituencyId = constituencyId
         self.localNews = localNews
@@ -66,6 +71,7 @@ struct NewsCell: View {
             return 24
         }
     }
+    
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -195,14 +201,75 @@ struct NewsCell: View {
                 }
             }
             
-            // Post Content
+            // Post Content with Read More functionality
             if !localNews.caption.isEmpty {
-                Text(localNews.caption)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    ZStack(alignment: .topLeading) {
+                        // Background text to measure if truncation is needed
+                        Text(localNews.caption)
+                            .font(.body)
+                            .foregroundColor(.clear)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(maxLines)
+                            .background(
+                                GeometryReader { geometry in
+                                    Color.clear
+                                        .onAppear {
+                                            // Check if text is truncated by comparing heights
+                                            let textSize = localNews.caption.boundingRect(
+                                                with: CGSize(width: geometry.size.width, height: .greatestFiniteMagnitude),
+                                                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                                attributes: [.font: UIFont.preferredFont(forTextStyle: .body)],
+                                                context: nil
+                                            )
+                                            
+                                            let lineHeight = UIFont.preferredFont(forTextStyle: .body).lineHeight
+                                            let maxHeight = lineHeight * CGFloat(maxLines)
+                                            
+                                            DispatchQueue.main.async {
+                                                needsTruncation = textSize.height > maxHeight
+                                            }
+                                        }
+                                }
+                            )
+                        
+                        // Visible text
+                        Text(localNews.caption)
+                            .font(.body)
+                            .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(isExpanded ? nil : maxLines)
+                            .animation(.easeInOut(duration: 0.3), value: isExpanded)
+                    }
                     .padding(.horizontal, 4) // Slight indent for content
+                    
+                    // Read More/Read Less button
+                    if needsTruncation {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isExpanded.toggle()
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Text(isExpanded ? "Read Less".localized() : "Read More".localized())
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                
+                                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.blue.opacity(0.1))
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
             }
             
             // Media Gallery - Display all media items

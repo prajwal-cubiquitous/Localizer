@@ -173,6 +173,7 @@ final class NewsFeedViewModel: ObservableObject {
                                 likesCount: newsItem.likesCount,
                                 commentsCount: newsItem.commentsCount,
                                 cosntituencyId: newsItem.cosntituencyId,
+                                category: newsItem.category,
                                 user: newsItem.user,
                                 newsImageURLs: newsItem.newsImageURLs
                             )
@@ -375,7 +376,8 @@ final class NewsFeedViewModel: ObservableObject {
             timestamp: news.timestamp.dateValue(),
             likesCount: news.likesCount,
             commentsCount: news.commentsCount,
-            constituencyId: news.cosntituencyId, category: news.category,
+            constituencyId: news.cosntituencyId,
+            category: news.category,
             newsImageURLs: news.newsImageURLs,
             user: userToUse
         )
@@ -403,7 +405,8 @@ final class NewsFeedViewModel: ObservableObject {
             timestamp: news.timestamp.dateValue(),
             likesCount: news.likesCount,
             commentsCount: news.commentsCount,
-            constituencyId: news.cosntituencyId, category: news.category,
+            constituencyId: news.cosntituencyId,
+            category: news.category,
             newsImageURLs: news.newsImageURLs,
             user: nil
         )
