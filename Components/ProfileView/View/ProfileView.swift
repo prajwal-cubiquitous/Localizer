@@ -28,10 +28,27 @@ struct ProfileView: View {
     @Query private var localUsers: [LocalUser]
     @State private var showSettings = false
     @State private var showConstituencySuccess = false
+    @State private var showRestartAlert = false
+    @State private var refreshTrigger = false
     
     private var currentUser: LocalUser? {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return nil }
         return localUsers.first { $0.id == currentUserId }
+    }
+    
+    // Get user's selected constituencies from LocalUser
+    private var userConstituencies: [String] {
+        guard let user = currentUser,
+              let constituencyIDs = user.constituencyIDs else { return [] }
+        return constituencyIDs.filter { !$0.isEmpty }
+    }
+    
+    // Get constituency names from IDs
+    private var userConstituencyNames: [String] {
+        guard let constituencies = constituencies else { return [] }
+        return userConstituencies.compactMap { constituencyId in
+            constituencies.first { $0.documentId == constituencyId || $0.id == constituencyId }?.constituencyName
+        }
     }
     
     @State private var path: [String] = []
@@ -135,8 +152,11 @@ struct ProfileView: View {
                 // Constituency Picker Section
                 if let list = constituencies {
                     Section {
-                        VStack(alignment: .leading, spacing: 12) {
-                            // Current Selection Display
+                        // Current Selection Display - Clickable
+                        Button(action: {
+                            // Navigate to constituency selection
+                            path.append("ConstituencySelection")
+                        }) {
                             HStack {
                                 Image(systemName: "location.circle.fill")
                                     .foregroundColor(.blue)
@@ -161,43 +181,12 @@ struct ProfileView: View {
                                     .foregroundColor(.secondary)
                             }
                             .padding(.vertical, 8)
-                            
-                            // Constituency Selection Button
-                            Button(action: {
-                                // Navigate to constituency selection
-                                path.append("ConstituencySelection")
-                            }) {
-                                HStack {
-                                    Image(systemName: "location.badge.plus")
-                                        .foregroundColor(.blue)
-                                    
-                                    Text("Change Constituency".localized())
-                                        .fontWeight(.medium)
-                                    
-                                    Spacer()
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .foregroundColor(.primary)
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 16)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(Color.blue.opacity(0.1))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                                        )
-                                )
-                            }
-                            .buttonStyle(PlainButtonStyle())
                         }
+                        .buttonStyle(PlainButtonStyle())
                     } header: {
                         Text("Constituency Selection".localized())
                     } footer: {
-                        Text("Select your constituency to receive relevant news and services".localized())
+                        Text("Tap to change your constituency".localized())
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -252,9 +241,17 @@ struct ProfileView: View {
                     hasFetchedUser = true
                     await refreshUserData()
                 }
+                // Update selectedName from user data
+                updateSelectedNameFromUserData()
+            }
+            .onAppear {
+                // Update selectedName when view appears
+                updateSelectedNameFromUserData()
             }
             .refreshable {
                 await refreshUserData()
+                // Also update selectedName from user's primary constituency
+                updateSelectedNameFromUserData()
             }
             // MODIFIED: Localized string
             .navigationTitle("profile_title".localized())
@@ -268,18 +265,43 @@ struct ProfileView: View {
             .navigationDestination(for: String.self) { value in
                 if value == "Upload" {
                     UploadDataView()
-                } else if value == "ConstituencySelection" {
-                    ConstituencyPickerView(
-                        constituencies: constituencies ?? [],
-                        selectedName: $selectedName,
-                        onSelectionChanged: {
-                            showConstituencySuccess = true
-                        }
-                    )
-                }
+                }                     else if value == "ConstituencySelection" {
+                        ConstituencyPickerView(
+                            constituencies: constituencies ?? [],
+                            selectedName: $selectedName,
+                            onSelectionChanged: {
+                                showConstituencySuccess = true
+                                // Show restart alert after constituency selection
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                    showRestartAlert = true
+                                }
+                            }
+                        )
+                    }
             }
             .sheet(isPresented: $showSettings) {
-                    SettingsView()
+                    SettingsViewWithCallback(onConstituencyChanged: {
+                        showRestartAlert = true
+                    })
+            }
+            .onChange(of: showSettings) { oldValue, newValue in
+                // When returning from Settings, refresh user data
+                if oldValue == true && newValue == false {
+                    Task {
+                        await refreshUserData()
+                        // Update selectedName from user's primary constituency
+                        updateSelectedNameFromUserData()
+                    }
+                }
+            }
+            .onChange(of: userConstituencyNames) { oldValue, newValue in
+                // Update selectedName when user constituencies change
+                updateSelectedNameFromUserData()
+                
+                // Show restart alert if constituencies changed
+                if !oldValue.isEmpty && !newValue.isEmpty && oldValue != newValue {
+                    showRestartAlert = true
+                }
             }
             .presentationDetents([.fraction(0.8)])
             .overlay {
@@ -317,6 +339,16 @@ struct ProfileView: View {
                     }
                 }
             }
+            .alert("Restart Required".localized(), isPresented: $showRestartAlert) {
+                Button("Later".localized(), role: .cancel) {
+                    showRestartAlert = false
+                }
+                Button("Restart App".localized()) {
+                    restartApp()
+                }
+            } message: {
+                Text("Your constituency settings have been updated. Please restart the app to see all changes take effect.".localized())
+            }
         }
     }
     
@@ -345,6 +377,18 @@ struct ProfileView: View {
         isRefreshing = true
         await self.AuthViewModel.fetchAndStoreUserAsync(userId: userId)
         isRefreshing = false
+    }
+    
+    private func updateSelectedNameFromUserData() {
+        // Update selectedName from user's primary constituency
+        if let primaryConstituencyName = userConstituencyNames.first {
+            selectedName = primaryConstituencyName
+        }
+    }
+    
+    private func restartApp() {
+        // Force restart the app by exiting and letting the system restart it
+        exit(0)
     }
 }
 
@@ -793,7 +837,9 @@ struct ConstituencyPickerView: View {
             .alert("Confirm Selection".localized(), isPresented: $showingConfirmation) {
                 Button("Cancel".localized(), role: .cancel) { }
                 Button("Select".localized()) {
-                    selectedName = tempSelectedName
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        selectedName = tempSelectedName
+                    }
                     onSelectionChanged?()
                     dismiss()
                 }
@@ -801,6 +847,19 @@ struct ConstituencyPickerView: View {
                 Text("Are you sure you want to select '\(tempSelectedName)' as your constituency?".localized())
             }
         }
+    }
+}
+
+// MARK: - Settings View with Callback
+struct SettingsViewWithCallback: View {
+    let onConstituencyChanged: () -> Void
+    @StateObject private var viewModel = SettingsViewModel()
+    
+    var body: some View {
+        SettingsView()
+            .onAppear {
+                viewModel.onConstituencyChanged = onConstituencyChanged
+            }
     }
 }
 

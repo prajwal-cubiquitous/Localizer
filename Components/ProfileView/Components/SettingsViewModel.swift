@@ -10,6 +10,8 @@ import FirebaseAuth
 import FirebaseFirestore
 
 class SettingsViewModel: ObservableObject {
+    var onConstituencyChanged: (() -> Void)?
+    
     func addConsituencyIdToProfile(constituencyID: String, index: Int) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -32,6 +34,11 @@ class SettingsViewModel: ObservableObject {
                 "constituencyIDs": constituencyIds
             ])
             print("ConstituencyID inserted at index \(index) successfully")
+            
+            // Notify that constituency has changed
+            DispatchQueue.main.async {
+                self.onConstituencyChanged?()
+            }
         } catch {
             print("Error updating constituencyIDs array: \(error.localizedDescription)")
         }
