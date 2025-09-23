@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var showingLanguagePicker = false
     @State private var showingConstituencyPicker = false
     @State private var showingConstituencySelection = false
+    @State private var isSaving = false
     
     let languages = ["English", "ಕನ್ನಡ"]
     let constituencies = ["560043", "560001", "560002", "560003", "560004", "560005"]
@@ -502,6 +503,7 @@ struct ConstituencySelectionView: View {
     @Binding var thirdConstituency: String
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = SettingsViewModel()
+    @State private var isSaving = false
     
     let constituencies = ["560043", "560001", "560002", "560003", "560004", "560005"]
     
@@ -649,31 +651,39 @@ struct ConstituencySelectionView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        Task{
-                            if primaryConstituency != ""{
-                                await viewModel.addConsituencyIdToProfile(constituencyID: primaryConstituency, index: 0)
-                                print("Primary constituency:\(primaryConstituency)")
-                            }
+                    HStack {
+                        if isSaving {
+                            ProgressView()
+                                .scaleEffect(0.8)
                         }
-                        Task{
-                            if secondaryConstituency != ""{
-                                await viewModel.addConsituencyIdToProfile(constituencyID: secondaryConstituency, index: 1)
-                                print("Secondary constituency:\(secondaryConstituency)")
-                            }
-                        }
-                        Task{
-                            if thirdConstituency != ""{
-                                await viewModel.addConsituencyIdToProfile(constituencyID: thirdConstituency, index: 2)
-                                print("3rd constituency:\(thirdConstituency)")
-                            }
+                        Text(isSaving ? "Saving..." : "Save")
+                    }
+                    .onTapGesture {
+                        // Validate that at least primary constituency is selected
+                        guard !primaryConstituency.isEmpty else {
+                            print("Error: Primary constituency is required")
+                            return
                         }
                         
-                        
-                       
-                        dismiss()
+                        Task {
+                            isSaving = true
+                            
+                            // Save all constituencies at once
+                            await viewModel.saveAllConstituencies(
+                                primary: primaryConstituency,
+                                secondary: secondaryConstituency,
+                                third: thirdConstituency
+                            )
+                            
+                            // Dismiss after save is complete
+                            await MainActor.run {
+                                isSaving = false
+                                dismiss()
+                            }
+                        }
                     }
                     .fontWeight(.semibold)
+                    .disabled(primaryConstituency.isEmpty || isSaving) // Disable save if no primary constituency or saving
                 }
             }
         }
@@ -738,6 +748,13 @@ struct ConstituencySelectionCard: View {
         .buttonStyle(PlainButtonStyle())
         .sheet(isPresented: $showingPicker) {
             ConstituencySearchView(selectedConstituencyId: $selectedConstituencyId, selectedConstituencyName: $selectedConstituencyName)
+        }
+        .onChange(of: selectedConstituencyId) { oldValue, newValue in
+            // Update the display name when constituency ID changes
+            if newValue != oldValue && !newValue.isEmpty {
+                // You can add logic here to map constituency ID to name if needed
+                selectedConstituencyName = "Constituency \(newValue)"
+            }
         }
 
     }

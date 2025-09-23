@@ -28,7 +28,6 @@ struct ProfileView: View {
     @Query private var localUsers: [LocalUser]
     @State private var showSettings = false
     @State private var showConstituencySuccess = false
-    @State private var showRestartAlert = false
     @State private var refreshTrigger = false
     
     private var currentUser: LocalUser? {
@@ -271,18 +270,17 @@ struct ProfileView: View {
                             selectedName: $selectedName,
                             onSelectionChanged: {
                                 showConstituencySuccess = true
-                                // Show restart alert after constituency selection
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                    showRestartAlert = true
+                                // Refresh user data to get updated constituency
+                                Task {
+                                    await refreshUserData()
+                                    updateSelectedNameFromUserData()
                                 }
                             }
                         )
                     }
             }
             .sheet(isPresented: $showSettings) {
-                    SettingsViewWithCallback(onConstituencyChanged: {
-                        showRestartAlert = true
-                    })
+                    SettingsView()
             }
             .onChange(of: showSettings) { oldValue, newValue in
                 // When returning from Settings, refresh user data
@@ -297,11 +295,6 @@ struct ProfileView: View {
             .onChange(of: userConstituencyNames) { oldValue, newValue in
                 // Update selectedName when user constituencies change
                 updateSelectedNameFromUserData()
-                
-                // Show restart alert if constituencies changed
-                if !oldValue.isEmpty && !newValue.isEmpty && oldValue != newValue {
-                    showRestartAlert = true
-                }
             }
             .presentationDetents([.fraction(0.8)])
             .overlay {
@@ -338,16 +331,6 @@ struct ProfileView: View {
                         }
                     }
                 }
-            }
-            .alert("Restart Required".localized(), isPresented: $showRestartAlert) {
-                Button("Later".localized(), role: .cancel) {
-                    showRestartAlert = false
-                }
-                Button("Restart App".localized()) {
-                    restartApp()
-                }
-            } message: {
-                Text("Your constituency settings have been updated. Please restart the app to see all changes take effect.".localized())
             }
         }
     }
@@ -386,10 +369,6 @@ struct ProfileView: View {
         }
     }
     
-    private func restartApp() {
-        // Force restart the app by exiting and letting the system restart it
-        exit(0)
-    }
 }
 
 
@@ -750,6 +729,9 @@ struct ConstituencyPickerView: View {
     @State private var searchText = ""
     @State private var showingConfirmation = false
     @State private var tempSelectedName = ""
+    @State private var tempSelectedId = ""
+    @State private var isSaving = false
+    @StateObject private var viewModel = SettingsViewModel()
     
     init(constituencies: [ConstituencyDetails], selectedName: Binding<String>, onSelectionChanged: (() -> Void)? = nil) {
         self.constituencies = constituencies
@@ -770,60 +752,8 @@ struct ConstituencyPickerView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Search Bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    
-                    TextField("Search constituencies...".localized(), text: $searchText)
-                        .textFieldStyle(PlainTextFieldStyle())
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                
-                // Constituencies List
-                List {
-                    ForEach(filteredConstituencies, id: \.constituencyName) { constituency in
-                        Button(action: {
-                            tempSelectedName = constituency.constituencyName
-                            showingConfirmation = true
-                        }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(constituency.constituencyName)
-                                        .font(.body)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.primary)
-                                    
-                                    Text("District: \(constituency.district)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    if !constituency.currentMLAName.isEmpty {
-                                        Text("MLA: \(constituency.currentMLAName)")
-                                            .font(.caption)
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                                if selectedName == constituency.constituencyName {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.blue)
-                                        .font(.system(size: 20))
-                                }
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                .listStyle(PlainListStyle())
+                searchBar
+                constituenciesList
             }
             .navigationTitle("Select Constituency".localized())
             .navigationBarTitleDisplayMode(.inline)
@@ -836,32 +766,107 @@ struct ConstituencyPickerView: View {
             }
             .alert("Confirm Selection".localized(), isPresented: $showingConfirmation) {
                 Button("Cancel".localized(), role: .cancel) { }
-                Button("Select".localized()) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        selectedName = tempSelectedName
+                Button(isSaving ? "Saving...".localized() : "Select".localized()) {
+                    Task {
+                        isSaving = true
+                        
+                        // Save constituency to Firebase as primary constituency
+                        await viewModel.addConsituencyIdToProfile(constituencyID: tempSelectedId, index: 0)
+                        
+                        // Update UI
+                        await MainActor.run {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                selectedName = tempSelectedName
+                            }
+                            isSaving = false
+                            onSelectionChanged?()
+                            dismiss()
+                        }
                     }
-                    onSelectionChanged?()
-                    dismiss()
                 }
+                .disabled(isSaving)
             } message: {
                 Text("Are you sure you want to select '\(tempSelectedName)' as your constituency?".localized())
             }
         }
     }
-}
-
-// MARK: - Settings View with Callback
-struct SettingsViewWithCallback: View {
-    let onConstituencyChanged: () -> Void
-    @StateObject private var viewModel = SettingsViewModel()
     
-    var body: some View {
-        SettingsView()
-            .onAppear {
-                viewModel.onConstituencyChanged = onConstituencyChanged
+    // MARK: - Search Bar
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+            
+            TextField("Search constituencies...".localized(), text: $searchText)
+                .textFieldStyle(PlainTextFieldStyle())
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+    }
+    
+    // MARK: - Constituencies List
+    private var constituenciesList: some View {
+        List {
+            ForEach(filteredConstituencies, id: \.constituencyName) { constituency in
+                constituencyRow(for: constituency)
             }
+        }
+        .listStyle(PlainListStyle())
+    }
+    
+    // MARK: - Constituency Row
+    private func constituencyRow(for constituency: ConstituencyDetails) -> some View {
+        Button(action: {
+            tempSelectedName = constituency.constituencyName
+            tempSelectedId = constituency.documentId ?? constituency.id ?? ""
+            showingConfirmation = true
+        }) {
+            HStack {
+                constituencyInfo(for: constituency)
+                Spacer()
+                selectionIndicator(for: constituency)
+            }
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    // MARK: - Constituency Info
+    private func constituencyInfo(for constituency: ConstituencyDetails) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(constituency.constituencyName)
+                .font(.body)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+            
+            Text("District: \(constituency.district)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            if !constituency.currentMLAName.isEmpty {
+                Text("MLA: \(constituency.currentMLAName)")
+                    .font(.caption)
+                    .foregroundColor(.blue)
+            }
+        }
+    }
+    
+    // MARK: - Selection Indicator
+    private func selectionIndicator(for constituency: ConstituencyDetails) -> some View {
+        Group {
+            if selectedName == constituency.constituencyName {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.blue)
+                    .font(.system(size: 20))
+            }
+        }
     }
 }
+
 
 //#Preview {
 //    ProfileView()
