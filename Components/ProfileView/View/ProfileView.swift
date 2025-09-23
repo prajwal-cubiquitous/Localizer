@@ -280,7 +280,7 @@ struct ProfileView: View {
                     }
             }
             .sheet(isPresented: $showSettings) {
-                    SettingsView()
+                SettingsView(constituencies: $constituencies)
             }
             .onChange(of: showSettings) { oldValue, newValue in
                 // When returning from Settings, refresh user data
@@ -771,7 +771,7 @@ struct ConstituencyPickerView: View {
                         isSaving = true
                         
                         // Save constituency to Firebase as primary constituency
-                        await viewModel.addConsituencyIdToProfile(constituencyID: tempSelectedId, index: 0)
+                        await viewModel.swapConstituencyWithPrimary(constituencyID: tempSelectedId)
                         
                         // Update UI
                         await MainActor.run {

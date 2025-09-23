@@ -22,9 +22,9 @@ struct SettingsView: View {
     @State private var showingConstituencyPicker = false
     @State private var showingConstituencySelection = false
     @State private var isSaving = false
+    @Binding var constituencies: [ConstituencyDetails]?
     
     let languages = ["English", "ಕನ್ನಡ"]
-    let constituencies = ["560043", "560001", "560002", "560003", "560004", "560005"]
     
     var body: some View {
         NavigationView {
@@ -257,7 +257,8 @@ struct SettingsView: View {
             ConstituencySelectionView(
                 primaryConstituency: $primaryConstituency,
                 secondaryConstituency: $secondaryConstituency,
-                thirdConstituency: $thirdConstituency
+                thirdConstituency: $thirdConstituency,
+                constituencies: $constituencies
             )
         }
         .alert("Logout", isPresented: $showingLogoutAlert) {
@@ -504,8 +505,8 @@ struct ConstituencySelectionView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = SettingsViewModel()
     @State private var isSaving = false
+    @Binding var constituencies: [ConstituencyDetails]?
     
-    let constituencies = ["560043", "560001", "560002", "560003", "560004", "560005"]
     
     var body: some View {
         NavigationView {
@@ -549,7 +550,6 @@ struct ConstituencySelectionView: View {
                         ConstituencySelectionCard(
                             title: "Primary",
                             selectedConstituencyId: $primaryConstituency,
-                            constituencies: constituencies,
                             isRequired: true
                         )
                     }
@@ -578,7 +578,6 @@ struct ConstituencySelectionView: View {
                         ConstituencySelectionCard(
                             title: "Secondary",
                             selectedConstituencyId: $secondaryConstituency,
-                            constituencies: constituencies,
                             isRequired: false
                         )
                     }
@@ -607,7 +606,6 @@ struct ConstituencySelectionView: View {
                         ConstituencySelectionCard(
                             title: "Third",
                             selectedConstituencyId: $thirdConstituency,
-                            constituencies: constituencies,
                             isRequired: false
                         )
                     }
@@ -668,12 +666,50 @@ struct ConstituencySelectionView: View {
                         Task {
                             isSaving = true
                             
+                            
                             // Save all constituencies at once
-                            await viewModel.saveAllConstituencies(
-                                primary: primaryConstituency,
-                                secondary: secondaryConstituency,
-                                third: thirdConstituency
-                            )
+                            if let constituencies = constituencies{
+                                await viewModel.saveAllConstituencies(
+                                    primary: primaryConstituency,
+                                    secondary: secondaryConstituency,
+                                    third: thirdConstituency,
+                                    constituencies: constituencies
+                                )
+                            }
+                            
+                            if var constituencie = constituencies {
+                                if primaryConstituency != "" {
+                                    let fetched = await viewModel.fetchConstituency(byDocumentId: primaryConstituency)
+                                    if let fetched = fetched {
+                                        if constituencie.count > 1 {
+                                            constituencie[1] = fetched
+                                        } else {
+                                            constituencie.append(fetched)
+                                        }
+                                    }                                }
+                                if secondaryConstituency != "" {
+                                    let fetched = await viewModel.fetchConstituency(byDocumentId: secondaryConstituency)
+                                    if let fetched = fetched {
+                                        if constituencie.count > 2 {
+                                            constituencie[2] = fetched
+                                        } else {
+                                            constituencie.append(fetched)
+                                        }
+                                    }
+                                }
+                                if thirdConstituency != "" {
+                                    let fetched = await viewModel.fetchConstituency(byDocumentId: thirdConstituency)
+                                    if let fetched = fetched {
+                                        if constituencie.count > 3 {
+                                            constituencie[3] = fetched
+                                        } else {
+                                            constituencie.append(fetched)
+                                        }
+                                    }
+                                }
+                                constituencies = constituencie // reassign to update the @Binding
+                            }
+
                             
                             // Dismiss after save is complete
                             await MainActor.run {
@@ -695,7 +731,6 @@ struct ConstituencySelectionCard: View {
     let title: String
     @State var selectedConstituencyName: String = ""
     @Binding var selectedConstituencyId: String
-    let constituencies: [String]
     let isRequired: Bool
     @State private var showingPicker = false
     
@@ -761,5 +796,5 @@ struct ConstituencySelectionCard: View {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(constituencies: .constant([DummyConstituencyDetials.detials1]))
 }
