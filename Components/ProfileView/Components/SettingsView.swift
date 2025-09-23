@@ -10,9 +10,9 @@ import SwiftUI
 struct SettingsView: View {
     @State private var selectedLanguage = "English"
     @State private var defaultConstituency = "560043"
-    @State private var primaryConstituency = "560043"
-    @State private var secondaryConstituency = "560001"
-    @State private var thirdConstituency = "560002"
+    @State private var primaryConstituency: String = ""
+    @State private var secondaryConstituency:String = ""
+    @State private var thirdConstituency:String = ""
     @State private var notificationsEnabled = true
     @State private var darkModeEnabled = false
     @State private var autoPlayVideos = true
@@ -249,9 +249,9 @@ struct SettingsView: View {
                 }
             }
         )
-        .sheet(isPresented: $showingConstituencyPicker) {
-            ConstituencyPickerView(selectedConstituency: $defaultConstituency)
-        }
+//        .sheet(isPresented: $showingConstituencyPicker) {
+//            ConstituencyPickerView(selectedConstituency: $defaultConstituency)
+//        }
         .sheet(isPresented: $showingConstituencySelection) {
             ConstituencySelectionView(
                 primaryConstituency: $primaryConstituency,
@@ -495,58 +495,13 @@ struct LanguagePickerView: View {
     }
 }
 
-// MARK: - Constituency Picker View
-struct ConstituencyPickerView: View {
-    @Binding var selectedConstituency: String
-    @Environment(\.dismiss) private var dismiss
-    
-    let constituencies = ["560043", "560001", "560002", "560003", "560004", "560005"]
-    
-    var body: some View {
-        NavigationView {
-            List {
-                ForEach(constituencies, id: \.self) { constituency in
-                    Button(action: {
-                        selectedConstituency = constituency
-                        dismiss()
-                    }) {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text("Constituency \(constituency)")
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                Text("Sample Area Name")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            if selectedConstituency == constituency {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Select Constituency")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
 // MARK: - Constituency Selection View
 struct ConstituencySelectionView: View {
     @Binding var primaryConstituency: String
     @Binding var secondaryConstituency: String
     @Binding var thirdConstituency: String
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel = SettingsViewModel()
     
     let constituencies = ["560043", "560001", "560002", "560003", "560004", "560005"]
     
@@ -591,7 +546,7 @@ struct ConstituencySelectionView: View {
                         
                         ConstituencySelectionCard(
                             title: "Primary",
-                            selectedConstituency: $primaryConstituency,
+                            selectedConstituencyId: $primaryConstituency,
                             constituencies: constituencies,
                             isRequired: true
                         )
@@ -620,7 +575,7 @@ struct ConstituencySelectionView: View {
                         
                         ConstituencySelectionCard(
                             title: "Secondary",
-                            selectedConstituency: $secondaryConstituency,
+                            selectedConstituencyId: $secondaryConstituency,
                             constituencies: constituencies,
                             isRequired: false
                         )
@@ -649,7 +604,7 @@ struct ConstituencySelectionView: View {
                         
                         ConstituencySelectionCard(
                             title: "Third",
-                            selectedConstituency: $thirdConstituency,
+                            selectedConstituencyId: $thirdConstituency,
                             constituencies: constituencies,
                             isRequired: false
                         )
@@ -695,7 +650,27 @@ struct ConstituencySelectionView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        // Save functionality will be implemented later
+                        Task{
+                            if primaryConstituency != ""{
+                                await viewModel.addConsituencyIdToProfile(constituencyID: primaryConstituency, index: 0)
+                                print("Primary constituency:\(primaryConstituency)")
+                            }
+                        }
+                        Task{
+                            if secondaryConstituency != ""{
+                                await viewModel.addConsituencyIdToProfile(constituencyID: secondaryConstituency, index: 1)
+                                print("Secondary constituency:\(secondaryConstituency)")
+                            }
+                        }
+                        Task{
+                            if thirdConstituency != ""{
+                                await viewModel.addConsituencyIdToProfile(constituencyID: thirdConstituency, index: 2)
+                                print("3rd constituency:\(thirdConstituency)")
+                            }
+                        }
+                        
+                        
+                       
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -708,7 +683,8 @@ struct ConstituencySelectionView: View {
 // MARK: - Constituency Selection Card
 struct ConstituencySelectionCard: View {
     let title: String
-    @Binding var selectedConstituency: String
+    @State var selectedConstituencyName: String = ""
+    @Binding var selectedConstituencyId: String
     let constituencies: [String]
     let isRequired: Bool
     @State private var showingPicker = false
@@ -726,18 +702,18 @@ struct ConstituencySelectionCard: View {
                 
                 // Content
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(title) Constituency")
+                    Text("\(selectedConstituencyName) Constituency")
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
                     
-                    if selectedConstituency.isEmpty {
+                    if selectedConstituencyName != "" {
                         Text("Tap to select constituency")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     } else {
-                        Text("Constituency \(selectedConstituency)")
+                        Text("Constituency \(selectedConstituencyName)")
                             .font(.caption)
                             .foregroundColor(.blue)
                     }
@@ -761,8 +737,9 @@ struct ConstituencySelectionCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .sheet(isPresented: $showingPicker) {
-            ConstituencyPickerView(selectedConstituency: $selectedConstituency)
+            ConstituencySearchView(selectedConstituencyId: $selectedConstituencyId, selectedConstituencyName: $selectedConstituencyName)
         }
+
     }
 }
 

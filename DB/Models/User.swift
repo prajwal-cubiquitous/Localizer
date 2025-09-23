@@ -28,7 +28,7 @@ struct User: Identifiable, Codable, Sendable {
     var SavedPostsCount: Int = 0
     var commentsCount: Int = 0
     var role: UserRole = .endUser
-    var constituencyIDs: [String]? = nil
+    var constituencyIDs: [String]? = ["","",""]
     @ServerTimestamp var lastUpdated: Date?
 }
 

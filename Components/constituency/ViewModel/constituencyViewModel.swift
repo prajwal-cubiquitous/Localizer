@@ -7,6 +7,7 @@
 import Foundation
 import FirebaseFirestore
 import Combine
+import FirebaseAuth
 
 @MainActor
 class constituencyViewModel: ObservableObject {
@@ -25,8 +26,18 @@ class constituencyViewModel: ObservableObject {
                 .whereField("Associated Pincodes (Compiled, Non-Official)", arrayContains: pincode)
                 .getDocuments()
             
-            let result = try snapshot.documents.compactMap {
+            var result = try snapshot.documents.compactMap {
                 try $0.data(as: ConstituencyDetails.self)
+            }
+            
+            guard let userId = Auth.auth().currentUser?.uid else { return [] }
+            
+            let constituencyIDs = try await fetchConstituencyIDs(userDocumentID: userId)
+            
+            for constituencyid in constituencyIDs {
+                if let constituencydetail = await fetchConstituency(byDocumentId: constituencyid) {
+                    result.append(constituencydetail)
+                }
             }
             
             constituencies = result
@@ -36,6 +47,18 @@ class constituencyViewModel: ObservableObject {
             print("❌ Error fetching constituency: \(error)")
             errorMessage = "Failed to fetch constituency data: \(error.localizedDescription)"
             isLoading = false
+            return []
+        }
+    }
+    
+    func fetchConstituencyIDs(userDocumentID: String) async throws -> [String] {
+        let db = Firestore.firestore()
+        let docRef = db.collection("users").document(userDocumentID)
+        let document = try await docRef.getDocument()
+        if document.exists,
+           let ids = document.data()?["constituencyIDs"] as? [String] {
+            return ids
+        } else {
             return []
         }
     }
