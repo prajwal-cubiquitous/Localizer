@@ -27,6 +27,7 @@ struct ProfileView: View {
     @Binding var selectedName: String
     @Query private var localUsers: [LocalUser]
     @State private var showSettings = false
+    @State private var showConstituencySuccess = false
     
     private var currentUser: LocalUser? {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return nil }
@@ -134,10 +135,85 @@ struct ProfileView: View {
                 // Constituency Picker Section
                 if let list = constituencies {
                     Section {
-                        StylishPicker(list: list, selectedName: $selectedName)
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Current Selection Display
+                            HStack {
+                                Image(systemName: "location.circle.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.system(size: 16))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Current Constituency".localized())
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text(selectedName.isEmpty ? "Not Selected".localized() : selectedName)
+                                        .font(.body)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.primary)
+                                        .animation(.easeInOut(duration: 0.3), value: selectedName)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 8)
+                            
+                            // Constituency Selection Button
+                            Button(action: {
+                                // Navigate to constituency selection
+                                path.append("ConstituencySelection")
+                            }) {
+                                HStack {
+                                    Image(systemName: "location.badge.plus")
+                                        .foregroundColor(.blue)
+                                    
+                                    Text("Change Constituency".localized())
+                                        .fontWeight(.medium)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .foregroundColor(.primary)
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.blue.opacity(0.1))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                        )
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
                     } header: {
-                        // MODIFIED: Localized string
-                        Text("Select Constituency".localized())
+                        Text("Constituency Selection".localized())
+                    } footer: {
+                        Text("Select your constituency to receive relevant news and services".localized())
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    // Loading state for constituencies
+                    Section {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Loading constituencies...".localized())
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                    } header: {
+                        Text("Constituency Selection".localized())
                     }
                 }
                 
@@ -192,12 +268,55 @@ struct ProfileView: View {
             .navigationDestination(for: String.self) { value in
                 if value == "Upload" {
                     UploadDataView()
+                } else if value == "ConstituencySelection" {
+                    ConstituencyPickerView(
+                        constituencies: constituencies ?? [],
+                        selectedName: $selectedName,
+                        onSelectionChanged: {
+                            showConstituencySuccess = true
+                        }
+                    )
                 }
             }
             .sheet(isPresented: $showSettings) {
                     SettingsView()
             }
             .presentationDetents([.fraction(0.8)])
+            .overlay {
+                if showConstituencySuccess {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.system(size: 20))
+                            
+                            Text("Constituency updated successfully!".localized())
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.regularMaterial)
+                                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                        )
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 100)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: showConstituencySuccess)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            withAnimation {
+                                showConstituencySuccess = false
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -575,6 +694,113 @@ struct EditProfileView: View {
             // Could add confirmation dialog here if needed
         }
         isPresented = false
+    }
+}
+
+// MARK: - Constituency Picker View
+struct ConstituencyPickerView: View {
+    let constituencies: [ConstituencyDetails]
+    @Binding var selectedName: String
+    let onSelectionChanged: (() -> Void)?
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+    @State private var showingConfirmation = false
+    @State private var tempSelectedName = ""
+    
+    init(constituencies: [ConstituencyDetails], selectedName: Binding<String>, onSelectionChanged: (() -> Void)? = nil) {
+        self.constituencies = constituencies
+        self._selectedName = selectedName
+        self.onSelectionChanged = onSelectionChanged
+    }
+    
+    var filteredConstituencies: [ConstituencyDetails] {
+        if searchText.isEmpty {
+            return constituencies
+        } else {
+            return constituencies.filter { constituency in
+                constituency.constituencyName.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Search Bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    
+                    TextField("Search constituencies...".localized(), text: $searchText)
+                        .textFieldStyle(PlainTextFieldStyle())
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                
+                // Constituencies List
+                List {
+                    ForEach(filteredConstituencies, id: \.constituencyName) { constituency in
+                        Button(action: {
+                            tempSelectedName = constituency.constituencyName
+                            showingConfirmation = true
+                        }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(constituency.constituencyName)
+                                        .font(.body)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("District: \(constituency.district)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    if !constituency.currentMLAName.isEmpty {
+                                        Text("MLA: \(constituency.currentMLAName)")
+                                            .font(.caption)
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                if selectedName == constituency.constituencyName {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.blue)
+                                        .font(.system(size: 20))
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .listStyle(PlainListStyle())
+            }
+            .navigationTitle("Select Constituency".localized())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel".localized()) {
+                        dismiss()
+                    }
+                }
+            }
+            .alert("Confirm Selection".localized(), isPresented: $showingConfirmation) {
+                Button("Cancel".localized(), role: .cancel) { }
+                Button("Select".localized()) {
+                    selectedName = tempSelectedName
+                    onSelectionChanged?()
+                    dismiss()
+                }
+            } message: {
+                Text("Are you sure you want to select '\(tempSelectedName)' as your constituency?".localized())
+            }
+        }
     }
 }
 
