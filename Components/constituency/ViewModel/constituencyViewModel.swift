@@ -35,8 +35,10 @@ class constituencyViewModel: ObservableObject {
             let constituencyIDs = try await fetchConstituencyIDs(userDocumentID: userId)
             
             for constituencyid in constituencyIDs {
-                if let constituencydetail = await fetchConstituency(byDocumentId: constituencyid) {
-                    result.append(constituencydetail)
+                if constituencyid != ""{
+                    if let constituencydetail = await fetchConstituency(byDocumentId: constituencyid) {
+                        result.append(constituencydetail)
+                    }
                 }
             }
             

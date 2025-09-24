@@ -58,7 +58,7 @@ struct MLAHistory: Codable {
     }
 }
 
-struct ConstituencyDetails: Codable, Identifiable, Hashable {
+struct ConstituencyDetails: Codable, Identifiable {
     var id: String?  // Firestore doc ID
     var documentId: String?  // Firestore document ID stored as field
     var constituencyId: String?  // New field for constituency ID
@@ -76,19 +76,6 @@ struct ConstituencyDetails: Codable, Identifiable, Hashable {
     var previousMLA: String
     var victoryMargin: String
     var mlaHistory: [MLAHistory]?
-    
-    // Hashable conformance
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(constituencyName)
-        hasher.combine(district)
-        hasher.combine(constituencyNumber)
-    }
-    
-    static func == (lhs: ConstituencyDetails, rhs: ConstituencyDetails) -> Bool {
-        return lhs.constituencyName == rhs.constituencyName &&
-               lhs.district == rhs.district &&
-               lhs.constituencyNumber == rhs.constituencyNumber
-    }
     
     // Standard memberwise initializer
     init(id: String? = nil, documentId: String? = nil, constituencyId: String? = nil, constituencyNumber: Int, constituencyName: String, district: String, currentMLAName: String, politicalParty: String, gender: String, electionYear: String, assemblyTerm: String, associatedPincodes: [String], lokSabhaConstituency: String, reservationStatus: String, previousMLA: String, victoryMargin: String, mlaHistory: [MLAHistory]? = nil) {

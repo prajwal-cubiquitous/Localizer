@@ -27,7 +27,7 @@ struct MainTabView: View {
     
     // for Constituency Fetching 
     @StateObject var ConstituencyViewModel = constituencyViewModel()
-    @State var constituencies : [ConstituencyDetails]?
+    @State var constituencies : Set<ConstituencyDetails>?  // Changed from Array to Set
     @State private var selectedName: String = ""
     
     // Add state to track constituency loading
@@ -61,6 +61,23 @@ struct MainTabView: View {
         }
         // Fallback to current pincode
         return [pincode]
+    }
+    
+    // Convert Set to Binding<Array> for ProfileView compatibility
+    private var constituenciesBinding: Binding<[ConstituencyDetails]?> {
+        Binding(
+            get: {
+                guard let constituencies = constituencies else { return nil }
+                return Array(constituencies)
+            },
+            set: { newValue in
+                guard let newValue = newValue else { 
+                    constituencies = nil
+                    return 
+                }
+                constituencies = Set(newValue)
+            }
+        )
     }
     
     // MARK: - Initialization
@@ -188,7 +205,7 @@ struct MainTabView: View {
                 .tag(3)
             
             // Profile Tab
-            ProfileView(pincode: pincode, constituencies: $constituencies, selectedName: $selectedName)
+            ProfileView(pincode: pincode, constituencies: constituenciesBinding, selectedName: $selectedName)
                 .environment(\.modelContext, modelContext) // Explicitly pass modelContext to ProfileView
                 .environmentObject(AuthviewModel)
                 .environmentObject(appState)
@@ -381,7 +398,8 @@ struct MainTabView: View {
             let fetchedConstituencies = await ConstituencyViewModel.fetchConstituency(forPincode: pincode)
             
             await MainActor.run {
-                self.constituencies = fetchedConstituencies
+                // Convert array to Set to eliminate duplicates
+                self.constituencies = Set(fetchedConstituencies)
                 
                 if let first = fetchedConstituencies.first {
                     self.selectedName = first.constituencyName

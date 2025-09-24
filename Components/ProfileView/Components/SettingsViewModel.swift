@@ -49,26 +49,20 @@ class SettingsViewModel: ObservableObject {
         let userRef = db.collection("users").document(uid)
         
         do {
+            print(constituencies[0].constituencyName)
+            
+            // 2. Build up the new constituency ID list
             var constituencyIds: [String] = []
             
-            for constituency in constituencies {
-                print(constituency.constituencyName)
-                if let constituencyID = constituency.id{
-                    constituencyIds.append(constituencyID)
-                }
-            }
+            constituencyIds.append("")
+        
+            constituencyIds.append(primary)
+            constituencyIds.append(secondary)
+//            if !third.isEmpty {
+            constituencyIds.append(third)
+//            }
             
-            // Add constituencies in order, only if they're not empty
-            if !primary.isEmpty {
-                constituencyIds.append(primary)
-            }
-            if !secondary.isEmpty {
-                constituencyIds.append(secondary)
-            }
-            if !third.isEmpty {
-                constituencyIds.append(third)
-            }
-            
+            // 3. Set the updated list
             try await userRef.updateData([
                 "constituencyIDs": constituencyIds
             ])
@@ -82,6 +76,7 @@ class SettingsViewModel: ObservableObject {
             print("Error saving all constituencies: \(error.localizedDescription)")
         }
     }
+
     
     func fetchConstituency(byDocumentId documentId: String) async -> ConstituencyDetails? {
         
@@ -140,4 +135,21 @@ class SettingsViewModel: ObservableObject {
                 print("Error swapping constituency: \(error.localizedDescription)")
             }
         }
+    
+    func fetchConstituency(forPincode pincode: String) async -> [ConstituencyDetails] {
+
+        let db = Firestore.firestore()
+        do {
+            let snapshot = try await db.collection("constituencies")
+                .whereField("Associated Pincodes (Compiled, Non-Official)", arrayContains: pincode)
+                .getDocuments()
+            
+            let result = try snapshot.documents.compactMap {
+                try $0.data(as: ConstituencyDetails.self)
+            }
+            return result
+        } catch {
+            return []
+        }
+    }
 }

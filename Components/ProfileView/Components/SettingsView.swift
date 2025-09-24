@@ -23,6 +23,7 @@ struct SettingsView: View {
     @State private var showingConstituencySelection = false
     @State private var isSaving = false
     @Binding var constituencies: [ConstituencyDetails]?
+    let pincode: String
     
     let languages = ["English", "ಕನ್ನಡ"]
     
@@ -258,7 +259,7 @@ struct SettingsView: View {
                 primaryConstituency: $primaryConstituency,
                 secondaryConstituency: $secondaryConstituency,
                 thirdConstituency: $thirdConstituency,
-                constituencies: $constituencies
+                constituencies: $constituencies, pincode: pincode
             )
         }
         .alert("Logout", isPresented: $showingLogoutAlert) {
@@ -506,7 +507,7 @@ struct ConstituencySelectionView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var isSaving = false
     @Binding var constituencies: [ConstituencyDetails]?
-    
+    let pincode: String
     
     var body: some View {
         NavigationView {
@@ -677,38 +678,38 @@ struct ConstituencySelectionView: View {
                                 )
                             }
                             
+                            constituencies = []
+                            
+                            
                             if var constituencie = constituencies {
                                 if primaryConstituency != "" {
                                     let fetched = await viewModel.fetchConstituency(byDocumentId: primaryConstituency)
                                     if let fetched = fetched {
-                                        if constituencie.count > 1 {
-                                            constituencie[1] = fetched
-                                        } else {
-                                            constituencie.append(fetched)
-                                        }
-                                    }                                }
+                                        constituencie.append(fetched)
+                                    }
+                                }
                                 if secondaryConstituency != "" {
                                     let fetched = await viewModel.fetchConstituency(byDocumentId: secondaryConstituency)
                                     if let fetched = fetched {
-                                        if constituencie.count > 2 {
-                                            constituencie[2] = fetched
-                                        } else {
-                                            constituencie.append(fetched)
-                                        }
+                                        constituencie.append(fetched)
                                     }
                                 }
                                 if thirdConstituency != "" {
                                     let fetched = await viewModel.fetchConstituency(byDocumentId: thirdConstituency)
                                     if let fetched = fetched {
-                                        if constituencie.count > 3 {
-                                            constituencie[3] = fetched
-                                        } else {
-                                            constituencie.append(fetched)
-                                        }
+                                        constituencie.append(fetched)
                                     }
                                 }
+                                
+                                let fetchedAll = await viewModel.fetchConstituency(forPincode: pincode)
+                                for fetched in fetchedAll{
+                                    constituencie.append(fetched)
+                                }
+                                
                                 constituencies = constituencie // reassign to update the @Binding
                             }
+                            
+                            
 
                             
                             // Dismiss after save is complete
@@ -796,5 +797,5 @@ struct ConstituencySelectionCard: View {
 }
 
 #Preview {
-    SettingsView(constituencies: .constant([DummyConstituencyDetials.detials1]))
+    SettingsView(constituencies: .constant([DummyConstituencyDetials.detials1]), pincode: "560041")
 }
